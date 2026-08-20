@@ -2,6 +2,34 @@
 /*  Hearth — home dashboard                                              */
 /* ===================================================================== */
 
+/* Cupertino styling tokens — the plugin's own visual identity, independent
+ * of whatever Obsidian theme is active. Only decorative values live here
+ * (typeface, corner radius, elevation, glass blur); nothing here changes
+ * a single layout property. Modelled on the platform-native font stacks
+ * and soft, multi-layer shadow language of aaaaalexis/obsidian-cupertino. */
+.hearth-view {
+	--hearth-font-family:
+		-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+		"SF Pro", "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI",
+		"Google Sans System", "Google Sans Flex", "Google Sans", "Adwaita Sans",
+		Inter, Roboto, Helvetica, Arial, sans-serif;
+	--hearth-radius-s: 10px;
+	--hearth-radius-m: 14px;
+	--hearth-radius-l: 18px;
+	--hearth-radius-xl: 24px;
+	--hearth-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
+	--hearth-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.09);
+	--hearth-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.16);
+	--hearth-glass-blur: blur(20px) saturate(1.6) brightness(1.02);
+	font-family: var(--hearth-font-family);
+}
+
+body.theme-dark .hearth-view {
+	--hearth-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.18), 0 4px 14px rgba(0, 0, 0, 0.16);
+	--hearth-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.22);
+	--hearth-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.34);
+}
+
 .hearth-view {
 	position: relative;
 	height: 100%;
@@ -49,7 +77,7 @@
 	flex: 0 0 auto;
 	width: 100%;
 	margin: 0 auto var(--hearth-inner-gap, 28px);
-	border-radius: 12px;
+	border-radius: 14px;
 	/* Crops the layer inside to the strip — including a blurred layer's soft
 	 * edges, which are deliberately grown past this box (see renderBanner). */
 	overflow: hidden;
@@ -301,10 +329,12 @@
 	gap: 10px;
 	height: 52px;
 	padding: 0 18px;
-	border-radius: 14px;
-	background: var(--background-primary);
+	border-radius: var(--hearth-radius-l);
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	backdrop-filter: var(--hearth-glass-blur);
+	-webkit-backdrop-filter: var(--hearth-glass-blur);
 	border: 1px solid var(--background-modifier-border);
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+	box-shadow: var(--hearth-shadow-s);
 	transition:
 		border-color 120ms ease,
 		box-shadow 120ms ease;
@@ -312,7 +342,7 @@
 
 .hearth-search-bar:focus-within {
 	border-color: var(--interactive-accent);
-	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--hearth-shadow-m);
 }
 
 .hearth-search-icon {
@@ -340,9 +370,11 @@
 	gap: 8px;
 	height: 52px;
 	padding: 0 18px;
-	border-radius: 14px;
+	border-radius: var(--hearth-radius-l);
 	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	backdrop-filter: var(--hearth-glass-blur);
+	-webkit-backdrop-filter: var(--hearth-glass-blur);
 	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.95rem;
@@ -375,7 +407,7 @@
 	z-index: 200;
 	max-height: min(360px, 50vh);
 	overflow-y: auto;
-	border-radius: 12px;
+	border-radius: var(--hearth-radius-l);
 	border: 1px solid var(--background-modifier-border);
 	/* Force an opaque surface even if the theme's --background-primary carries
 	 * alpha: the extra flat gradient layer stacks on top of the base colour so a
@@ -385,7 +417,7 @@
 	background-image:
 		linear-gradient(var(--background-primary), var(--background-primary)),
 		linear-gradient(var(--background-primary), var(--background-primary));
-	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+	box-shadow: var(--hearth-shadow-l);
 	padding: 6px;
 }
 
@@ -403,7 +435,7 @@
 	align-items: center;
 	gap: 12px;
 	padding: 9px 12px;
-	border-radius: 8px;
+	border-radius: var(--hearth-radius-s);
 	cursor: pointer;
 }
 
@@ -544,7 +576,7 @@
 	justify-content: center;
 	width: 38px;
 	height: 38px;
-	border-radius: 10px;
+	border-radius: 12px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -687,7 +719,7 @@
 	align-items: center;
 	gap: 6px;
 	padding: 4px 10px;
-	border-radius: 10px;
+	border-radius: 12px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -794,7 +826,7 @@
 	background: var(--hearth-card-surface);
 	/* Drop shadow via a variable so merged edges can drop it (see below) and
 	 * hover can lift it without re-declaring the whole shadow. */
-	--hearth-card-lift: 0 2px 12px rgba(0, 0, 0, 0.06);
+	--hearth-card-lift: var(--hearth-shadow-s);
 	box-shadow: var(--hearth-card-lift);
 	overflow: hidden;
 	transition:
@@ -864,7 +896,7 @@
 }
 
 .hearth-card:hover {
-	--hearth-card-lift: 0 6px 20px rgba(0, 0, 0, 0.12);
+	--hearth-card-lift: var(--hearth-shadow-m);
 }
 
 .hearth-card-head {
@@ -1004,7 +1036,7 @@
 .hearth-embed img,
 .hearth-embed video {
 	max-width: 100%;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 /* Per-card zoom. Uses the `zoom` property rather than `transform: scale()` so
@@ -1210,7 +1242,7 @@
 .hearth-setting-warning {
 	margin-top: 8px;
 	padding: 10px 12px;
-	border-radius: 8px;
+	border-radius: 10px;
 	border-left: 3px solid var(--color-orange, #e8a33d);
 	background: color-mix(
 		in srgb,
@@ -1364,7 +1396,7 @@
 .hearth-daily-create {
 	margin-top: 10px;
 	padding: 6px 14px;
-	border-radius: 8px;
+	border-radius: 10px;
 	border: 1px solid var(--interactive-accent);
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
@@ -1396,7 +1428,7 @@
 	align-items: center;
 	justify-content: center;
 	padding: 4px;
-	border-radius: 7px;
+	border-radius: 9px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	color: var(--text-muted);
@@ -1481,7 +1513,7 @@
 .hearth-section-body {
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	padding: 2px 16px;
 }
 
@@ -1543,7 +1575,7 @@
 .hearth-settings-index-rows {
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	overflow: hidden;
 }
 
@@ -1579,7 +1611,7 @@
 	flex-shrink: 0;
 	width: 30px;
 	height: 30px;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-border);
 	color: var(--text-normal);
 }
@@ -1622,7 +1654,7 @@
 	gap: 4px;
 	margin: 14px 0 0;
 	padding: 5px 10px 5px 6px;
-	border-radius: 7px;
+	border-radius: 9px;
 	color: var(--text-muted);
 	font-size: var(--font-ui-small);
 	cursor: pointer;
@@ -1668,7 +1700,7 @@
 	align-items: center;
 	gap: 6px;
 	padding: 6px 10px;
-	border-radius: 8px;
+	border-radius: 10px;
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -1728,7 +1760,7 @@
 .hearth-settings-tabbody > .setting-item {
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	padding: 14px 16px;
 }
 
@@ -1741,7 +1773,7 @@
 	padding: 12px 14px;
 	margin: 8px 0;
 	border: 1px solid var(--background-modifier-error);
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-error-hover);
 }
 
@@ -1864,7 +1896,7 @@
 	align-items: center;
 	gap: 10px;
 	padding: 7px 8px;
-	border-radius: 7px;
+	border-radius: 9px;
 	cursor: pointer;
 }
 
@@ -1882,7 +1914,7 @@
 	width: 16px;
 	height: 16px;
 	object-fit: contain;
-	border-radius: 3px;
+	border-radius: 5px;
 }
 
 /* An emoji icon from Iconic/Iconize stands in for the Lucide glyph setIcon
@@ -2065,7 +2097,7 @@
 	width: 100%;
 	resize: none;
 	overflow: hidden;
-	border-radius: 4px;
+	border-radius: 6px;
 	border: 1px solid var(--interactive-accent);
 	background: var(--background-primary);
 	padding: 2px 5px;
@@ -2192,7 +2224,7 @@
 	flex-direction: column;
 	gap: 6px;
 	padding: 12px;
-	border-radius: 10px;
+	border-radius: 12px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	cursor: pointer;
@@ -2431,7 +2463,7 @@
 	gap: 8px;
 	/* Default span: 1 column × 1 row. Overridden per-tile via inline styles. */
 	padding: 14px 8px;
-	border-radius: 12px;
+	border-radius: 14px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	cursor: pointer;
@@ -2488,7 +2520,7 @@
 	z-index: 1;
 	max-width: calc(100% - 8px);
 	padding: 2px 8px;
-	border-radius: 6px;
+	border-radius: 8px;
 	color: #fff;
 	background: rgba(0, 0, 0, 0.55);
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
@@ -2588,7 +2620,7 @@
 .hearth-link-tile.is-tile-dragging {
 	z-index: 20;
 	cursor: grabbing;
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 20px 44px rgba(0, 0, 0, 0.18);
 	opacity: 0.92;
 	pointer-events: none;
 	/* No transition during drag — the tile must follow the pointer instantly. */
@@ -2601,7 +2633,7 @@
 .hearth-tile-placeholder {
 	grid-column: var(--hearth-tile-col, auto) / span var(--hearth-tile-cs, 1);
 	grid-row: var(--hearth-tile-row, auto) / span var(--hearth-tile-rs, 1);
-	border-radius: 12px;
+	border-radius: 14px;
 	border: 2px dashed var(--interactive-accent);
 	background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
 	pointer-events: none;
@@ -2614,7 +2646,7 @@
 .hearth-tile-ghost {
 	grid-column: var(--hearth-tile-col, auto) / span var(--hearth-tile-cs, 1);
 	grid-row: var(--hearth-tile-row, auto) / span var(--hearth-tile-rs, 1);
-	border-radius: 12px;
+	border-radius: 14px;
 	border: 2px dashed var(--interactive-accent);
 	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 	pointer-events: none;
@@ -2823,7 +2855,7 @@
 	height: 26px;
 	padding: 0;
 	border: none;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
@@ -2858,7 +2890,7 @@
 	display: flex;
 	gap: 10px;
 	padding: 6px 4px;
-	border-radius: 8px;
+	border-radius: 10px;
 	cursor: pointer;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
@@ -2907,7 +2939,7 @@
 	flex: 0 0 auto;
 	width: 64px;
 	height: 64px;
-	border-radius: 8px;
+	border-radius: 10px;
 	overflow: hidden;
 	background: var(--background-modifier-hover);
 }
@@ -3200,7 +3232,7 @@
 	align-items: center;
 	gap: 8px;
 	padding: 6px 8px;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-hover);
 	min-width: 0;
 }
@@ -3257,7 +3289,7 @@
 	flex: 1 0 auto;
 	min-width: 42px;
 	padding: 4px 2px;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .hearth-weather-hour:hover {
@@ -3305,7 +3337,7 @@
 	align-items: center;
 	gap: 8px;
 	padding: 3px 4px;
-	border-radius: 8px;
+	border-radius: 10px;
 	font-size: 0.78rem;
 }
 
@@ -3958,7 +3990,7 @@
 	width: 32px;
 	height: 32px;
 	padding: 0;
-	border-radius: 8px;
+	border-radius: 10px;
 	border: none;
 	background: transparent;
 	color: var(--text-normal);
@@ -4014,7 +4046,7 @@
 	align-items: center;
 	justify-content: center;
 	gap: 2px;
-	border-radius: 7px;
+	border-radius: 9px;
 	cursor: pointer;
 	min-height: 28px;
 }
@@ -4061,7 +4093,7 @@
 .hearth-calendar-day.is-today {
 	outline: 2px solid var(--interactive-accent);
 	outline-offset: -2px;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .hearth-calendar-dot {
@@ -4129,7 +4161,7 @@
 	align-items: center;
 	gap: 10px;
 	padding: 6px 8px;
-	border-radius: 8px;
+	border-radius: 10px;
 	cursor: pointer;
 }
 
@@ -4271,7 +4303,7 @@
 	gap: 7px;
 	padding: 2px 6px;
 	margin: 0 -6px;
-	border-radius: 6px;
+	border-radius: 8px;
 	cursor: pointer;
 	min-width: 0;
 }
@@ -4317,7 +4349,7 @@
 	font-size: 0.62rem;
 	color: var(--text-faint);
 	padding: 0 5px;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: var(--background-modifier-hover);
 }
 
@@ -4506,7 +4538,7 @@
 	height: 26px;
 	padding: 0;
 	border: none;
-	border-radius: 7px;
+	border-radius: 9px;
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
@@ -4528,7 +4560,7 @@
 	padding: 3px 9px;
 	height: 26px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 7px;
+	border-radius: 9px;
 	background: transparent;
 	color: var(--text-muted);
 	font-size: 0.74rem;
@@ -4556,7 +4588,7 @@
 .hearth-sched-views {
 	display: flex;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 7px;
+	border-radius: 9px;
 	overflow: hidden;
 }
 
@@ -4599,7 +4631,7 @@
 	align-items: baseline;
 	gap: 5px;
 	padding: 1px 5px;
-	border-radius: 5px;
+	border-radius: 7px;
 	border-left: 3px solid var(--ev-color, var(--interactive-accent));
 	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 16%, transparent);
 	font-size: 0.72rem;
@@ -4697,7 +4729,7 @@
 	gap: 2px;
 	min-height: 0;
 	padding: 2px 3px;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: var(--background-modifier-hover);
 	cursor: pointer;
 	overflow: hidden;
@@ -4965,7 +4997,7 @@
 	display: flex;
 	flex-direction: column;
 	padding: 1px 4px;
-	border-radius: 5px;
+	border-radius: 7px;
 	border-left: 3px solid var(--ev-color, var(--interactive-accent));
 	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 22%, var(--background-primary));
 	color: var(--text-normal);
@@ -5168,7 +5200,7 @@
 	align-items: center;
 	gap: 7px;
 	padding: 6px 12px;
-	border-radius: 9px;
+	border-radius: 11px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -5195,7 +5227,7 @@
 /* Compact icon-only toolbar button (e.g. the Arrange toggle at rest). */
 .hearth-tool-btn.is-icon {
 	padding: 3px;
-	border-radius: 7px;
+	border-radius: 9px;
 	opacity: 0.55;
 }
 
@@ -5277,7 +5309,7 @@
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	border-radius: 8px;
+	border-radius: 10px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -5610,7 +5642,7 @@
 	flex: 1;
 	min-width: 0;
 	padding: 4px 8px;
-	border-radius: 7px;
+	border-radius: 9px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-normal);
@@ -5635,7 +5667,7 @@
 	align-items: center;
 	justify-content: center;
 	padding: 5px;
-	border-radius: 7px;
+	border-radius: 9px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -5656,7 +5688,7 @@
 .hearth-card.is-moving {
 	cursor: grabbing;
 	z-index: 20;
-	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14), 0 28px 56px rgba(0, 0, 0, 0.22);
 }
 
 .hearth-card.is-moving .hearth-card-overlay {
@@ -5856,7 +5888,7 @@
 	width: 24px;
 	height: 24px;
 	padding: 0;
-	border-radius: 7px;
+	border-radius: 9px;
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -5913,7 +5945,7 @@
 		var(--background-secondary) calc(var(--card-opacity, 1) * 40%),
 		transparent
 	);
-	border-radius: 8px;
+	border-radius: 10px;
 	max-height: 100%;
 }
 
@@ -5945,7 +5977,7 @@
 
 .hearth-kanban-col-body.is-drop-target {
 	background: var(--background-modifier-hover);
-	border-radius: 6px;
+	border-radius: 8px;
 }
 
 /* Cards on the lane: a translucent fill (scaled by --card-opacity for the same
@@ -5958,7 +5990,7 @@
 		transparent
 	);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	border-radius: 8px;
 	padding: 6px 8px;
 	font-size: 0.85rem;
 	cursor: grab;
@@ -5976,7 +6008,7 @@
 .hearth-kanban-card.is-drop-target {
 	outline: 2px dashed var(--interactive-accent);
 	outline-offset: 1px;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .hearth-kanban-card.is-done .hearth-kanban-card-text {
@@ -6009,7 +6041,7 @@
 	align-items: center;
 	gap: 4px;
 	padding: 4px 6px;
-	border-radius: 6px;
+	border-radius: 8px;
 	color: var(--text-faint);
 	font-size: 0.8rem;
 	cursor: pointer;
@@ -6039,7 +6071,7 @@
 .hearth-kanban-add-input {
 	width: 100%;
 	resize: none;
-	border-radius: 6px;
+	border-radius: 8px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	padding: 6px 8px;
@@ -6285,7 +6317,7 @@ body.hearth-dv-resizing {
 .hearth-taskdetail-input {
 	flex: 1;
 	min-width: 0;
-	border-radius: 6px;
+	border-radius: 8px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	padding: 4px 6px;
@@ -6307,7 +6339,7 @@ body.hearth-dv-resizing {
 .hearth-taskdetail-interval {
 	flex: 0 0 3.5em;
 	width: 3.5em;
-	border-radius: 6px;
+	border-radius: 8px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	padding: 4px 6px;
@@ -6331,7 +6363,7 @@ body.hearth-dv-resizing {
 	min-width: 0;
 	width: 100%;
 	resize: vertical;
-	border-radius: 6px;
+	border-radius: 8px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	padding: 4px 6px;
@@ -6344,7 +6376,7 @@ body.hearth-dv-resizing {
 .hearth-kanban-col-rename {
 	flex: 1;
 	min-width: 0;
-	border-radius: 4px;
+	border-radius: 6px;
 	border: 1px solid var(--interactive-accent);
 	background: var(--background-primary);
 	padding: 1px 4px;
@@ -6374,7 +6406,7 @@ body.hearth-dv-resizing {
 	box-sizing: border-box;
 	margin: 0 0 4px;
 	resize: vertical;
-	border-radius: 6px;
+	border-radius: 8px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	padding: 4px 8px;
@@ -6429,7 +6461,7 @@ body.hearth-dv-resizing {
 	gap: 4px;
 	height: 22px;
 	padding: 0 7px;
-	border-radius: 7px;
+	border-radius: 9px;
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--text-muted);
@@ -6645,7 +6677,7 @@ body.hearth-dv-resizing {
 	display: inline-flex;
 	gap: 2px;
 	padding: 2px;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-hover);
 	border: 1px solid var(--background-modifier-border);
 }
@@ -6682,7 +6714,7 @@ body.hearth-dv-resizing {
 	white-space: nowrap;
 	padding: 2px 9px;
 	border: none;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: transparent;
 	color: var(--text-muted);
 	font-size: 0.72rem;
@@ -6873,7 +6905,7 @@ body.hearth-dv-resizing {
 	align-items: center;
 	gap: 2px;
 	padding: 2px;
-	border-radius: 8px;
+	border-radius: 10px;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	opacity: 0;
@@ -6902,7 +6934,7 @@ body.hearth-dv-resizing {
 	justify-content: center;
 	padding: 3px;
 	border: none;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
@@ -7033,7 +7065,7 @@ body.hearth-dv-resizing {
 	width: 26px;
 	height: 26px;
 	padding: 0;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: var(--background-secondary);
 	opacity: 0;
 	transition: opacity 0.15s ease;
@@ -7388,14 +7420,14 @@ body.hearth-dv-resizing {
 .hearth-taskfields-field,
 .hearth-taskfields-key {
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: var(--background-secondary);
 	overflow: hidden;
 }
 
 .hearth-taskfields-key {
 	background: var(--background-primary);
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 /* An open panel is outlined so its body reads as belonging to it rather than
@@ -7597,7 +7629,7 @@ body.hearth-dv-resizing {
 	height: 24px;
 	padding: 0;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	border-radius: 8px;
 	background: none;
 	cursor: pointer;
 }
@@ -7608,7 +7640,7 @@ body.hearth-dv-resizing {
 
 .hearth-taskfields-picker::-webkit-color-swatch {
 	border: none;
-	border-radius: 4px;
+	border-radius: 6px;
 }
 
 /* Two lines per value on a narrow screen: the value it matches owns the first,
@@ -7816,7 +7848,7 @@ body.hearth-dv-resizing {
 .hearth-kanban-col.is-col-drop-target {
 	outline: 2px dashed var(--interactive-accent);
 	outline-offset: 1px;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 /* ---- Tile resize handle (commands & links) -------------------------- */
@@ -7866,7 +7898,7 @@ body.hearth-dv-resizing {
 /* While a tile is being resized, bring it above its siblings. */
 .hearth-link-tile.is-tile-resizing {
 	z-index: 15;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 14px 32px rgba(0, 0, 0, 0.16);
 }
 
 /* ── "What's new" release-notes dialog ─────────────────────────────────── */
@@ -8058,7 +8090,7 @@ body.hearth-dv-resizing {
 	overflow-y: auto;
 	padding: 6px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: var(--background-primary);
 	box-shadow: var(--shadow-s);
 }
@@ -8076,7 +8108,7 @@ body.hearth-dv-resizing {
 	height: 30px;
 	padding: 4px 8px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	border-radius: 8px;
 	background: var(--background-primary-alt);
 	color: var(--text-normal);
 	font-size: 0.8rem;
@@ -8093,7 +8125,7 @@ body.hearth-dv-resizing {
 	align-items: center;
 	gap: 7px;
 	padding: 5px 6px;
-	border-radius: 6px;
+	border-radius: 8px;
 	font-size: 0.8rem;
 	cursor: pointer;
 }
@@ -8119,7 +8151,7 @@ body.hearth-dv-resizing {
 	margin-left: auto;
 	padding: 0;
 	border: 0;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
@@ -8150,7 +8182,7 @@ body.hearth-dv-resizing {
 	padding: 8px 6px;
 	border: 0;
 	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: 7px;
+	border-radius: 9px;
 	background: transparent;
 	color: var(--text-normal);
 	text-align: left;
@@ -8416,7 +8448,7 @@ body.hearth-dv-resizing {
 	margin-left: auto;
 	padding: 3px;
 	border: none;
-	border-radius: 5px;
+	border-radius: 7px;
 	background: transparent;
 	color: var(--text-faint);
 	cursor: pointer;
@@ -8465,7 +8497,7 @@ body.hearth-dv-resizing {
 	min-width: 30px;
 	padding: 0 8px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 7px;
+	border-radius: 9px;
 	background: var(--background-primary-alt);
 	color: var(--text-normal);
 	font-size: 0.78rem;
@@ -8536,7 +8568,7 @@ body.hearth-dv-resizing {
 	flex: 0 0 auto;
 	width: 17px;
 	height: 17px;
-	border-radius: 4px;
+	border-radius: 6px;
 	background: var(--background-modifier-border);
 	color: var(--text-muted);
 	font-family: var(--font-monospace);
@@ -8613,7 +8645,7 @@ body.hearth-dv-resizing {
 	align-items: baseline;
 	gap: 8px;
 	padding: 4px 6px;
-	border-radius: 6px;
+	border-radius: 8px;
 	cursor: pointer;
 }
 
@@ -8706,7 +8738,7 @@ body.hearth-dv-resizing {
 	cursor: pointer;
 	/* The sprite is pixel art: keep the pixels square and crisp at any scale. */
 	image-rendering: pixelated;
-	border-radius: 6px;
+	border-radius: 8px;
 }
 
 .hearth-pet-stage:focus-visible {
@@ -9101,7 +9133,7 @@ body.hearth-dv-resizing {
 	padding: 0 10px;
 	margin-bottom: 12px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-form-field);
 }
 
@@ -9161,7 +9193,7 @@ body.hearth-dv-resizing {
 	width: 100%;
 	padding: 6px 10px;
 	border: none;
-	border-radius: 6px;
+	border-radius: 8px;
 	background: transparent;
 	box-shadow: none;
 	color: var(--text-muted);
@@ -9251,7 +9283,7 @@ body.hearth-dv-resizing {
 	height: auto;
 	padding: 10px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-primary);
 	box-shadow: none;
 	text-align: left;
@@ -9378,7 +9410,7 @@ body.hearth-dv-resizing {
 	padding: 12px;
 	margin-bottom: 8px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .hearth-picker-request-icon {
@@ -9611,7 +9643,7 @@ body.hearth-dv-resizing {
 .hearth-setup-note {
 	margin-top: 14px;
 	padding: 10px 12px;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-secondary);
 	color: var(--text-muted);
 	font-size: 0.85em;
@@ -9646,7 +9678,7 @@ body.hearth-dv-resizing {
 	justify-content: center;
 	width: 32px;
 	height: 32px;
-	border-radius: 8px;
+	border-radius: 10px;
 	background: var(--background-modifier-hover);
 	color: var(--text-accent);
 }
@@ -9675,7 +9707,7 @@ body.hearth-dv-resizing {
 	gap: 10px;
 	padding: 12px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: var(--background-primary);
 	cursor: pointer;
 	transition: border-color 120ms ease, background 120ms ease;
@@ -9741,7 +9773,7 @@ body.hearth-dv-resizing {
 	margin-top: 14px;
 	padding: 12px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: var(--background-secondary);
 }
 
@@ -9781,7 +9813,7 @@ body.hearth-dv-resizing {
 	height: 190px;
 	padding: 8px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: var(--background-secondary);
 }
 
@@ -9792,7 +9824,7 @@ body.hearth-dv-resizing {
 	min-width: 0;
 	padding: 2px 4px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 5px;
+	border-radius: 7px;
 	background: var(--background-primary);
 	overflow: hidden;
 }
