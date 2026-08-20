@@ -6,8 +6,13 @@
  * of whatever Obsidian theme is active. Only decorative values live here
  * (typeface, corner radius, elevation, glass blur); nothing here changes
  * a single layout property. Modelled on the platform-native font stacks
- * and soft, multi-layer shadow language of aaaaalexis/obsidian-cupertino. */
-.hearth-view {
+ * and soft, multi-layer shadow language of aaaaalexis/obsidian-cupertino.
+ *
+ * Global (:root) so every Hearth-owned surface can use them — not just the
+ * dashboard view, but the settings tab and every Hearth modal (card/task
+ * editors, pickers, the setup wizard) — without redeclaring the block on
+ * each one. */
+:root {
 	--hearth-font-family:
 		-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
 		"SF Pro", "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI",
@@ -21,13 +26,64 @@
 	--hearth-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.09);
 	--hearth-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.16);
 	--hearth-glass-blur: blur(20px) saturate(1.6) brightness(1.02);
-	font-family: var(--hearth-font-family);
 }
 
-body.theme-dark .hearth-view {
+body.theme-dark {
 	--hearth-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.18), 0 4px 14px rgba(0, 0, 0, 0.16);
 	--hearth-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.22);
 	--hearth-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.34);
+}
+
+/* The typeface reaches every Hearth surface: the dashboard itself, the
+ * plugin's settings tab, and every Hearth modal (card/task editors and
+ * pickers, the setup wizard, the changelog). */
+.hearth-view,
+.hearth-settings,
+.hearth-tabbed-modal,
+.hearth-setup-modal,
+.hearth-whatsnew-modal,
+.hearth-card-picker-modal,
+.hearth-event-modal,
+.hearth-taskfields-modal,
+.hearth-taskdate-modal,
+.hearth-tasksort-modal,
+.hearth-taskfilter-modal,
+.hearth-taskdetail-modal {
+	font-family: var(--hearth-font-family);
+}
+
+/* Cupertino's own system-background palette (light: systemBackground /
+ * systemGroupedBackground; dark: their black-based counterparts), scoped to
+ * the dashboard only — not the settings tab or modals, whose outer chrome is
+ * painted by Obsidian outside this class and would otherwise mismatch a
+ * recoloured inner pane. The accent stays whatever the user has chosen (real
+ * Cupertino derives its accent from it too, rather than forcing iOS blue). */
+.hearth-view {
+	--background-primary: #ffffff;
+	--background-primary-alt: #f2f2f7;
+	--background-secondary: #f2f2f7;
+	--background-secondary-alt: #e5e5ea;
+	--background-modifier-border: rgba(60, 60, 67, 0.16);
+	--background-modifier-hover: rgba(120, 120, 128, 0.12);
+	--background-modifier-active-hover: rgba(120, 120, 128, 0.2);
+	--text-normal: #1c1c1e;
+	--text-muted: #6e6e73;
+	--text-faint: #8e8e93;
+	--text-on-accent: #ffffff;
+}
+
+body.theme-dark .hearth-view {
+	--background-primary: #1c1c1e;
+	--background-primary-alt: #000000;
+	--background-secondary: #2c2c2e;
+	--background-secondary-alt: #3a3a3c;
+	--background-modifier-border: rgba(255, 255, 255, 0.12);
+	--background-modifier-hover: rgba(120, 120, 128, 0.24);
+	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
+	--text-normal: #f2f2f7;
+	--text-muted: #98989d;
+	--text-faint: #636366;
+	--text-on-accent: #ffffff;
 }
 
 .hearth-view {
@@ -5200,7 +5256,7 @@ body.theme-dark .hearth-view {
 	align-items: center;
 	gap: 7px;
 	padding: 6px 12px;
-	border-radius: 11px;
+	border-radius: var(--hearth-radius-s);
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -5218,6 +5274,7 @@ body.theme-dark .hearth-view {
 	color: var(--text-on-accent);
 	background: var(--interactive-accent);
 	border-color: var(--interactive-accent);
+	box-shadow: var(--hearth-shadow-s);
 }
 
 .hearth-tool-icon {
@@ -5227,7 +5284,7 @@ body.theme-dark .hearth-view {
 /* Compact icon-only toolbar button (e.g. the Arrange toggle at rest). */
 .hearth-tool-btn.is-icon {
 	padding: 3px;
-	border-radius: 9px;
+	border-radius: var(--hearth-radius-s);
 	opacity: 0.55;
 }
 
@@ -5309,7 +5366,7 @@ body.theme-dark .hearth-view {
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	border-radius: 10px;
+	border-radius: 50%;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
 	color: var(--text-muted);
@@ -5322,6 +5379,7 @@ body.theme-dark .hearth-view {
 .hearth-dash-btn:hover {
 	color: var(--text-normal);
 	border-color: var(--interactive-accent);
+	box-shadow: var(--hearth-shadow-s);
 }
 
 /* Lucide icon buttons: size the glyph to match the numeric/emoji buttons. */
@@ -5335,6 +5393,7 @@ body.theme-dark .hearth-view {
 	color: var(--text-on-accent);
 	background: var(--interactive-accent);
 	border-color: var(--interactive-accent);
+	box-shadow: var(--hearth-shadow-s);
 }
 
 .hearth-dash-add {
@@ -6677,7 +6736,7 @@ body.hearth-dv-resizing {
 	display: inline-flex;
 	gap: 2px;
 	padding: 2px;
-	border-radius: 10px;
+	border-radius: var(--hearth-radius-s);
 	background: var(--background-modifier-hover);
 	border: 1px solid var(--background-modifier-border);
 }
@@ -6733,7 +6792,7 @@ body.hearth-dv-resizing {
 .hearth-embed-switch-btn.is-active {
 	background: var(--background-primary);
 	color: var(--text-normal);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	box-shadow: var(--hearth-shadow-s);
 }
 
 /* ---- Slideshow card --------------------------------------------------
