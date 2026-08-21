@@ -27,6 +27,21 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   small tracked-out uppercase label rather than a plain heading — together
   reading as a glass stat tile no matter what a card renders.
 
+### Fixed
+
+- **Flat, opaque UI on glass cards.** With the Glass card style actually
+  turned on, several pieces still painted a solid background instead of the
+  card's own translucent surface — a visible cutout against the frosted card:
+  the card title (also too low-contrast against a busy wallpaper at
+  `--text-muted`), the daily-note "create note" button, the corner "open"
+  button (daily/embed/slideshow cards), list rows (recent files, bookmarks,
+  links, RSS, tasks, ...), favorite tiles, and the same again on the home
+  page's own chrome — "New note", the Arrange/Edit toggle, the dashboard
+  switcher, a card's editable-header actions, and the Commands/Links/Templater
+  launchpad tiles. All of these now reuse the surrounding glass tint, and none
+  of them had any `:active` press feedback at all — every one now presses in
+  on click.
+
 ### Added
 
 - **A launchpad that makes notes: the Templater card.** Hearth's third tile card
