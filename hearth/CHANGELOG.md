@@ -21,6 +21,12 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   the plugin id, so existing installs start from a fresh settings/layout store
   on upgrade.
 
+- **A more frosted card chrome.** Every card's border and header divider now
+  blend toward transparent instead of a flat theme line, the card's shadow
+  gains a subtle inset top highlight for a glass bevel, and the card title is a
+  small tracked-out uppercase label rather than a plain heading — together
+  reading as a glass stat tile no matter what a card renders.
+
 ### Added
 
 - **A launchpad that makes notes: the Templater card.** Hearth's third tile card
