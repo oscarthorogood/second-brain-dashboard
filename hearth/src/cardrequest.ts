@@ -20,7 +20,7 @@
 export const CARD_REQUEST_EMAIL = "ondrej.uhnavy@proton.me";
 
 /** GitHub's issue-form endpoint, and the form the request opens. */
-const GITHUB_NEW_ISSUE_URL = "https://github.com/ondreu/hearth/issues/new";
+const GITHUB_NEW_ISSUE_URL = "https://github.com/oscarthorogood/second-brain-dashboard/issues/new";
 const FEATURE_REQUEST_FORM = "feature_request.yml";
 
 /** Everything the templates stamp into a request so the maintainer doesn't have

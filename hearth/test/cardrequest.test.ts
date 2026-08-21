@@ -27,7 +27,9 @@ const ctx: CardRequestContext = {
 describe("cardRequestGithubUrl", () => {
 	it("opens the feature-request form on the Second Brain Dashboard repository", () => {
 		const url = new URL(cardRequestGithubUrl(ctx));
-		expect(url.origin + url.pathname).toBe("https://github.com/ondreu/hearth/issues/new");
+		expect(url.origin + url.pathname).toBe(
+			"https://github.com/oscarthorogood/second-brain-dashboard/issues/new",
+		);
 		expect(url.searchParams.get("template")).toBe("feature_request.yml");
 		expect(url.searchParams.get("labels")).toBe("enhancement");
 		expect(url.searchParams.get("title")).toBe(CARD_REQUEST_TITLE);

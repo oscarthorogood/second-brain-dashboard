@@ -11,7 +11,7 @@ If you believe you've found a security issue in Second Brain Dashboard, please r
 privately rather than opening a public issue.
 
 - Preferred: use GitHub's
-  [**Report a vulnerability**](https://github.com/ondreu/Hearth/security/advisories/new)
+  [**Report a vulnerability**](https://github.com/oscarthorogood/second-brain-dashboard/security/advisories/new)
   flow (Security → Advisories) so the report stays private until a fix is out.
 
 Please include what the issue is, how to reproduce it, and its potential impact.

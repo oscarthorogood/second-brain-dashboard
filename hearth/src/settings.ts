@@ -52,8 +52,8 @@ type StringSettingKey =
 	| "iconizeIconProperty";
 
 /** The GitHub repository and support links surfaced in the About tab. */
-const GITHUB_URL = "https://github.com/ondreu/hearth";
-const GITHUB_ISSUES_URL = "https://github.com/ondreu/hearth/issues/new";
+const GITHUB_URL = "https://github.com/oscarthorogood/second-brain-dashboard";
+const GITHUB_ISSUES_URL = "https://github.com/oscarthorogood/second-brain-dashboard/issues/new";
 const KOFI_URL = "https://ko-fi.com/ondru";
 
 /** Download filenames for the JSON exports. */

@@ -65,6 +65,6 @@ live in [`RELEASING.md`](RELEASING.md).
 
 ## Filing an issue
 
-Use [GitHub Issues](https://github.com/ondreu/Hearth/issues). A quick search
+Use [GitHub Issues](https://github.com/oscarthorogood/second-brain-dashboard/issues). A quick search
 first saves duplicates. Otherwise there are no forms to fill — just be clear,
 and be kind. 🔥
