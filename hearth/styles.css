@@ -1465,20 +1465,29 @@ body.theme-dark .sbd-view {
 	height: 100%;
 }
 
-/* Daily-note card: the "create today's note" prompt button. */
+/* Daily-note card: the "create today's note" prompt button. A translucent
+ * glass pill — outlined in the accent colour rather than filled solid — so it
+ * reads as part of the frosted surface instead of a flat, opaque UI control
+ * dropped on top of it. Fills solid only on hover, as the one moment it's
+ * meant to stand out. */
 .sbd-daily-create {
 	margin-top: 10px;
-	padding: 6px 14px;
-	border-radius: 10px;
+	padding: 7px 18px;
+	border-radius: 999px;
 	border: 1px solid var(--interactive-accent);
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.85rem;
+	font-weight: 500;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
 }
 
 .sbd-daily-create:hover {
-	opacity: 0.9;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 }
 
 /* A floating action button (e.g. the daily-note "open" button) pinned to the
@@ -1495,23 +1504,31 @@ body.theme-dark .sbd-view {
 	pointer-events: none;
 }
 
+/* A small glass chip rather than a flat opaque square — it floats over the
+ * card's own translucent surface (see .sbd-card-surface), so it reuses that
+ * tint instead of painting a solid background that would look like a cut-out
+ * hole in the frosted card. */
 .sbd-open-btn {
 	pointer-events: auto;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 4px;
-	border-radius: 9px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-secondary);
+	padding: 5px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	background: var(--sbd-card-surface, var(--background-secondary));
 	color: var(--text-muted);
 	cursor: pointer;
-	opacity: 0.7;
+	opacity: 0.85;
+	transition:
+		opacity 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease;
 }
 
 .sbd-open-btn:hover {
 	opacity: 1;
-	color: var(--text-normal);
+	color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
 }
 
@@ -1971,16 +1988,22 @@ body.theme-dark .sbd-view {
 	padding: 7px 8px;
 	border-radius: 9px;
 	cursor: pointer;
+	transition: background 120ms ease;
 }
 
 .sbd-list-item:hover {
-	background: var(--background-modifier-hover);
+	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
 
 .sbd-list-icon {
 	display: flex;
 	color: var(--text-muted);
 	flex-shrink: 0;
+	transition: color 120ms ease;
+}
+
+.sbd-list-item:hover .sbd-list-icon {
+	color: var(--interactive-accent);
 }
 
 .sbd-list-icon .sbd-favicon {
@@ -2292,14 +2315,19 @@ body.theme-dark .sbd-view {
 	gap: 10px;
 }
 
+/* A glass chip, not a flat opaque tile: painting a solid --background-secondary
+ * here would read as a cut-out hole in the card's own translucent surface (see
+ * --sbd-card-surface on .sbd-card). Tinting the same surface colour a little
+ * stronger keeps it a shade lifted off the card without breaking the frost. */
 .sbd-fav-card {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 	padding: 12px;
 	border-radius: 12px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-secondary);
+	border: 1px solid
+		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	background: color-mix(in srgb, var(--sbd-card-surface, var(--background-secondary)) 60%, var(--background-secondary) 40%);
 	cursor: pointer;
 	transition:
 		border-color 120ms ease,
@@ -2308,7 +2336,7 @@ body.theme-dark .sbd-view {
 
 .sbd-fav-card:hover {
 	border-color: var(--interactive-accent);
-	background: var(--background-modifier-hover);
+	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
 
 .sbd-fav-card.is-missing {
