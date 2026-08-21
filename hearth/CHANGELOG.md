@@ -27,6 +27,20 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   small tracked-out uppercase label rather than a plain heading — together
   reading as a glass stat tile no matter what a card renders.
 
+- **The dark glass look is now fixed, not configurable.** The dashboard's
+  colour palette previously followed Obsidian's own light/dark appearance
+  setting, and the card style (Glass/Solid/Minimal), opacity, blur, corner
+  radius and border width were all user-configurable at three levels (global
+  settings, per-dashboard, per-card). All of that is gone: the board is
+  always the dark palette with a fixed warm brass/gold accent regardless of
+  Obsidian's theme or the user's own accent colour, and the glass surface is
+  a fixed identity rather than a set of sliders — including the setup
+  wizard's card-style picker, which no longer offers a choice. Low power mode
+  still forces opaque, unblurred cards, since that's a performance switch,
+  not a styling choice. The Vault Statistics card's tiles are also redrawn as
+  KPI tiles (uppercase label, big bold value, corner accent icon) instead of
+  small centered icon+number+label stacks.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
