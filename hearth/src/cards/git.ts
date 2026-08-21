@@ -84,7 +84,7 @@ export function renderGit(
 		destroyed = true;
 	});
 
-	const wrap = body.createDiv("hearth-git");
+	const wrap = body.createDiv("sbd-git");
 	let snapshot: GitSnapshot = { status: plugin.cachedStatus };
 	let loading = false;
 	let busy = false;
@@ -156,10 +156,10 @@ export function renderGit(
 			// The plugin is loaded but has no repository open — either it is still
 			// starting up, or this vault isn't a repo. Both are worth saying, and
 			// both are fixed from obsidian-git's own view.
-			const empty = wrap.createDiv("hearth-git-notready");
+			const empty = wrap.createDiv("sbd-git-notready");
 			emptyState(empty, "git-branch", t().cards.empty.gitNotReady);
 			const button = empty.createEl("button", {
-				cls: "hearth-git-notready-button",
+				cls: "sbd-git-notready-button",
 				text: t().cards.git.openSourceControl,
 			});
 			button.addEventListener("click", () => void openGitView(view.app, "sourceControl"));
@@ -203,7 +203,7 @@ export function renderGit(
 	);
 	// The plugin finished a refresh cycle — but it only re-reads the status
 	// during one when its own status bar or one of its views needs it, and a
-	// Hearth card is neither. So when that cycle produced no status event, the
+	// Second Brain Dashboard card is neither. So when that cycle produced no status event, the
 	// card reads for itself; when it did, the paint above already happened and
 	// there is nothing left to do.
 	component.registerEvent(
@@ -245,13 +245,13 @@ function paintStatus(
 	onRefresh: () => void,
 ): void {
 	const strings = t().cards.git;
-	const row = wrap.createDiv("hearth-git-status");
+	const row = wrap.createDiv("sbd-git-status");
 
 	const branchName = snapshot.branch?.current;
-	const branch = row.createDiv("hearth-git-branch");
-	setIcon(branch.createDiv("hearth-git-branch-icon"), "git-branch");
+	const branch = row.createDiv("sbd-git-branch");
+	setIcon(branch.createDiv("sbd-git-branch-icon"), "git-branch");
 	branch.createSpan({
-		cls: "hearth-git-branch-name",
+		cls: "sbd-git-branch-name",
 		text: branchName || strings.noBranch,
 	});
 	if (branchName) {
@@ -261,7 +261,7 @@ function paintStatus(
 	}
 
 	const counts = gitChangeCounts(snapshot.status);
-	const chips = row.createDiv("hearth-git-chips");
+	const chips = row.createDiv("sbd-git-chips");
 	/** One count chip; drawn only when it has something to say. */
 	const chip = (
 		value: number,
@@ -270,9 +270,9 @@ function paintStatus(
 		cls: string,
 	): void => {
 		if (value <= 0) return;
-		const el = chips.createDiv(`hearth-git-chip ${cls}`);
-		setIcon(el.createSpan("hearth-git-chip-icon"), icon);
-		el.createSpan({ cls: "hearth-git-chip-value", text: String(value) });
+		const el = chips.createDiv(`sbd-git-chip ${cls}`);
+		setIcon(el.createSpan("sbd-git-chip-icon"), icon);
+		el.createSpan({ cls: "sbd-git-chip-value", text: String(value) });
 		el.setAttribute("title", label);
 		el.setAttribute("aria-label", `${value} ${label}`);
 	};
@@ -282,20 +282,20 @@ function paintStatus(
 	chip(snapshot.unpushed ?? 0, "upload", strings.unpushed, "is-unpushed");
 
 	if (counts.total === 0 && !(snapshot.unpushed ?? 0)) {
-		chips.createSpan({ cls: "hearth-git-clean", text: strings.clean });
+		chips.createSpan({ cls: "sbd-git-clean", text: strings.clean });
 	}
 
 	const last = snapshot.lastCommit;
 	if (last) {
 		row.createDiv({
-			cls: "hearth-git-lastcommit",
+			cls: "sbd-git-lastcommit",
 			text: strings.lastCommit(relativeTime(last)),
 		});
 	}
 	// The refresh control doubles as the busy indicator: it spins while a read is
 	// in flight, which is also when pressing it again would be pointless.
 	const refresh = row.createEl("button", {
-		cls: "hearth-git-refresh",
+		cls: "sbd-git-refresh",
 		attr: { "aria-label": strings.refresh },
 		title: strings.refresh,
 	});
@@ -319,16 +319,16 @@ function paintActions(
 	const actions = gitActions(configured);
 	if (actions.length === 0) return;
 	const labelled = style === "labelled";
-	const row = wrap.createDiv("hearth-git-actions");
+	const row = wrap.createDiv("sbd-git-actions");
 	row.toggleClass("is-labelled", labelled);
 	for (const action of actions) {
 		const def = GIT_ACTION_DEFS[action];
 		const label = t().cards.git.actions[action];
-		const button = row.createEl("button", { cls: "hearth-git-action" });
+		const button = row.createEl("button", { cls: "sbd-git-action" });
 		button.addClass(`is-${action}`);
 		if (def.destructive) button.addClass("is-destructive");
-		setIcon(button.createSpan("hearth-git-action-icon"), def.icon);
-		if (labelled) button.createSpan({ cls: "hearth-git-action-label", text: label });
+		setIcon(button.createSpan("sbd-git-action-icon"), def.icon);
+		if (labelled) button.createSpan({ cls: "sbd-git-action-label", text: label });
 		button.setAttribute("aria-label", label);
 		button.setAttribute("title", label);
 		const available = gitActionAvailable(plugin, action);
@@ -350,17 +350,17 @@ function paintChanges(
 	refresh: () => void,
 ): void {
 	const rows = gitChangeRows(snapshot.status);
-	const section = wrap.createDiv("hearth-git-changes");
+	const section = wrap.createDiv("sbd-git-changes");
 	if (rows.length === 0) {
-		section.createDiv({ cls: "hearth-git-none", text: t().cards.git.noChanges });
+		section.createDiv({ cls: "sbd-git-none", text: t().cards.git.noChanges });
 		return;
 	}
 	const shown = limit > 0 ? rows.slice(0, limit) : rows;
-	const list = section.createDiv("hearth-list hearth-git-list");
+	const list = section.createDiv("sbd-list sbd-git-list");
 	for (const row of shown) paintChangeRow(view, plugin, list, row, showPaths, refresh);
 	if (rows.length > shown.length) {
 		const more = section.createDiv({
-			cls: "hearth-git-more",
+			cls: "sbd-git-more",
 			text: t().cards.git.more(rows.length - shown.length),
 		});
 		const open = (): void => void openGitView(view.app, "sourceControl");
@@ -380,18 +380,18 @@ function paintChangeRow(
 	showPaths: boolean | undefined,
 	refresh: () => void,
 ): void {
-	const el = list.createDiv("hearth-list-item hearth-git-file");
+	const el = list.createDiv("sbd-list-item sbd-git-file");
 	el.addClass(`is-${row.kind}`);
 	if (row.staged) el.addClass("is-staged");
-	el.createDiv({ cls: "hearth-git-letter", text: row.letter });
+	el.createDiv({ cls: "sbd-git-letter", text: row.letter });
 
-	const main = el.createDiv("hearth-git-file-main");
-	main.createDiv({ cls: "hearth-list-label", text: row.name });
+	const main = el.createDiv("sbd-git-file-main");
+	main.createDiv({ cls: "sbd-list-label", text: row.name });
 	if (showPaths) {
 		const folder = row.path.includes("/")
 			? row.path.slice(0, row.path.lastIndexOf("/"))
 			: "";
-		if (folder) main.createDiv({ cls: "hearth-git-file-path", text: folder });
+		if (folder) main.createDiv({ cls: "sbd-git-file-path", text: folder });
 	}
 	el.setAttribute("title", row.path);
 
@@ -468,23 +468,23 @@ function paintLog(
 	limit: number,
 ): void {
 	const entries = (snapshot.log ?? []).slice(0, limit);
-	const section = wrap.createDiv("hearth-git-log");
+	const section = wrap.createDiv("sbd-git-log");
 	if (entries.length === 0) {
-		section.createDiv({ cls: "hearth-git-none", text: t().cards.git.noCommits });
+		section.createDiv({ cls: "sbd-git-none", text: t().cards.git.noCommits });
 		return;
 	}
 	for (const entry of entries) {
-		const el = section.createDiv("hearth-git-commit");
-		el.createDiv({ cls: "hearth-git-commit-hash", text: shortHash(entry.hash) });
-		const main = el.createDiv("hearth-git-commit-main");
+		const el = section.createDiv("sbd-git-commit");
+		el.createDiv({ cls: "sbd-git-commit-hash", text: shortHash(entry.hash) });
+		const main = el.createDiv("sbd-git-commit-main");
 		main.createDiv({
-			cls: "hearth-git-commit-message",
+			cls: "sbd-git-commit-message",
 			text: commitSummary(entry.message) || t().cards.git.noMessage,
 		});
 		const when = parseCommitDate(entry.date);
 		const meta = [entry.author?.name, when ? relativeTime(when) : ""].filter(Boolean);
 		if (meta.length) {
-			main.createDiv({ cls: "hearth-git-commit-meta", text: meta.join(" · ") });
+			main.createDiv({ cls: "sbd-git-commit-meta", text: meta.join(" · ") });
 		}
 		const open = (): void => void openGitView(view.app, "history");
 		el.setAttribute("title", entry.hash ?? "");

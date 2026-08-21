@@ -19,13 +19,13 @@ import {
  */
 
 const ctx: CardRequestContext = {
-	hearthVersion: "1.18.0",
+	sbdVersion: "1.18.0",
 	obsidianVersion: "1.8.7",
 	platform: "Desktop",
 };
 
 describe("cardRequestGithubUrl", () => {
-	it("opens the feature-request form on the Hearth repository", () => {
+	it("opens the feature-request form on the Second Brain Dashboard repository", () => {
 		const url = new URL(cardRequestGithubUrl(ctx));
 		expect(url.origin + url.pathname).toBe("https://github.com/ondreu/hearth/issues/new");
 		expect(url.searchParams.get("template")).toBe("feature_request.yml");
@@ -46,7 +46,7 @@ describe("cardRequestGithubUrl", () => {
 
 	it("stamps the environment into the request", () => {
 		const idea = new URL(cardRequestGithubUrl(ctx)).searchParams.get("idea") ?? "";
-		expect(idea).toContain("Hearth 1.18.0");
+		expect(idea).toContain("Second Brain Dashboard 1.18.0");
 		expect(idea).toContain("Obsidian 1.8.7");
 		expect(idea).toContain("Desktop");
 	});
@@ -58,8 +58,8 @@ describe("cardRequestMailtoUrl", () => {
 		expect(url.startsWith(`mailto:${CARD_REQUEST_EMAIL}?`)).toBe(true);
 		const params = new URLSearchParams(url.slice(url.indexOf("?") + 1));
 		expect(params.get("subject")).toBe(CARD_REQUEST_TITLE);
-		expect(params.get("body")).toContain("I'd like to suggest a new card for Hearth.");
-		expect(params.get("body")).toContain("Hearth 1.18.0 · Obsidian 1.8.7 · Desktop");
+		expect(params.get("body")).toContain("I'd like to suggest a new card for Second Brain Dashboard.");
+		expect(params.get("body")).toContain("Second Brain Dashboard 1.18.0 · Obsidian 1.8.7 · Desktop");
 	});
 
 	// Mail clients differ on whether they decode "+" in a body; several paste it

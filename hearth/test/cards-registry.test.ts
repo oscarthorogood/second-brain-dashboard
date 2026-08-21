@@ -350,7 +350,7 @@ describe("liveness classification", () => {
 describe("cardDefinition", () => {
 	it("serves an inert fallback for a kind this build doesn't know", () => {
 		// Persisted data can outrun the code: a data.json written by a newer
-		// Hearth (then downgraded), a sync conflict, a hand edit. The lookup must
+		// Second Brain Dashboard (then downgraded), a sync conflict, a hand edit. The lookup must
 		// stay total so one alien card can't take down the whole dashboard render.
 		const alien = { id: "a", x: 0, y: 0, w: 1, h: 1, kind: "hologram" } as unknown as DashboardCard;
 		const def = cardDefinition(alien);

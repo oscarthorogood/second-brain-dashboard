@@ -257,7 +257,7 @@ export function fitVerticalScale(cards: DashboardCard[], boardHeight: number): n
  * to convert between a card's stored geometry and the pixels it actually
  * occupies must go through this — see cardGeometryFromScreen. */
 export function boardFitScale(gridEl: HTMLElement, cards: DashboardCard[]): number {
-	if (!gridEl.closest(".hearth-fit")) return 1;
+	if (!gridEl.closest(".sbd-fit")) return 1;
 	return fitVerticalScale(cards, gridEl.clientHeight);
 }
 
@@ -440,12 +440,12 @@ export function enableDragResize(
 	component: Component,
 	onCommit: () => void,
 ): void {
-	const overlay = cardEl.createDiv("hearth-card-overlay");
+	const overlay = cardEl.createDiv("sbd-card-overlay");
 	// One resize grip per edge and corner, so the card can be resized from any
 	// side, not just the bottom-right.
 	const handles = RESIZE_DIRS.map((dir) => ({
 		dir,
-		el: cardEl.createDiv(`hearth-resize-handle is-${dir}`),
+		el: cardEl.createDiv(`sbd-resize-handle is-${dir}`),
 	}));
 
 	let ctx: DragContext | null = null;
@@ -457,7 +457,7 @@ export function enableDragResize(
 	 * scale (which a commit may have changed) and reposition every card with it,
 	 * scrolling boards just place the dragged card. */
 	const reposition = () => {
-		if (gridEl.closest(".hearth-fit")) applyFitLayout(gridEl, layout);
+		if (gridEl.closest(".sbd-fit")) applyFitLayout(gridEl, layout);
 		else applyCardPosition(cardEl, card);
 	};
 
@@ -494,7 +494,7 @@ export function enableDragResize(
 				guideX = null;
 				return;
 			}
-			if (!guideX) guideX = gridEl.createDiv("hearth-align-guide is-vertical");
+			if (!guideX) guideX = gridEl.createDiv("sbd-align-guide is-vertical");
 			guideX.style.left = `${pos}px`;
 		} else {
 			if (pos == null) {
@@ -502,7 +502,7 @@ export function enableDragResize(
 				guideY = null;
 				return;
 			}
-			if (!guideY) guideY = gridEl.createDiv("hearth-align-guide is-horizontal");
+			if (!guideY) guideY = gridEl.createDiv("sbd-align-guide is-horizontal");
 			guideY.style.top = `${pos}px`;
 		}
 	};
@@ -511,7 +511,7 @@ export function enableDragResize(
 		e.preventDefault();
 		e.stopPropagation();
 		const boardWidth = gridEl.clientWidth;
-		const fit = !!gridEl.closest(".hearth-fit");
+		const fit = !!gridEl.closest(".sbd-fit");
 		// Fit-to-page clamps cards to the visible board; scroll mode lets the board
 		// grow downward without limit, so a card can be dragged/resized as far down
 		// as the pointer goes (the board height follows via updateBoardHeight).
@@ -681,11 +681,11 @@ export function enableDragResize(
  * In fit-to-page mode the board is locked to one screen, so skip the inline
  * min-height there — the CSS handles clipping instead. */
 export function updateBoardHeight(gridEl: HTMLElement): void {
-	if (gridEl.closest(".hearth-fit")) return;
+	if (gridEl.closest(".sbd-fit")) return;
 	let bottom = 0;
 	for (const child of Array.from(gridEl.children)) {
 		const el = child as HTMLElement;
-		if (!el.classList.contains("hearth-card")) continue;
+		if (!el.classList.contains("sbd-card")) continue;
 		bottom = Math.max(bottom, el.offsetTop + el.offsetHeight);
 	}
 	gridEl.style.minHeight = `${bottom + GRID_GAP}px`;
@@ -697,7 +697,7 @@ export function updateBoardHeight(gridEl: HTMLElement): void {
  *  notifications. Reads live DOM offsets so it works both at rest and while a
  *  card is being dragged (its inline position is already current). */
 export function applyEdgeMerging(gridEl: HTMLElement): void {
-	const cards = Array.from(gridEl.querySelectorAll<HTMLElement>(":scope > .hearth-card"));
+	const cards = Array.from(gridEl.querySelectorAll<HTMLElement>(":scope > .sbd-card"));
 	const MERGE_CLASSES = [
 		"merge-top", "merge-bottom", "merge-left", "merge-right",
 		"merge-tl", "merge-tr", "merge-bl", "merge-br",
@@ -791,14 +791,14 @@ export function applyEdgeMerging(gridEl: HTMLElement): void {
 }
 
 /** Fallback card corner radius (px), matching the `border-radius` fallback in
- *  styles.css, used when the board hasn't set --hearth-card-radius. */
+ *  styles.css, used when the board hasn't set --sbd-card-radius. */
 const CARD_RADIUS_FALLBACK = 14;
 
-/** Resolve the board's live corner radius (px) from the --hearth-card-radius
+/** Resolve the board's live corner radius (px) from the --sbd-card-radius
  *  CSS variable set by renderDashboard, so the frost mask rounds by exactly the
  *  same amount the cards do. Falls back to the design baseline if unset. */
 function resolveGridRadius(gridEl: HTMLElement): number {
-	const raw = getComputedStyle(gridEl).getPropertyValue("--hearth-card-radius");
+	const raw = getComputedStyle(gridEl).getPropertyValue("--sbd-card-radius");
 	const n = parseFloat(raw);
 	return Number.isFinite(n) && n >= 0 ? n : CARD_RADIUS_FALLBACK;
 }
@@ -828,23 +828,23 @@ function cardSilhouettePath(el: HTMLElement, radius: number): string {
 }
 
 /** Rebuild the shared frosted-glass blur layers behind the cards. See the
- *  .hearth-frost note in styles.css for why the blur is shared rather than
- *  per-card. One .hearth-frost layer is created per distinct resolved blur value
+ *  .sbd-frost note in styles.css for why the blur is shared rather than
+ *  per-card. One .sbd-frost layer is created per distinct resolved blur value
  *  (stashed on each card as data-blur), each masked — via an inline SVG built
  *  from the cards' live silhouettes — to the union of its cards. The blur is
  *  therefore computed once per value and shows only under the cards, so touching
  *  cards blur as one seamless surface while gaps stay sharp. */
 export function updateFrostLayers(gridEl: HTMLElement): void {
-	let root = gridEl.querySelector<HTMLElement>(":scope > .hearth-frost-root");
+	let root = gridEl.querySelector<HTMLElement>(":scope > .sbd-frost-root");
 	const cards = Array.from(
-		gridEl.querySelectorAll<HTMLElement>(":scope > .hearth-card.has-blur"),
+		gridEl.querySelectorAll<HTMLElement>(":scope > .sbd-card.has-blur"),
 	);
 	if (cards.length === 0) {
 		root?.remove();
 		return;
 	}
 	if (!root) {
-		root = gridEl.createDiv("hearth-frost-root");
+		root = gridEl.createDiv("sbd-frost-root");
 		// Paint behind every card by sitting first in the grid.
 		gridEl.prepend(root);
 	}
@@ -867,10 +867,10 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 	for (const [blur, group] of byBlur) {
 		seen.add(blur);
 		let layer = root.querySelector<HTMLElement>(
-			`:scope > .hearth-frost[data-blur="${blur}"]`,
+			`:scope > .sbd-frost[data-blur="${blur}"]`,
 		);
 		if (!layer) {
-			layer = root.createDiv("hearth-frost");
+			layer = root.createDiv("sbd-frost");
 			layer.dataset.blur = blur;
 		}
 		const filter = `blur(${blur}px)`;
@@ -888,7 +888,7 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 	}
 	// Drop layers for blur values that no longer have any cards.
 	for (const layer of Array.from(
-		root.querySelectorAll<HTMLElement>(":scope > .hearth-frost"),
+		root.querySelectorAll<HTMLElement>(":scope > .sbd-frost"),
 	)) {
 		if (!seen.has(layer.dataset.blur ?? "")) layer.remove();
 	}

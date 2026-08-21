@@ -78,14 +78,14 @@ export function renderDashboard(
 
 	renderToolbar(view, container);
 
-	const grid = container.createDiv("hearth-grid");
+	const grid = container.createDiv("sbd-grid");
 	grid.toggleClass("is-arranging", view.arrangeMode);
 	// Board-level defaults; per-card overrides are set in the render loop below.
 	grid.style.setProperty("--card-opacity", String(effectiveCardOpacity(s)));
 	// Board-wide corner radius (px). Every card reads this via CSS; the frost
 	// mask in grid.ts reads the resolved value back off the grid so its rounding
 	// matches. Merged-edge corners still flatten to 0 regardless (see styles.css).
-	grid.style.setProperty("--hearth-card-radius", `${effectiveCardRadius(s)}px`);
+	grid.style.setProperty("--sbd-card-radius", `${effectiveCardRadius(s)}px`);
 	grid.style.setProperty("--card-border-width", `${effectiveCardBorderWidth(s)}px`);
 	const fit = effectiveFitToPage(s);
 	// In fit-to-page mode the board is locked to one screen, so leave the
@@ -110,7 +110,7 @@ export function renderDashboard(
 	};
 
 	for (const card of cards) {
-		const el = grid.createDiv("hearth-card");
+		const el = grid.createDiv("sbd-card");
 		gridLayout.elements.set(card, el);
 		applyCardPosition(el, card);
 
@@ -133,7 +133,7 @@ export function renderDashboard(
 			);
 		}
 		// Cards whose resolved blur is > 0 feed the shared frost layer (see
-		// updateFrostLayers / the .hearth-frost note in styles.css). The value is
+		// updateFrostLayers / the .sbd-frost note in styles.css). The value is
 		// stashed on the element so the frost rebuild can group cards by blur
 		// without re-reading settings, and blur-off cards never enter a layer.
 		// A seamless card paints no surface of its own, so frosting the wallpaper
@@ -145,15 +145,15 @@ export function renderDashboard(
 			el.dataset.blur = String(cardBlur);
 		}
 
-		const head = el.createDiv("hearth-card-head");
+		const head = el.createDiv("sbd-card-head");
 		if (view.arrangeMode) {
 			renderCardControls(view, card, head, commit);
 		} else {
 			head.toggleClass("is-untitled", !(card.title ?? "").trim());
-			head.createDiv({ cls: "hearth-card-title", text: card.title ?? "" });
+			head.createDiv({ cls: "sbd-card-title", text: card.title ?? "" });
 		}
 
-		const body = el.createDiv("hearth-card-body");
+		const body = el.createDiv("sbd-card-body");
 		if (card.background) body.addClass("has-bg");
 		const redraw = mountCardBody(view, card, body, component, events);
 
@@ -253,7 +253,7 @@ function mountCardBody(
 			// fallback for an unknown kind, one level down: contain the failure
 			// to the one card and say so on its face, with the real error on the
 			// console for a bug report.
-			console.error(`Hearth: the ${card.kind} card failed to render`, err);
+			console.error(`Second Brain Dashboard: the ${card.kind} card failed to render`, err);
 			body.empty();
 			emptyState(body, "alert-triangle", t().cards.empty.renderFailed);
 		}
@@ -358,7 +358,7 @@ function renderCardControls(
 	head.addClass("is-editing");
 
 	const title = head.createEl("input", {
-		cls: "hearth-card-title-input",
+		cls: "sbd-card-title-input",
 		attr: { type: "text", placeholder: "Title", spellcheck: "false" },
 	});
 	title.value = card.title ?? "";
@@ -370,10 +370,10 @@ function renderCardControls(
 	title.addEventListener("change", commit);
 	title.addEventListener("blur", commit);
 
-	const actions = head.createDiv("hearth-card-actions");
+	const actions = head.createDiv("sbd-card-actions");
 
 	const settingsBtn = actions.createEl("button", {
-		cls: "hearth-card-action",
+		cls: "sbd-card-action",
 		attr: { "aria-label": t().dashboard.cardSettings },
 	});
 	setIcon(settingsBtn, "settings-2");
@@ -381,7 +381,7 @@ function renderCardControls(
 	settingsBtn.addEventListener("click", () => openCardSettings(view, card));
 
 	const remove = actions.createEl("button", {
-		cls: "hearth-card-action is-danger",
+		cls: "sbd-card-action is-danger",
 		attr: { "aria-label": t().dashboard.removeCard },
 	});
 	setIcon(remove, "trash-2");
@@ -430,18 +430,18 @@ function openCardSettings(view: HomeView, card: DashboardCard): void {
 }
 
 function renderToolbar(view: HomeView, container: HTMLElement): void {
-	const bar = container.createDiv("hearth-toolbar");
+	const bar = container.createDiv("sbd-toolbar");
 	// Track arrange mode so the toolbar can switch between its compact and full controls.
 	bar.toggleClass("is-arranging", view.arrangeMode);
 
 	if (view.arrangeMode) {
-		const add = bar.createEl("button", { cls: "hearth-tool-btn" });
-		setIcon(add.createSpan("hearth-tool-icon"), "plus");
-		add.createSpan({ cls: "hearth-tool-label", text: t().dashboard.addCard });
+		const add = bar.createEl("button", { cls: "sbd-tool-btn" });
+		setIcon(add.createSpan("sbd-tool-icon"), "plus");
+		add.createSpan({ cls: "sbd-tool-label", text: t().dashboard.addCard });
 		add.setAttribute("aria-label", t().dashboard.addCardAria);
 		add.addEventListener("click", () => {
 			openCardPicker(view.app, {
-				hearthVersion: view.plugin.manifest.version,
+				sbdVersion: view.plugin.manifest.version,
 				onChoose: (template) => {
 					const s = view.plugin.settings;
 					const card = cardFromTemplate(template);
@@ -463,10 +463,10 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 
 		// Same editor the dashboard switcher's right-click menu opens, surfaced
 		// here so arrange mode is a self-contained way to configure the board.
-		const dashSettings = bar.createEl("button", { cls: "hearth-tool-btn" });
-		setIcon(dashSettings.createSpan("hearth-tool-icon"), "settings-2");
+		const dashSettings = bar.createEl("button", { cls: "sbd-tool-btn" });
+		setIcon(dashSettings.createSpan("sbd-tool-icon"), "settings-2");
 		dashSettings.createSpan({
-			cls: "hearth-tool-label",
+			cls: "sbd-tool-label",
 			text: t().dashboard.dashboardSettings,
 		});
 		dashSettings.setAttribute("aria-label", t().dashboard.dashboardSettingsAria);
@@ -477,14 +477,14 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 		// Toggle the per-card headers (title input + actions) off so each
 		// card's full body is visible while arranging. Only available while
 		// arranging; the headers come back automatically when arranging ends.
-		const hideHdr = bar.createEl("button", { cls: "hearth-tool-btn" });
+		const hideHdr = bar.createEl("button", { cls: "sbd-tool-btn" });
 		hideHdr.toggleClass("is-active", view.hideHeaderInArrange);
 		setIcon(
-			hideHdr.createSpan("hearth-tool-icon"),
+			hideHdr.createSpan("sbd-tool-icon"),
 			view.hideHeaderInArrange ? "eye-off" : "eye",
 		);
 		hideHdr.createSpan({
-			cls: "hearth-tool-label",
+			cls: "sbd-tool-label",
 			text: view.hideHeaderInArrange
 				? t().dashboard.showTitles
 				: t().dashboard.hideTitles,
@@ -501,24 +501,24 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 		});
 	}
 
-	const arrangeZone = bar.createDiv("hearth-arrange-zone");
+	const arrangeZone = bar.createDiv("sbd-arrange-zone");
 	arrangeZone.toggleClass(
 		"is-auto-hide",
 		!view.arrangeMode &&
 			view.plugin.settings.arrangeButtonVisibility === "hover",
 	);
-	const arrange = arrangeZone.createEl("button", { cls: "hearth-tool-btn" });
+	const arrange = arrangeZone.createEl("button", { cls: "sbd-tool-btn" });
 	arrange.toggleClass("is-active", view.arrangeMode);
 	// Outside arrange mode keep it as a small, unobtrusive icon button; while
 	// arranging, show the labelled "Done arranging" action.
 	arrange.toggleClass("is-icon", !view.arrangeMode);
 	setIcon(
-		arrange.createSpan("hearth-tool-icon"),
+		arrange.createSpan("sbd-tool-icon"),
 		view.arrangeMode ? "check" : "move",
 	);
 	if (view.arrangeMode) {
 		arrange.createSpan({
-			cls: "hearth-tool-label",
+			cls: "sbd-tool-label",
 			text: t().dashboard.doneArranging,
 		});
 	}

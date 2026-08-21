@@ -1,7 +1,7 @@
 import { type Component, Platform, setIcon } from "obsidian";
 import type { HomeView } from "./view";
 import { SearchSection } from "./search";
-import { hearthIconIdFor } from "./icon";
+import { sbdIconIdFor } from "./icon";
 import { resolveIconId } from "./lucide";
 import {
 	effectiveHeaderAlign,
@@ -37,39 +37,39 @@ export function renderHeader(view: HomeView, container: HTMLElement, component: 
 	container.addClass(`is-title-align-${effectiveHeaderAlign(s)}`);
 	const spacingBelow = effectiveHeaderSpacingBelow(s);
 	if (spacingBelow !== undefined) {
-		container.style.setProperty("--hearth-header-spacing-below", `${spacingBelow}px`);
+		container.style.setProperty("--sbd-header-spacing-below", `${spacingBelow}px`);
 	}
 
 	if (effectiveShowTitle(s)) {
-		const titleRow = container.createDiv("hearth-title");
+		const titleRow = container.createDiv("sbd-title");
 		// Tint the crystal and/or title text with the theme's icon color per
 		// the themeColorTarget setting (see styles.css).
 		const target = s.themeColorTarget;
 		if (target === "icon" || target === "both") titleRow.addClass("is-icon-themed");
 		if (target === "title" || target === "both") titleRow.addClass("is-title-themed");
-		titleRow.style.setProperty("--hearth-title-scale", String(effectiveHeaderTitleScale(s)));
-		titleRow.style.setProperty("--hearth-logo-scale", String(effectiveHeaderLogoScale(s)));
+		titleRow.style.setProperty("--sbd-title-scale", String(effectiveHeaderTitleScale(s)));
+		titleRow.style.setProperty("--sbd-logo-scale", String(effectiveHeaderLogoScale(s)));
 		const marginTop = effectiveHeaderMarginTop(s);
 		if (marginTop !== undefined) {
-			titleRow.style.setProperty("--hearth-title-margin-top", `${marginTop}px`);
+			titleRow.style.setProperty("--sbd-title-margin-top", `${marginTop}px`);
 		}
 
 		// Three ways to mark the title, in order: a Lucide icon (global, or this
 		// board's override), a custom emoji/text logo shown verbatim, or the
-		// Hearth crystal as the fallback brand mark. An unknown Lucide id draws
+		// Second Brain Dashboard crystal as the fallback brand mark. An unknown Lucide id draws
 		// nothing, so it falls through rather than leaving an empty slot.
 		const logo = effectiveLogo(s).trim();
 		const lucideId = resolveIconId(effectiveLogoIcon(s));
 		if (lucideId) {
-			const logoEl = titleRow.createSpan({ cls: "hearth-logo hearth-logo-icon" });
+			const logoEl = titleRow.createSpan({ cls: "sbd-logo sbd-logo-icon" });
 			setIcon(logoEl, lucideId);
 		} else if (logo === "") {
-			const logoEl = titleRow.createSpan({ cls: "hearth-logo hearth-logo-icon" });
-			setIcon(logoEl, hearthIconIdFor(target));
+			const logoEl = titleRow.createSpan({ cls: "sbd-logo sbd-logo-icon" });
+			setIcon(logoEl, sbdIconIdFor(target));
 		} else {
-			titleRow.createSpan({ cls: "hearth-logo", text: logo });
+			titleRow.createSpan({ cls: "sbd-logo", text: logo });
 		}
-		titleRow.createSpan({ cls: "hearth-title-text", text: effectiveTitle(s) });
+		titleRow.createSpan({ cls: "sbd-title-text", text: effectiveTitle(s) });
 	}
 
 	if (!effectiveShowSearch(s)) return;
@@ -85,9 +85,9 @@ export function renderHeader(view: HomeView, container: HTMLElement, component: 
 	// The button is a sibling of the column (not inside the bar's row) so the
 	// filters span only the bar's width; the button sits flush beside the bar,
 	// not pushed down among the filter chips.
-	const searchWrap = container.createDiv("hearth-search-wrap");
-	const searchCol = searchWrap.createDiv("hearth-search-col");
-	const searchRow = searchCol.createDiv("hearth-search");
+	const searchWrap = container.createDiv("sbd-search-wrap");
+	const searchCol = searchWrap.createDiv("sbd-search-col");
+	const searchRow = searchCol.createDiv("sbd-search");
 	const bar = search.renderBar(searchRow);
 
 	if (s.showNewNoteButton && !mobileOnly) {
@@ -111,7 +111,7 @@ export function createSearchBarButton(
 
 /** Read the current query out of the search bar's input element. */
 function getSearchQuery(bar: HTMLElement): string {
-	return bar.querySelector<HTMLInputElement>(".hearth-search-input")?.value.trim() ?? "";
+	return bar.querySelector<HTMLInputElement>(".sbd-search-input")?.value.trim() ?? "";
 }
 
 /** Open a web search for the current query (or the engine's home page when
@@ -130,11 +130,11 @@ function searchOnline(bar: HTMLElement): void {
 /** The original New-note button: creates a new note on click. */
 function createNewNoteButton(view: HomeView): HTMLElement {
 	const btn = createEl("button", {
-		cls: "hearth-newnote",
+		cls: "sbd-newnote",
 		attr: { "aria-label": t().header.newNoteAria },
 	});
-	setIcon(btn.createSpan("hearth-newnote-icon"), "plus");
-	btn.createSpan({ cls: "hearth-newnote-label", text: t().header.newNote });
+	setIcon(btn.createSpan("sbd-newnote-icon"), "plus");
+	btn.createSpan({ cls: "sbd-newnote-label", text: t().header.newNote });
 	btn.addEventListener("click", () => {
 		void view.plugin.createNewNote(view);
 	});
@@ -144,11 +144,11 @@ function createNewNoteButton(view: HomeView): HTMLElement {
 /** The Search-online button: runs a web search for the current query. */
 function createSearchOnlineButton(bar: HTMLElement): HTMLElement {
 	const btn = createEl("button", {
-		cls: "hearth-newnote hearth-newnote-search",
+		cls: "sbd-newnote sbd-newnote-search",
 		attr: { "aria-label": t().header.searchOnlineAria },
 	});
-	setIcon(btn.createSpan("hearth-newnote-icon"), "globe");
-	btn.createSpan({ cls: "hearth-newnote-label", text: t().header.searchOnline });
+	setIcon(btn.createSpan("sbd-newnote-icon"), "globe");
+	btn.createSpan({ cls: "sbd-newnote-label", text: t().header.searchOnline });
 	btn.addEventListener("click", () => searchOnline(bar));
 	return btn;
 }

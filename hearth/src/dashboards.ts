@@ -27,7 +27,7 @@ import { configuredPlaces, renderSkySource } from "./placepicker";
 import { formatSkyValue, parseSkyValue } from "./sky";
 import { confirmAction } from "./ui";
 import type { WorkspacesInstance } from "./obsidian-ext";
-import { HearthTabbedModal, type HearthModalTab } from "./tabbedmodal";
+import { SbdTabbedModal, type SbdModalTab } from "./tabbedmodal";
 import { t } from "./i18n";
 
 /** A per-dashboard background's opacity and blur default to — and reset to —
@@ -49,15 +49,15 @@ export function renderDashboardSwitcher(
 	container: HTMLElement,
 ): void {
 	const s = view.plugin.settings;
-	const zone = container.createDiv("hearth-dash-switcher-zone");
+	const zone = container.createDiv("sbd-dash-switcher-zone");
 	zone.toggleClass("is-auto-hide", s.dashboardSwitcherVisibility === "hover");
-	const bar = zone.createDiv("hearth-dash-switcher");
+	const bar = zone.createDiv("sbd-dash-switcher");
 
 	s.dashboards.forEach((d, i) => {
 		const lucide = d.iconLucide?.trim();
 		const icon = d.icon?.trim();
 		const btn = bar.createEl("button", {
-			cls: "hearth-dash-btn",
+			cls: "sbd-dash-btn",
 		});
 		// An icon id that names nothing renderable falls through to the emoji or
 		// the number, so a mistyped id never leaves a blank switcher button.
@@ -103,7 +103,7 @@ export function renderDashboardSwitcher(
 	});
 
 	const add = bar.createEl("button", {
-		cls: "hearth-dash-btn hearth-dash-add",
+		cls: "sbd-dash-btn sbd-dash-add",
 		attr: { "aria-label": t().dashboards.newDashboard },
 	});
 	setIcon(add, "plus");
@@ -217,7 +217,7 @@ function showDashboardMenu(
  * Laid out as a tabbed modal (General / Layout / Style / Background) with a
  * persistent Done footer, mirroring the plugin settings pane so both configure
  * the same way. */
-class DashboardSettingsModal extends HearthTabbedModal {
+class DashboardSettingsModal extends SbdTabbedModal {
 	private view: HomeView;
 	private dash: Dashboard;
 
@@ -233,13 +233,13 @@ class DashboardSettingsModal extends HearthTabbedModal {
 
 	onOpen(): void {
 		this.titleEl.setText(t().dashboards.modal.title);
-		this.hearthRenderShell();
+		this.sbdRenderShell();
 	}
 
 	/** Rebuild the modal in place, keeping the active tab. Used by the override
 	 * toggles and background dropdown, which swap which controls are shown. */
 	private render(): void {
-		this.hearthRenderShell();
+		this.sbdRenderShell();
 	}
 
 	/** Persist and refresh the live view without closing the modal. */
@@ -248,11 +248,11 @@ class DashboardSettingsModal extends HearthTabbedModal {
 		this.view.render();
 	}
 
-	protected hearthTabStorageKey(): string {
-		return "hearth-dash-settings-tab";
+	protected sbdTabStorageKey(): string {
+		return "sbd-dash-settings-tab";
 	}
 
-	protected hearthTabs(): HearthModalTab[] {
+	protected sbdTabs(): SbdModalTab[] {
 		const tabs = t().dashboards.modal.tabs;
 		return [
 			{ id: "general", label: tabs.general, icon: "settings-2" },
@@ -263,7 +263,7 @@ class DashboardSettingsModal extends HearthTabbedModal {
 		];
 	}
 
-	protected hearthRenderBody(body: HTMLElement, tabId: string): void {
+	protected sbdRenderBody(body: HTMLElement, tabId: string): void {
 		switch (tabId) {
 			case "general":
 				this.generalSection(body);
@@ -284,7 +284,7 @@ class DashboardSettingsModal extends HearthTabbedModal {
 	}
 
 	/** Persistent footer shared by every tab: close the modal. */
-	protected hearthRenderFooter(footer: HTMLElement): void {
+	protected sbdRenderFooter(footer: HTMLElement): void {
 		new Setting(footer).addButton((b) =>
 			b
 				.setButtonText(t().dashboards.modal.done)

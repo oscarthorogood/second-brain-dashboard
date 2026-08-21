@@ -52,7 +52,7 @@ export function renderCalendar(
 		return;
 	}
 
-	const wrap = body.createDiv("hearth-calendar");
+	const wrap = body.createDiv("sbd-calendar");
 	// Activity counts are only needed for the heatmap tint.
 	const activity = cfg.heatmap ? activityByDay(view.app, cfg.heatmapMetric ?? "modified") : null;
 
@@ -109,16 +109,16 @@ function renderCalendarHead(
 	cursor: Moment,
 	handlers: { onPrev: () => void; onNext: () => void; onToday: () => void },
 ): void {
-	const head = wrap.createDiv("hearth-calendar-head");
-	const prev = head.createEl("button", { cls: "hearth-calendar-nav", attr: { "aria-label": t().cards.calendar.previousMonth } });
+	const head = wrap.createDiv("sbd-calendar-head");
+	const prev = head.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.previousMonth } });
 	setIcon(prev, "chevron-left");
 	prev.addEventListener("click", handlers.onPrev);
 
-	const label = head.createDiv({ cls: "hearth-calendar-label", text: cursor.format("MMMM YYYY") });
+	const label = head.createDiv({ cls: "sbd-calendar-label", text: cursor.format("MMMM YYYY") });
 	label.setAttribute("title", t().cards.calendar.backToToday);
 	label.addEventListener("click", handlers.onToday);
 
-	const next = head.createEl("button", { cls: "hearth-calendar-nav", attr: { "aria-label": t().cards.calendar.nextMonth } });
+	const next = head.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.nextMonth } });
 	setIcon(next, "chevron-right");
 	next.addEventListener("click", handlers.onNext);
 }
@@ -134,18 +134,18 @@ function renderCalendarGrid(
 	activity: Map<string, number> | null,
 	ics: IcsContext,
 ): void {
-	const grid = wrap.createDiv("hearth-calendar-grid");
+	const grid = wrap.createDiv("sbd-calendar-grid");
 	const startOfWeek = moment.localeData().firstDayOfWeek();
 	const weekNumbers = cfg.showWeekNumbers === true;
 	if (weekNumbers) {
 		// One extra leading column for the week number.
 		grid.addClass("has-week-numbers");
-		grid.createDiv({ cls: "hearth-calendar-dow hearth-calendar-wk", text: "wk" });
+		grid.createDiv({ cls: "sbd-calendar-dow sbd-calendar-wk", text: "wk" });
 	}
 
 	for (let i = 0; i < 7; i++) {
 		const dow = (startOfWeek + i) % 7;
-		grid.createDiv({ cls: "hearth-calendar-dow", text: moment().day(dow).format("dd") });
+		grid.createDiv({ cls: "sbd-calendar-dow", text: moment().day(dow).format("dd") });
 	}
 
 	const monthStart = cursor.clone().startOf("month");
@@ -166,7 +166,7 @@ function renderCalendarGrid(
 	for (let i = 0; i < totalCells; i++) {
 		const day = gridStart.clone().add(i, "days");
 		if (weekNumbers && i % 7 === 0) {
-			grid.createDiv({ cls: "hearth-calendar-wk", text: day.format("W") });
+			grid.createDiv({ cls: "sbd-calendar-wk", text: day.format("W") });
 		}
 		const dayKey = day.format("YYYY-MM-DD");
 		const path = options ? dailyNotePath(day, options) : null;
@@ -174,7 +174,7 @@ function renderCalendarGrid(
 		const isToday = dayKey === today;
 		const events = ics.on(dayKey);
 
-		const cell = grid.createDiv("hearth-calendar-day");
+		const cell = grid.createDiv("sbd-calendar-day");
 		cell.toggleClass("is-outside", day.month() !== cursor.month());
 		cell.toggleClass("is-today", isToday);
 		cell.toggleClass("has-note", file instanceof TFile);
@@ -184,15 +184,15 @@ function renderCalendarGrid(
 			cell.toggleClass("has-heat", count > 0);
 			cell.setAttribute("aria-label", t().cards.calendar.dayEdited(day.format("MMM D"), count));
 		}
-		cell.createDiv({ cls: "hearth-calendar-daynum", text: String(day.date()) });
+		cell.createDiv({ cls: "sbd-calendar-daynum", text: String(day.date()) });
 
 		// Markers row: the daily-note dot, then one coloured dot per external
 		// event (capped) so a busy day reads at a glance without overflowing.
 		if (file instanceof TFile || events.length) {
-			const dots = cell.createDiv("hearth-calendar-dots");
-			if (file instanceof TFile) dots.createDiv("hearth-calendar-dot");
+			const dots = cell.createDiv("sbd-calendar-dots");
+			if (file instanceof TFile) dots.createDiv("sbd-calendar-dot");
 			for (const ev of events.slice(0, 3)) {
-				const dot = dots.createDiv("hearth-calendar-evdot");
+				const dot = dots.createDiv("sbd-calendar-evdot");
 				dot.style.setProperty("--ev-color", ics.eventColor(ev));
 				// A finished task's dot fades, so a busy day still reads as
 				// "what's left" at a glance — the way TaskNotes shows it.
@@ -249,14 +249,14 @@ function renderCalendarAgenda(
 		}
 	}
 
-	const list = wrap.createDiv("hearth-agenda");
+	const list = wrap.createDiv("sbd-agenda");
 	let lastMonth = -1;
 	for (let i = 0; i < days; i++) {
 		const day = start.clone().add(i, "days");
 		const dayKey = day.format("YYYY-MM-DD");
 		// A light month separator whenever the agenda crosses into a new month.
 		if (day.month() !== lastMonth) {
-			list.createDiv({ cls: "hearth-agenda-month", text: day.format("MMMM YYYY") });
+			list.createDiv({ cls: "sbd-agenda-month", text: day.format("MMMM YYYY") });
 			lastMonth = day.month();
 		}
 
@@ -266,19 +266,19 @@ function renderCalendarAgenda(
 		const isToday = i === 0;
 		const events = ics.on(dayKey);
 
-		const row = list.createDiv("hearth-agenda-row");
+		const row = list.createDiv("sbd-agenda-row");
 		row.toggleClass("is-today", isToday);
 		row.toggleClass("has-note", hasNote);
 
-		const dateBox = row.createDiv("hearth-agenda-date");
-		dateBox.createDiv({ cls: "hearth-agenda-dow", text: day.format("ddd") });
-		dateBox.createDiv({ cls: "hearth-agenda-daynum", text: String(day.date()) });
+		const dateBox = row.createDiv("sbd-agenda-date");
+		dateBox.createDiv({ cls: "sbd-agenda-dow", text: day.format("ddd") });
+		dateBox.createDiv({ cls: "sbd-agenda-daynum", text: String(day.date()) });
 
-		const main = row.createDiv("hearth-agenda-main");
-		main.createDiv({ cls: "hearth-agenda-label", text: formatRelativeDate(dayKey) });
+		const main = row.createDiv("sbd-agenda-main");
+		main.createDiv({ cls: "sbd-agenda-label", text: formatRelativeDate(dayKey) });
 		// Faint "No note" hint only for truly empty days (no note, no events).
 		if (!hasNote && events.length === 0 && options) {
-			main.createDiv({ cls: "hearth-agenda-sub", text: t().cards.calendar.agendaNoNote });
+			main.createDiv({ cls: "sbd-agenda-sub", text: t().cards.calendar.agendaNoNote });
 		}
 
 		if (activity) {
@@ -287,7 +287,7 @@ function renderCalendarAgenda(
 			row.toggleClass("has-heat", count > 0);
 			row.setAttribute("aria-label", t().cards.calendar.dayEdited(day.format("MMM D"), count));
 		}
-		if (hasNote) row.createDiv("hearth-calendar-dot hearth-agenda-dot");
+		if (hasNote) row.createDiv("sbd-calendar-dot sbd-agenda-dot");
 
 		// The day header opens/creates the daily note (events are listed
 		// separately below, each clickable); with no daily notes it's inert.
@@ -302,7 +302,7 @@ function renderCalendarAgenda(
 		// External calendar events for the day, listed under its header. Each is
 		// clickable to view its details, so the day offers both note and events.
 		if (events.length) {
-			const evList = list.createDiv("hearth-agenda-events");
+			const evList = list.createDiv("sbd-agenda-events");
 			for (const ev of events) renderEventRow(view, evList, ev, day, ics);
 		}
 	}

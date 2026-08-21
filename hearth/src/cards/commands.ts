@@ -19,18 +19,18 @@ export function renderCommands(view: HomeView, card: DashboardCard, body: HTMLEl
 		return;
 	}
 
-	const grid = body.createDiv("hearth-links hearth-tiles-sized");
+	const grid = body.createDiv("sbd-links sbd-tiles-sized");
 	const baseTile = card.tileSize && card.tileSize > 0 ? card.tileSize : 90;
-	grid.style.setProperty("--hearth-tile", `${baseTile}px`);
-	if (view.arrangeMode) body.addClass("hearth-tiles-arrange");
+	grid.style.setProperty("--sbd-tile", `${baseTile}px`);
+	if (view.arrangeMode) body.addClass("sbd-tiles-arrange");
 	for (const cmd of commands) {
-		const tile = grid.createDiv("hearth-link-tile");
+		const tile = grid.createDiv("sbd-link-tile");
 		// A per-tile size overrides the card default: it drives the tile's own
-		// height/icon (via --hearth-tile) and, when larger than the base, makes
+		// height/icon (via --sbd-tile) and, when larger than the base, makes
 		// the tile span proportionally more grid columns so it's wider too.
 		applyTileSize(tile, cmd.sizeW, cmd.sizeH, cmd.size, baseTile, cmd.col, cmd.row);
 		applyTileVisual(view, tile, cmd.icon, "terminal-square");
-		tile.createDiv({ cls: "hearth-link-label", text: cmd.name || cmd.id });
+		tile.createDiv({ cls: "sbd-link-label", text: cmd.name || cmd.id });
 		const run = () => runCommand(view, cmd);
 		// In arrange mode, clicking a tile must NOT trigger its action.
 		if (!view.arrangeMode) {
@@ -100,7 +100,7 @@ export function commandsEditor(ctx: CardEditorContext, containerEl: HTMLElement)
 
 	commands.forEach((cmd, index) => {
 		const row = new Setting(containerEl)
-			.setClass("hearth-link-setting")
+			.setClass("sbd-link-setting")
 			.setName(cmd.name || cmd.id);
 		row.addText((txt) => {
 			txt
@@ -123,7 +123,7 @@ export function commandsEditor(ctx: CardEditorContext, containerEl: HTMLElement)
 					ctx.opts.save();
 				});
 			txt.inputEl.type = "number";
-			txt.inputEl.addClass("hearth-count-input");
+			txt.inputEl.addClass("sbd-count-input");
 			txt.inputEl.setAttribute(
 				"aria-label",
 				t().editors.commands.tileSizeAria,

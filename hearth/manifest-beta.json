@@ -1,6 +1,6 @@
 {
-	"id": "hearth",
-	"name": "Hearth",
+	"id": "second-brain-dashboard",
+	"name": "Second Brain Dashboard",
 	"version": "2.1.0-beta.1",
 	"minAppVersion": "1.8.7",
 	"description": "A beautiful, customizable home screen for your vault — search, dashboard, and launcher in one.",

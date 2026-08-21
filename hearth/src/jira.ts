@@ -500,13 +500,13 @@ export function renderJiraCard(
 ): void {
 	const config = card.jira ?? {};
 	const strings = t().cards.jira;
-	const wrap = body.createDiv("hearth-jira");
+	const wrap = body.createDiv("sbd-jira");
 	if (view.plugin.settings.disableExternalCalls) {
-		wrap.createDiv({ cls: "hearth-jira-state", text: strings.disabled });
+		wrap.createDiv({ cls: "sbd-jira-state", text: strings.disabled });
 		return;
 	}
 	if (!config.host?.trim() || !config.pat?.trim() || !config.filterId?.trim()) {
-		wrap.createDiv({ cls: "hearth-jira-state", text: strings.notConfigured });
+		wrap.createDiv({ cls: "sbd-jira-state", text: strings.notConfigured });
 		return;
 	}
 
@@ -540,8 +540,8 @@ export function renderJiraCard(
 		window.open(url.toString(), "_blank", "noopener");
 	};
 
-	const toolbar = wrap.createDiv("hearth-jira-toolbar");
-	const content = wrap.createDiv("hearth-jira-issues");
+	const toolbar = wrap.createDiv("sbd-jira-toolbar");
+	const content = wrap.createDiv("sbd-jira-issues");
 	let refreshButton: HTMLButtonElement | null = null;
 	let coordinator: JiraLoadCoordinator<{ force: boolean; refinedOnly: boolean }>;
 
@@ -554,7 +554,7 @@ export function renderJiraCard(
 		toolbar.empty();
 		const enabled = config.controls ?? JIRA_CONTROLS;
 		for (const control of enabled) {
-			const details = toolbar.createEl("details", { cls: "hearth-jira-filter" });
+			const details = toolbar.createEl("details", { cls: "sbd-jira-filter" });
 			const selected = selections[control] ?? [];
 			const summary = details.createEl("summary");
 			summary.setText(
@@ -562,9 +562,9 @@ export function renderJiraCard(
 					? strings.controlCount(controlLabel(control), selected.length)
 					: controlLabel(control),
 			);
-			const menu = details.createDiv("hearth-jira-filter-menu");
+			const menu = details.createDiv("sbd-jira-filter-menu");
 			const values = options[control];
-			const searchWrap = menu.createDiv("hearth-jira-filter-search");
+			const searchWrap = menu.createDiv("sbd-jira-filter-search");
 			const search = searchWrap.createEl("input", {
 				attr: {
 					"aria-label": strings.searchAria(controlLabel(control)),
@@ -574,13 +574,13 @@ export function renderJiraCard(
 			});
 			search.type = "search";
 			search.placeholder = strings.searchPlaceholder;
-			const optionList = menu.createDiv("hearth-jira-filter-options");
+			const optionList = menu.createDiv("sbd-jira-filter-options");
 			const paintOptions = (): void => {
 				optionList.empty();
 				const filtered = filterJiraOptions(values, search.value);
 				if (!filtered.length) {
 					optionList.createDiv({
-						cls: "hearth-jira-filter-empty",
+						cls: "sbd-jira-filter-empty",
 						text: values.length ? strings.noMatchingOptions : strings.noOptions,
 						attr: { role: "status" },
 					});
@@ -588,7 +588,7 @@ export function renderJiraCard(
 				}
 				for (const value of filtered) {
 					const label = optionList.createEl("label", {
-						cls: "hearth-jira-filter-option",
+						cls: "sbd-jira-filter-option",
 					});
 					const input = label.createEl("input");
 					input.type = "checkbox";
@@ -623,7 +623,7 @@ export function renderJiraCard(
 			paintOptions();
 		}
 		refreshButton = toolbar.createEl("button", {
-			cls: "hearth-jira-refresh",
+			cls: "sbd-jira-refresh",
 			attr: { "aria-label": strings.refresh },
 		});
 		setIcon(refreshButton, "refresh-cw");
@@ -637,35 +637,35 @@ export function renderJiraCard(
 		if (destroyed) return;
 		content.empty();
 		if (loading && !issues.length) {
-			content.createDiv({ cls: "hearth-jira-state", text: strings.loading });
+			content.createDiv({ cls: "sbd-jira-state", text: strings.loading });
 			return;
 		}
 		if (error && !issues.length) {
-			content.createDiv({ cls: "hearth-jira-state", text: strings.error });
+			content.createDiv({ cls: "sbd-jira-state", text: strings.error });
 			return;
 		}
 		if (!issues.length) {
-			content.createDiv({ cls: "hearth-jira-state", text: strings.empty });
+			content.createDiv({ cls: "sbd-jira-state", text: strings.empty });
 			return;
 		}
 		for (const issue of issues) {
-			const row = content.createEl("button", { cls: "hearth-jira-issue" });
+			const row = content.createEl("button", { cls: "sbd-jira-issue" });
 			row.addEventListener("click", () => openIssue(issue.key));
-			const type = row.createDiv("hearth-jira-type");
+			const type = row.createDiv("sbd-jira-type");
 			setIcon(type, "square-dashed");
 			type.setAttribute("aria-label", issue.fields.issuetype.name);
-			const main = row.createDiv("hearth-jira-main");
-			const meta = main.createDiv("hearth-jira-meta");
-			meta.createSpan({ cls: "hearth-jira-key", text: issue.key });
+			const main = row.createDiv("sbd-jira-main");
+			const meta = main.createDiv("sbd-jira-meta");
+			meta.createSpan({ cls: "sbd-jira-key", text: issue.key });
 			if (issue.fields.priority?.name) {
 				meta.createSpan({
-					cls: "hearth-jira-priority",
+					cls: "sbd-jira-priority",
 					text: issue.fields.priority.name,
 				});
 			}
-			main.createDiv({ cls: "hearth-jira-summary", text: issue.fields.summary });
+			main.createDiv({ cls: "sbd-jira-summary", text: issue.fields.summary });
 			row.createSpan({
-				cls: `hearth-jira-status ${statusClass(
+				cls: `sbd-jira-status ${statusClass(
 					issue.fields.status.statusCategory?.key,
 				)}`,
 				text: issue.fields.status.name,

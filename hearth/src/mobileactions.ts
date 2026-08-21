@@ -14,14 +14,14 @@ export function renderMobileActionBar(view: HomeView, parent: HTMLElement): void
 	const buttons = view.plugin.settings.mobileActionButtons;
 	if (buttons.length === 0) return;
 
-	const bar = parent.createDiv("hearth-mobile-actions");
+	const bar = parent.createDiv("sbd-mobile-actions");
 	for (const btn of buttons) {
 		const el = bar.createEl("button", {
-			cls: "hearth-mobile-action",
+			cls: "sbd-mobile-action",
 			attr: { "aria-label": btn.label || actionTarget(btn) },
 		});
-		setIcon(el.createSpan("hearth-mobile-action-icon"), btn.icon || "circle");
-		el.createSpan({ cls: "hearth-mobile-action-label", text: btn.label });
+		setIcon(el.createSpan("sbd-mobile-action-icon"), btn.icon || "circle");
+		el.createSpan({ cls: "sbd-mobile-action-label", text: btn.label });
 		el.addEventListener("click", () => runMobileAction(view, btn));
 	}
 }

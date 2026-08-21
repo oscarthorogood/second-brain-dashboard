@@ -20,7 +20,7 @@ export function renderHighlighted(
 	for (const [start, end] of matches) {
 		if (start >= text.length) break;
 		if (start > cursor) el.appendText(text.slice(cursor, start));
-		el.createEl("mark", { cls: "hearth-result-mark", text: text.slice(start, end) });
+		el.createEl("mark", { cls: "sbd-result-mark", text: text.slice(start, end) });
 		cursor = Math.min(end, text.length);
 	}
 	if (cursor < text.length) el.appendText(text.slice(cursor));
@@ -150,7 +150,7 @@ export class PromptModal extends Modal {
 				txt.inputEl.select();
 			}, 0);
 		});
-		field.settingEl.addClass("hearth-prompt-field");
+		field.settingEl.addClass("sbd-prompt-field");
 
 		new Setting(this.contentEl)
 			.addButton((b) => b.setButtonText(t().confirm.cancel).onClick(() => this.close()))

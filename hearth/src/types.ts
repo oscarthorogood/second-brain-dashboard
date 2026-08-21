@@ -139,7 +139,7 @@ export interface TemplaterConfig {
 	items?: TemplaterItem[];
 }
 
-/** The Tasks-plugin metadata Hearth's Kanban editor reads and writes on a card.
+/** The Tasks-plugin metadata Second Brain Dashboard's Kanban editor reads and writes on a card.
  * Dates are YYYY-MM-DD or ""; `priority` is a key ("highest".."lowest") or "";
  * `recurrence` is the raw text written after 🔁 (e.g. "every week") or "". */
 export interface TaskMeta {
@@ -213,7 +213,7 @@ export interface TaskValueMap {
 }
 
 /** One source a field reads. `source` is either `fm:<property>` for a
- * frontmatter property or `builtin:<id>` for something Hearth parses itself
+ * frontmatter property or `builtin:<id>` for something Second Brain Dashboard parses itself
  * (see `TASK_BUILTIN_SOURCES`). Every key with a value renders. */
 export interface TaskFieldKey {
 	source: string;
@@ -226,7 +226,7 @@ export interface TaskFieldKey {
 	/** Treat this key's value as a date: show it as a relative label
 	 * ("Tomorrow"), colour it by its relation to today, and edit it with a
 	 * calendar rather than a list. Implied for the built-in date sources; a
-	 * frontmatter property has to say so, since Hearth can't know a property
+	 * frontmatter property has to say so, since Second Brain Dashboard can't know a property
 	 * holds a date rather than text that looks like one. */
 	isDate?: boolean;
 }
@@ -260,12 +260,12 @@ export interface TasksConfig {
 	/** "checkbox" (default) scans plain Markdown `- [ ]` checkboxes anywhere
 	 * in scope. "tasknotes" reads frontmatter from the TaskNotes community
 	 * plugin's task notes instead, using the field-name mapping configured in
-	 * Settings → Hearth (TaskNotes has no stable public API to query, so this
+	 * Settings → Second Brain Dashboard (TaskNotes has no stable public API to query, so this
 	 * reads its files the same way TaskNotes itself does: frontmatter).
 	 * "kanban" reads a single Kanban-plugin board note, where each `##` heading
 	 * is a column and the checkbox items beneath it are that column's cards. */
 	source?: "checkbox" | "tasknotes" | "kanban";
-	/** Kanban source: path to the board note. When empty, Hearth auto-detects
+	/** Kanban source: path to the board note. When empty, Second Brain Dashboard auto-detects
 	 * the first note in scope whose frontmatter carries `kanban-plugin`. */
 	kanbanFile?: string;
 	/** Kanban source: when true, parse the Tasks-plugin emoji metadata written
@@ -329,14 +329,14 @@ export interface TasksConfig {
 	/** TaskNotes source: the status values counted as "complete" (case-insensitive).
 	 * When set and non-empty, a task is done when its status is in this list — so,
 	 * e.g., both "done" and "canceled" can be treated as complete. When unset, the
-	 * single global `taskNotesDoneValue` from Settings → Hearth is used. */
+	 * single global `taskNotesDoneValue` from Settings → Second Brain Dashboard is used. */
 	taskNotesDoneStatuses?: string[];
 	/** List layout: an active filter narrowing which tasks appear. Presets in the
 	 * filter modal are conveniences that fill in these concrete criteria; the
 	 * filter is "active" (and applied) when any field below is set. */
 	taskFilter?: TaskFilterConfig;
 	/** Give this card its own field list instead of following the global one
-	 * from Settings → Hearth → Integrations. Off by default: a card follows the
+	 * from Settings → Second Brain Dashboard → Integrations. Off by default: a card follows the
 	 * global list. Only consulted while the global `taskFieldsEnabled` master
 	 * switch is on. */
 	taskFieldsEnabled?: boolean;
@@ -733,7 +733,7 @@ export interface DatacoreConfig {
  * Per-card configuration for a "git" card, which shows the state of the vault's
  * repository and runs git operations through the obsidian-git community plugin.
  *
- * Hearth performs no git work of its own — every button is a call into that
+ * Second Brain Dashboard performs no git work of its own — every button is a call into that
  * plugin, so its remote, credentials and commit-message template all apply. See
  * `src/git.ts`. Only offered by the "Add card" picker when obsidian-git is
  * installed and enabled.
@@ -1032,7 +1032,7 @@ export interface PetConfig {
 
 /** A single button in the mobile action bar (shown under the search bar and
  * filters in Mobile mode). Like a launchpad tile, a button can run an Obsidian
- * command, open a vault note/file, or open a URL — chosen by `type`. Hearth's
+ * command, open a vault note/file, or open a URL — chosen by `type`. Second Brain Dashboard's
  * own defaults (new note, new drawing, record voice, open daily note) are
  * registered as ordinary commands too, so any button can be replaced with any
  * command from any plugin. */
@@ -1097,7 +1097,7 @@ export interface EmbedView {
 	imagePosition?: EmbedImagePosition;
 	/** Edit the embedded note's text in place instead of read-only (Markdown only). */
 	editable?: boolean;
-	/** Edit through Obsidian's own Live Preview editor rather than Hearth's plain
+	/** Edit through Obsidian's own Live Preview editor rather than Second Brain Dashboard's plain
 	 * raw-Markdown box. Only meaningful together with `editable`. */
 	livePreview?: boolean;
 }
@@ -1285,7 +1285,7 @@ export interface DashboardCard {
 	editable?: boolean;
 
 	/** kind === "embed" / "daily": when editing in place, use Obsidian's own
-	 * Live Preview editor (hosted in the card) instead of Hearth's plain
+	 * Live Preview editor (hosted in the card) instead of Second Brain Dashboard's plain
 	 * raw-Markdown box. Only meaningful together with `editable`. */
 	livePreview?: boolean;
 
@@ -1367,7 +1367,7 @@ export interface DashboardCard {
 	fh?: number;
 }
 
-/** Background mode for the home view. "default" uses Hearth's bundled
+/** Background mode for the home view. "default" uses Second Brain Dashboard's bundled
  * background (a curated image shipped with a release); "weather" paints the
  * live sky for a place (see sky.ts); the other kinds use the user's own
  * value. */
@@ -1380,14 +1380,14 @@ export type BackgroundKind =
 	| "weather";
 
 /** The flat backdrop low power mode paints instead of the wallpaper: a muted
- * grey-purple that sits close to Hearth's brand colour without any image
+ * grey-purple that sits close to Second Brain Dashboard's brand colour without any image
  * decode, opacity layer or blur behind it. */
 export const LOW_POWER_BACKGROUND = "#4a4459";
 
 /**
  * Where the background is painted.
  *
- * "full" is the classic Hearth board: the backdrop fills the whole view and the
+ * "full" is the classic Second Brain Dashboard board: the backdrop fills the whole view and the
  * cards float on top of it. "banner" turns the same backdrop into a strip
  * across the top of the content — a cover image, the way a note's banner works
  * — and leaves the rest of the board on the theme's own surface, so the cards
@@ -1475,7 +1475,7 @@ export interface DashboardHeaderConfig {
 	showTitle?: boolean;
 	/** Override the global title text for this dashboard. */
 	title?: string;
-	/** Override the global logo text/icon for this dashboard. Empty = Hearth icon. */
+	/** Override the global logo text/icon for this dashboard. Empty = Second Brain Dashboard icon. */
 	logo?: string;
 	/** Override the global title Lucide icon for this dashboard. A bare Lucide id
 	 * (`"flame"`), drawn instead of the logo text. An empty string is a real
@@ -1534,7 +1534,7 @@ export interface Dashboard extends BannerOverrides {
 	/** Name of a core-Workspace; loading that workspace auto-switches to this
 	 * dashboard (one-way, workspace → dashboard). Undefined = not linked. */
 	linkedWorkspace?: string;
-	/** Marks this board as the one to open on phones/tablets. When Hearth loads
+	/** Marks this board as the one to open on phones/tablets. When Second Brain Dashboard loads
 	 * on mobile it switches to the first dashboard with this flag, so a board
 	 * tuned for a small screen can be the mobile default without being the
 	 * desktop default. Undefined/false = not a mobile default. */
@@ -1544,9 +1544,9 @@ export interface Dashboard extends BannerOverrides {
 export type ChromeVisibility = "always" | "hover";
 
 /**
- * Where Hearth puts a note when you open one from the home view.
+ * Where Second Brain Dashboard puts a note when you open one from the home view.
  *
- * `"same"` reuses the tab Hearth itself is in, so the note replaces the home
+ * `"same"` reuses the tab Second Brain Dashboard itself is in, so the note replaces the home
  * view exactly like clicking a link inside a normal editor tab (#106). The
  * other three map straight onto Obsidian's own pane types — a new tab (the
  * historical behaviour, and still the default), a split beside the current
@@ -1565,7 +1565,7 @@ export const OPEN_IN_MODES: readonly OpenIn[] = ["tab", "same", "split", "window
  * - `search` — a result from the search bar or the Search card
  * - `card` — a note listed by a card (Recent, Bookmarks, Favourites, Calendar,
  *   Heatmap, Tasks) or by a mobile action button
- * - `newNote` — a note Hearth has just created (new note, daily note, event
+ * - `newNote` — a note Second Brain Dashboard has just created (new note, daily note, event
  *   note), which is opened for editing straight away
  */
 export type OpenSource = "link" | "search" | "card" | "newNote";
@@ -1578,17 +1578,17 @@ export const OPEN_SOURCES: readonly OpenSource[] = ["link", "search", "card", "n
 export type OpenInRule = OpenIn | "default";
 
 /**
- * What happens to a focused Hearth tab when a note is opened by something
- * Hearth doesn't control — the file explorer, the quick switcher, the graph, or
+ * What happens to a focused Second Brain Dashboard tab when a note is opened by something
+ * Second Brain Dashboard doesn't control — the file explorer, the quick switcher, the graph, or
  * a view embedded in a card that opens links itself (an embedded Bases table).
  *
- * Obsidian makes that call, not Hearth: it reuses the focused tab when the view
+ * Obsidian makes that call, not Second Brain Dashboard: it reuses the focused tab when the view
  * in it reports itself navigable, so this is expressed by flipping
  * `View.navigation` rather than by picking a leaf. Only two outcomes are
- * possible — Hearth is taken over (`"same"`) or it is left alone and the note
+ * possible — Second Brain Dashboard is taken over (`"same"`) or it is left alone and the note
  * goes to another tab (`"tab"`) — plus `"default"` to follow
  * {@link HomeSettings.openIn}, where anything but "same tab" counts as leaving
- * Hearth alone.
+ * Second Brain Dashboard alone.
  */
 export type OpenOutsideRule = "default" | "same" | "tab";
 
@@ -1603,11 +1603,11 @@ export interface HomeSettings {
 	logo: string;
 	/** A Lucide icon id drawn as the title icon instead of the emoji/text logo
 	 * (`"flame"`, `"layout-dashboard"`). Empty = fall back to {@link logo}, and
-	 * to the Hearth crystal when that is empty too. Each dashboard can override
+	 * to the Second Brain Dashboard crystal when that is empty too. Each dashboard can override
 	 * it — see {@link DashboardHeaderConfig.logoIcon}. */
 	logoIcon: string;
-	/** A Lucide icon id used for Hearth's tab header and ribbon button instead of
-	 * the Hearth crystal. Empty = the crystal. */
+	/** A Lucide icon id used for Second Brain Dashboard's tab header and ribbon button instead of
+	 * the Second Brain Dashboard crystal. Empty = the crystal. */
 	tabIcon: string;
 	/** What follows the theme's icon color: nothing (brand-purple crystal and
 	 * normal title text, the historical look), the crystal icon, the title
@@ -1623,9 +1623,9 @@ export interface HomeSettings {
 	newNoteButtonMode: "newNote" | "searchOnline";
 	/** Also search inside note bodies (full-text), not just names/tags/properties. */
 	searchContents: boolean;
-	/** Which engine powers the search bar: Hearth's built-in vault search, or the
+	/** Which engine powers the search bar: Second Brain Dashboard's built-in vault search, or the
 	 * Omnisearch community plugin (only usable when Omnisearch is installed and
-	 * enabled — Hearth falls back to the built-in engine otherwise). */
+	 * enabled — Second Brain Dashboard falls back to the built-in engine otherwise). */
 	searchEngine: "builtin" | "omnisearch";
 
 	// ---- Background ----
@@ -1654,7 +1654,7 @@ export interface HomeSettings {
 	openOnStartup: boolean;
 	replaceNewTabs: boolean;
 	/** Place keyboard focus in the search field whenever a home view opens, so a
-	 * new Hearth tab can be typed into straight away without reaching for the
+	 * new Second Brain Dashboard tab can be typed into straight away without reaching for the
 	 * mouse. Desktop only — auto-focusing on mobile would pop the on-screen
 	 * keyboard on every open. */
 	focusSearchOnOpen: boolean;
@@ -1672,21 +1672,21 @@ export interface HomeSettings {
 	showMobileActionBar: boolean;
 	/** Buttons shown in the mobile action bar. */
 	mobileActionButtons: MobileActionButton[];
-	/** Block all outbound network requests Hearth would otherwise make. The only
+	/** Block all outbound network requests Second Brain Dashboard would otherwise make. The only
 	 * requests are configured live-content cards (including Jira) and the
 	 * calculator's key-less, ECB-backed currency-rate fetch. */
 	disableExternalCalls: boolean;
 
 	// ---- Opening notes ----
-	/** Where every note Hearth opens goes by default (#106). `"tab"` is the
+	/** Where every note Second Brain Dashboard opens goes by default (#106). `"tab"` is the
 	 * historical behaviour. */
 	openIn: OpenIn;
 	/** Per-source exceptions to {@link openIn}. Every source defaults to
 	 * `"default"` (follow the global choice), so the single dropdown above is
 	 * enough for anyone who doesn't want the detail. */
 	openInOverrides: Record<OpenSource, OpenInRule>;
-	/** Whether a note opened from outside Hearth may take over a focused Hearth
-	 * tab. Defaults to `"same"` — the behaviour Hearth has had since #84, where
+	/** Whether a note opened from outside Second Brain Dashboard may take over a focused Second Brain Dashboard
+	 * tab. Defaults to `"same"` — the behaviour Second Brain Dashboard has had since #84, where
 	 * the dashboard acts like an ordinary tab and the file explorer's selection
 	 * tracks what you open. Deliberately *not* `"default"`: following the global
 	 * choice would flip this for everyone on upgrade. */
@@ -1774,7 +1774,7 @@ export interface HomeSettings {
 
 	// ---- File icons / Iconic / Iconize ----
 	/** Show the per-file icons set with the Iconic or Iconize community plugins
-	 * wherever Hearth draws a file icon, instead of Hearth's file-type icon.
+	 * wherever Second Brain Dashboard draws a file icon, instead of Second Brain Dashboard's file-type icon.
 	 * Harmless with neither plugin installed — there is simply nothing to read,
 	 * and every file keeps its type icon. */
 	customFileIcons: boolean;
@@ -1804,7 +1804,7 @@ export interface HomeSettings {
  *   (see `migrateSettings`): an existing dashboard must never be interrupted by
  *   a wizard offering to rebuild it.
  * - `skipped` — the wizard was offered and dismissed. Behaves like `done`, but
- *   is kept distinct so "Set up Hearth" in settings can still read as an
+ *   is kept distinct so "Set up Second Brain Dashboard" in settings can still read as an
  *   invitation rather than a redo.
  */
 export type SetupStatus = "pending" | "done" | "skipped";
@@ -1812,11 +1812,11 @@ export type SetupStatus = "pending" | "done" | "skipped";
 export const DEFAULT_SETTINGS: HomeSettings = {
 	title: "Obsidian",
 	showTitle: true,
-	// Empty => the Hearth crystal icon is shown as the brand mark.
+	// Empty => the Second Brain Dashboard crystal icon is shown as the brand mark.
 	logo: "",
 	// Empty => no Lucide title icon; the logo text (or the crystal) is drawn.
 	logoIcon: "",
-	// Empty => the Hearth crystal is the tab and ribbon icon.
+	// Empty => the Second Brain Dashboard crystal is the tab and ribbon icon.
 	tabIcon: "",
 	themeColorTarget: "none",
 	showSearch: true,
@@ -1833,7 +1833,7 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	 * the image is still recognizable, not a wash of colour. */
 	backgroundOpacity: 0.35,
 	backgroundBlur: 2,
-	/* The wallpaper board is what Hearth has always been, so it stays the
+	/* The wallpaper board is what Second Brain Dashboard has always been, so it stays the
 	 * default; the banner is a choice, not an upgrade. */
 	backgroundLayout: "full",
 	bannerHeight: BANNER_HEIGHT_DEFAULT,
@@ -1851,7 +1851,7 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	mobileActionButtons: [],
 	disableExternalCalls: false,
 
-	// A new tab is what Hearth has always done; existing vaults must not change
+	// A new tab is what Second Brain Dashboard has always done; existing vaults must not change
 	// behaviour on upgrade, so both the global default and every per-source rule
 	// start out as "open a new tab".
 	openIn: "tab",
@@ -1967,15 +1967,15 @@ function starterCards(): DashboardCard[] {
 	];
 }
 
-/** The mobile action bar's default buttons. Each `target` is a command Hearth
+/** The mobile action bar's default buttons. Each `target` is a command Second Brain Dashboard
  * registers itself, so replacing one via the command picker works exactly like
  * swapping in any other plugin's command. */
 export function defaultMobileActionButtons(): MobileActionButton[] {
 	return [
-		{ id: "action-new-note", label: "New note", icon: "plus", type: "command", target: "hearth:new-note" },
-		{ id: "action-new-drawing", label: "New drawing", icon: "pen-tool", type: "command", target: "hearth:new-drawing" },
-		{ id: "action-record-voice", label: "Record voice", icon: "mic", type: "command", target: "hearth:record-voice" },
-		{ id: "action-daily-note", label: "Daily note", icon: "calendar", type: "command", target: "hearth:open-daily-note" },
+		{ id: "action-new-note", label: "New note", icon: "plus", type: "command", target: "second-brain-dashboard:new-note" },
+		{ id: "action-new-drawing", label: "New drawing", icon: "pen-tool", type: "command", target: "second-brain-dashboard:new-drawing" },
+		{ id: "action-record-voice", label: "Record voice", icon: "mic", type: "command", target: "second-brain-dashboard:record-voice" },
+		{ id: "action-daily-note", label: "Daily note", icon: "calendar", type: "command", target: "second-brain-dashboard:open-daily-note" },
 	];
 }
 
@@ -2058,13 +2058,13 @@ export function effectiveTitle(s: HomeSettings): string {
 	return activeDashboard(s).header?.title ?? s.title;
 }
 
-/** Logo text for the active board's title/logo block. Empty = Hearth icon. */
+/** Logo text for the active board's title/logo block. Empty = Second Brain Dashboard icon. */
 export function effectiveLogo(s: HomeSettings): string {
 	return activeDashboard(s).header?.logo ?? s.logo;
 }
 
 /** Lucide title icon for the active board. Empty = none, so the logo text (or
- * the Hearth crystal) is drawn instead. A board's own empty string wins over a
+ * the Second Brain Dashboard crystal) is drawn instead. A board's own empty string wins over a
  * global icon: that is how a single board opts back out of it. */
 export function effectiveLogoIcon(s: HomeSettings): string {
 	return activeDashboard(s).header?.logoIcon ?? s.logoIcon;
@@ -2174,7 +2174,7 @@ export const CARD_BORDER_WIDTH_MAX = 8;
 
 /** Effective card corner radius (px) for the active board (per-dashboard
  * override or global), clamped to [0, CARD_RADIUS_MAX]. Applied board-wide via
- * the --hearth-card-radius CSS variable so every card (and the frost mask)
+ * the --sbd-card-radius CSS variable so every card (and the frost mask)
  * rounds by the same amount. */
 export function effectiveCardRadius(s: HomeSettings): number {
 	const v = activeDashboard(s).cardRadius ?? s.cardRadius;

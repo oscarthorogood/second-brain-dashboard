@@ -1,6 +1,6 @@
 # second-brain-dashboard
 
-This repo hosts the [Hearth](https://github.com/ondreu/Hearth) Obsidian plugin under [`hearth/`](hearth/). There is no code at the repo root — all source, build tooling, tests, and docs live inside `hearth/`.
+This repo hosts the Second Brain Dashboard Obsidian plugin under [`hearth/`](hearth/). There is no code at the repo root — all source, build tooling, tests, and docs live inside `hearth/`. `hearth/` was imported as a snapshot of the upstream [Hearth](https://github.com/ondreu/Hearth) project (no shared git history) and has since been renamed to Second Brain Dashboard.
 
 When working on the plugin itself, treat `hearth/` as the project root: run npm commands from inside it (`cd hearth && npm ci`), and follow `hearth/README.md`, `hearth/CONTRIBUTING.md`, and `hearth/RELEASING.md` for conventions.
 

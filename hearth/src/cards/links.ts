@@ -20,17 +20,17 @@ export function renderLinks(view: HomeView, card: DashboardCard, body: HTMLEleme
 		return;
 	}
 
-	const grid = body.createDiv("hearth-links hearth-tiles-sized");
+	const grid = body.createDiv("sbd-links sbd-tiles-sized");
 	const baseTile = card.tileSize && card.tileSize > 0 ? card.tileSize : 90;
-	grid.style.setProperty("--hearth-tile", `${baseTile}px`);
+	grid.style.setProperty("--sbd-tile", `${baseTile}px`);
 	// Flag the card body so CSS can disable the card drag overlay over tiles in
 	// arrange mode (tiles are self-contained widgets with their own resize).
-	if (view.arrangeMode) body.addClass("hearth-tiles-arrange");
+	if (view.arrangeMode) body.addClass("sbd-tiles-arrange");
 	for (const link of links) {
-		const tile = grid.createDiv("hearth-link-tile");
+		const tile = grid.createDiv("sbd-link-tile");
 		applyTileSize(tile, link.sizeW, link.sizeH, link.size, baseTile, link.col, link.row);
 		applyTileVisual(view, tile, link.icon, "link");
-		tile.createDiv({ cls: "hearth-link-label", text: link.label || link.target });
+		tile.createDiv({ cls: "sbd-link-label", text: link.label || link.target });
 		const open = () => openLink(view, link);
 		// In arrange mode, clicking a tile must NOT trigger its action — the
 		// click is almost always the tail end of a resize/drag gesture.
@@ -93,7 +93,7 @@ export function linksEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 		);
 
 	links.forEach((link, index) => {
-		const row = new Setting(containerEl).setClass("hearth-link-setting");
+		const row = new Setting(containerEl).setClass("sbd-link-setting");
 		row.addText((txt) =>
 			txt
 				.setPlaceholder(t().editors.links.labelPlaceholder)
