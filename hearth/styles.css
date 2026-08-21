@@ -1465,29 +1465,39 @@ body.theme-dark .sbd-view {
 	height: 100%;
 }
 
-/* Daily-note card: the "create today's note" prompt button. A translucent
- * glass pill — outlined in the accent colour rather than filled solid — so it
- * reads as part of the frosted surface instead of a flat, opaque UI control
- * dropped on top of it. Fills solid only on hover, as the one moment it's
- * meant to stand out. */
+/* Daily-note card: the "create today's note" prompt button. Sits at rest as
+ * pure frosted glass — a barely-there neutral border, no colour of its own —
+ * so it reads as a chip of the same surface as the card, not a UI control
+ * dropped on top of it. Accent colour only shows up once you interact with
+ * it: a tinted ring on hover, a solid fill plus a press-down on click, so the
+ * one moment it looks like "a button" is the moment you're using it as one. */
 .sbd-daily-create {
 	margin-top: 10px;
 	padding: 7px 18px;
 	border-radius: 999px;
-	border: 1px solid var(--interactive-accent);
-	background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	background: var(--sbd-card-surface, var(--background-secondary));
 	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.85rem;
 	font-weight: 500;
 	transition:
 		background 120ms ease,
-		color 120ms ease;
+		border-color 120ms ease,
+		color 120ms ease,
+		transform 80ms ease;
 }
 
 .sbd-daily-create:hover {
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 14%, var(--sbd-card-surface, var(--background-secondary)));
+}
+
+.sbd-daily-create:active {
 	background: var(--interactive-accent);
+	border-color: var(--interactive-accent);
 	color: var(--text-on-accent);
+	transform: scale(0.96);
 }
 
 /* A floating action button (e.g. the daily-note "open" button) pinned to the
@@ -1523,13 +1533,18 @@ body.theme-dark .sbd-view {
 	transition:
 		opacity 120ms ease,
 		color 120ms ease,
-		border-color 120ms ease;
+		border-color 120ms ease,
+		transform 80ms ease;
 }
 
 .sbd-open-btn:hover {
 	opacity: 1;
 	color: var(--interactive-accent);
 	border-color: var(--interactive-accent);
+}
+
+.sbd-open-btn:active {
+	transform: scale(0.9);
 }
 
 .sbd-open-btn .svg-icon {
@@ -1995,6 +2010,10 @@ body.theme-dark .sbd-view {
 	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
 
+.sbd-list-item:active {
+	background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+}
+
 .sbd-list-icon {
 	display: flex;
 	color: var(--text-muted);
@@ -2331,12 +2350,18 @@ body.theme-dark .sbd-view {
 	cursor: pointer;
 	transition:
 		border-color 120ms ease,
-		background 120ms ease;
+		background 120ms ease,
+		transform 80ms ease;
 }
 
 .sbd-fav-card:hover {
 	border-color: var(--interactive-accent);
 	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+}
+
+.sbd-fav-card:active {
+	background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+	transform: scale(0.98);
 }
 
 .sbd-fav-card.is-missing {
