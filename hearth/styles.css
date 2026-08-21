@@ -867,8 +867,11 @@ body.theme-dark .sbd-view {
 	/* --sbd-card-radius (px) is set per-board by renderDashboard; the 14px
 	 * fallback keeps the design baseline when it isn't set. */
 	border-radius: var(--sbd-card-radius, 14px);
+	/* A soft glass edge rather than a flat theme line: the border colour is
+	 * blended toward transparent so it reads as a highlight on the frosted
+	 * surface instead of a hard outline, in both light and dark themes. */
 	border: var(--card-border-width, 1px) solid
-		var(--background-modifier-border);
+		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 	/* --card-opacity (0..1) tints the card surface without dimming content.
 	 * Published as a variable so content INSIDE the card that has to paint its
 	 * own surface (a Bases table's sticky header, say) can reuse the exact same
@@ -881,8 +884,11 @@ body.theme-dark .sbd-view {
 	);
 	background: var(--sbd-card-surface);
 	/* Drop shadow via a variable so merged edges can drop it (see below) and
-	 * hover can lift it without re-declaring the whole shadow. */
-	--sbd-card-lift: var(--sbd-shadow-s);
+	 * hover can lift it without re-declaring the whole shadow. A thin inset
+	 * top highlight rides along on every card (merged edges zero it via
+	 * --sbd-card-lift the same as the drop shadow) for the glass bevel seen
+	 * where the frosted surface catches light along its top edge. */
+	--sbd-card-lift: var(--sbd-shadow-s), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 	box-shadow: var(--sbd-card-lift);
 	overflow: hidden;
 	transition:
@@ -952,7 +958,7 @@ body.theme-dark .sbd-view {
 }
 
 .sbd-card:hover {
-	--sbd-card-lift: var(--sbd-shadow-m);
+	--sbd-card-lift: var(--sbd-shadow-m), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 .sbd-card-head {
@@ -960,13 +966,18 @@ body.theme-dark .sbd-view {
 	align-items: center;
 	padding: 10px 14px;
 	border-bottom: var(--card-border-width, 1px) solid
-		var(--background-modifier-border);
+		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
 
+/* Small uppercase eyebrow label (e.g. "BUDGET USED") rather than a plain
+ * heading — the tracked-out caps read as a stat tile's label above the big
+ * value that fills the card body, matching the rest of the glass chrome. */
 .sbd-card-title {
 	font-weight: 600;
-	font-size: 0.9rem;
-	color: var(--text-normal);
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
 }
 
 /* Hidden via the .is-untitled class (set in dashboard.ts) instead of :has, which
