@@ -2128,77 +2128,67 @@ export function effectiveAutoRefreshMinutes(s: HomeSettings, minutes: number): n
 	return lowPowerActive(s) ? 0 : minutes;
 }
 
-/** Effective card surface opacity for the active board (per-dashboard override
- * or global). 0 = fully transparent, 1 = fully opaque. */
+/** The card's fixed glass identity (opacity, blur px, radius px, border px) —
+ * no longer configurable per-board or per-card. The dashboard always looks
+ * like frosted glass; a user (or a card) can no longer dial that down to
+ * Solid or Minimal. Low power mode still overrides opacity/blur, since that's
+ * a performance switch, not a styling choice. */
+export const FIXED_CARD_OPACITY = 0.5;
+export const FIXED_CARD_BLUR = 7;
+export const FIXED_CARD_BORDER_WIDTH = 1;
+
+/** Effective card surface opacity for the active board. 0 = fully
+ * transparent, 1 = fully opaque. */
 export function effectiveCardOpacity(s: HomeSettings): number {
 	// Low power: opaque cards. Translucency has to composite the card over the
 	// backdrop on every paint, and without the frost blur below it reads as a
 	// wash rather than glass.
-	if (lowPowerActive(s)) return 1;
-	const v = activeDashboard(s).cardOpacity ?? s.cardOpacity;
-	return typeof v === "number" && !Number.isNaN(v) ? Math.max(0, Math.min(1, v)) : 1;
+	return lowPowerActive(s) ? 1 : FIXED_CARD_OPACITY;
 }
 
-/** Resolve the per-card opacity override, falling back to the board/global
- * value from effectiveCardOpacity. */
-export function resolveCardOpacity(s: HomeSettings, card: DashboardCard): number {
-	if (lowPowerActive(s)) return 1;
-	const v = card.cardOpacity ?? effectiveCardOpacity(s);
-	return typeof v === "number" && !Number.isNaN(v) ? Math.max(0, Math.min(1, v)) : 1;
+/** Resolve the card opacity — same fixed value for every card; no per-card
+ * override. */
+export function resolveCardOpacity(s: HomeSettings, _card: DashboardCard): number {
+	return effectiveCardOpacity(s);
 }
 
-/** Effective card backdrop blur (px) for the active board (per-dashboard
- * override or global). 0 = no frosted-glass blur. Clamped to a sane range. */
+/** Effective card backdrop blur (px) for the active board. 0 = no
+ * frosted-glass blur. */
 export function effectiveCardBlur(s: HomeSettings): number {
 	// Low power: no frosted glass. Reporting 0 here (and in resolveCardBlur) is
 	// enough to switch it off wholesale — no card is marked .has-blur, so
 	// updateFrostLayers never builds a backdrop-filter layer or its SVG mask.
-	if (lowPowerActive(s)) return 0;
-	const v = activeDashboard(s).cardBlur ?? s.cardBlur;
-	return typeof v === "number" && !Number.isNaN(v) ? Math.max(0, Math.min(40, v)) : 0;
+	return lowPowerActive(s) ? 0 : FIXED_CARD_BLUR;
 }
 
-/** Resolve the per-card blur override (px), falling back to the board/global
- * value from effectiveCardBlur. */
-export function resolveCardBlur(s: HomeSettings, card: DashboardCard): number {
-	if (lowPowerActive(s)) return 0;
-	const v = card.cardBlur ?? effectiveCardBlur(s);
-	return typeof v === "number" && !Number.isNaN(v) ? Math.max(0, Math.min(40, v)) : 0;
+/** Resolve the card blur (px) — same fixed value for every card; no per-card
+ * override. */
+export function resolveCardBlur(s: HomeSettings, _card: DashboardCard): number {
+	return effectiveCardBlur(s);
 }
 
-/** The design baseline card corner radius (px). Also the maximum the setting
- * allows: rounding beyond this was never tuned for (merged-edge sharpening, the
- * frosted-glass mask, arrange outlines) so only sharper is offered. */
+/** The design baseline card corner radius (px) — also the fixed value now
+ * that rounding is no longer configurable (merged-edge sharpening and the
+ * frosted-glass mask were only ever tuned for this exact radius). */
 export const CARD_RADIUS_MAX = 14;
 export const CARD_BORDER_WIDTH_MAX = 8;
 
-/** Effective card corner radius (px) for the active board (per-dashboard
- * override or global), clamped to [0, CARD_RADIUS_MAX]. Applied board-wide via
- * the --sbd-card-radius CSS variable so every card (and the frost mask)
- * rounds by the same amount. */
-export function effectiveCardRadius(s: HomeSettings): number {
-	const v = activeDashboard(s).cardRadius ?? s.cardRadius;
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(0, Math.min(CARD_RADIUS_MAX, v))
-		: CARD_RADIUS_MAX;
+/** Effective card corner radius (px) — fixed at {@link CARD_RADIUS_MAX} for
+ * every board. Applied board-wide via the --sbd-card-radius CSS variable so
+ * every card (and the frost mask) rounds by the same amount. */
+export function effectiveCardRadius(_s: HomeSettings): number {
+	return CARD_RADIUS_MAX;
 }
 
-/** Effective card border width (px) for the active board (per-dashboard
- * override or global), clamped to [0, CARD_BORDER_WIDTH_MAX]. */
-export function effectiveCardBorderWidth(s: HomeSettings): number {
-	const v = activeDashboard(s).cardBorderWidth ?? s.cardBorderWidth;
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(0, Math.min(CARD_BORDER_WIDTH_MAX, Math.round(v)))
-		: 1;
+/** Effective card border width (px) — fixed for every board. */
+export function effectiveCardBorderWidth(_s: HomeSettings): number {
+	return FIXED_CARD_BORDER_WIDTH;
 }
 
-/** Resolve the per-card border width override (px), falling back to the
- * board/global value from effectiveCardBorderWidth. */
-export function resolveCardBorderWidth(s: HomeSettings, card: DashboardCard): number {
-	const v = card.cardBorderWidth;
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(0, Math.min(CARD_BORDER_WIDTH_MAX, Math.round(v)))
-		: effectiveCardBorderWidth(s);
+/** Resolve the card border width (px) — same fixed value for every card; no
+ * per-card override. */
+export function resolveCardBorderWidth(s: HomeSettings, _card: DashboardCard): number {
+	return effectiveCardBorderWidth(s);
 }
 
 /** Remove a card from whichever list holds it (a board or the pinned set). */

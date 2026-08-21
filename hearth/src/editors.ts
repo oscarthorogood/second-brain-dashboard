@@ -3,13 +3,7 @@ import { CARD_KINDS, cardDefinition } from "./cards";
 import { type CardEditorContext } from "./cards/definition";
 import { t } from "./i18n";
 import { SbdTabbedModal, type SbdModalTab } from "./tabbedmodal";
-import {
-	CARD_BORDER_WIDTH_MAX,
-	effectiveCardBorderWidth,
-	type CardKind,
-	type DashboardCard,
-	type HomeSettings,
-} from "./types";
+import { type CardKind, type DashboardCard, type HomeSettings } from "./types";
 import { confirmAction } from "./ui";
 
 
@@ -223,83 +217,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 				}),
 		);
 
-		const opacityRow = new Setting(containerEl)
-			.setName(t().editors.colors.cardOpacity)
-			.setDesc(t().editors.colors.cardOpacityDesc);
-		opacityRow.addSlider((sl) =>
-			sl
-				.setLimits(0, 1, 0.05)
-				.setValue(card.cardOpacity ?? 1)
-				.setDynamicTooltip()
-				.onChange((v) => {
-					card.cardOpacity = v;
-					this.opts.save();
-					this.opts.rerender();
-				}),
-		);
-		opacityRow.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(t().editors.colors.useDashboardDefault)
-				.onClick(() => {
-					card.cardOpacity = undefined;
-					this.opts.save();
-					this.opts.rerender();
-					this.render();
-				}),
-		);
-
-		const blurRow = new Setting(containerEl)
-			.setName(t().editors.colors.cardBlur)
-			.setDesc(t().editors.colors.cardBlurDesc);
-		blurRow.addSlider((sl) =>
-			sl
-				.setLimits(0, 24, 1)
-				.setValue(card.cardBlur ?? 0)
-				.setDynamicTooltip()
-				.onChange((v) => {
-					card.cardBlur = v;
-					this.opts.save();
-					this.opts.rerender();
-				}),
-		);
-		blurRow.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(t().editors.colors.useDashboardDefault)
-				.onClick(() => {
-					card.cardBlur = undefined;
-					this.opts.save();
-					this.opts.rerender();
-					this.render();
-				}),
-		);
-
-		const borderRow = new Setting(containerEl)
-			.setName(t().editors.colors.cardBorderWidth)
-			.setDesc(t().editors.colors.cardBorderWidthDesc);
-		borderRow.addSlider((sl) =>
-			sl
-				.setLimits(0, CARD_BORDER_WIDTH_MAX, 1)
-				.setValue(card.cardBorderWidth ?? effectiveCardBorderWidth(this.opts.settings))
-				.setDynamicTooltip()
-				.onChange((v) => {
-					card.cardBorderWidth = v;
-					this.opts.save();
-					this.opts.rerender();
-				}),
-		);
-		borderRow.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(t().editors.colors.useDashboardDefault)
-				.onClick(() => {
-					card.cardBorderWidth = undefined;
-					this.opts.save();
-					this.opts.rerender();
-					this.render();
-				}),
-		);
 	}
 
 	private sizeSection(containerEl: HTMLElement): void {

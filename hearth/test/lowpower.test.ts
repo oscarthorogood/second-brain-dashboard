@@ -142,7 +142,7 @@ describe("card surface under low power", () => {
 		expect(effectiveCardBlur(s)).toBe(7);
 	});
 
-	it("overrides per-dashboard and per-card values without losing them", () => {
+	it("ignores stale per-dashboard and per-card overrides — the glass identity is fixed, not configurable", () => {
 		const s = settings();
 		s.dashboards[0].cardOpacity = 0.2;
 		s.dashboards[0].cardBlur = 20;
@@ -155,10 +155,10 @@ describe("card surface under low power", () => {
 		expect(resolveCardBlur(s, c)).toBe(0);
 
 		s.lowPower = false;
-		expect(effectiveCardOpacity(s)).toBe(0.2);
-		expect(effectiveCardBlur(s)).toBe(20);
-		expect(resolveCardOpacity(s, c)).toBe(0.15);
-		expect(resolveCardBlur(s, c)).toBe(30);
+		expect(effectiveCardOpacity(s)).toBe(0.5);
+		expect(effectiveCardBlur(s)).toBe(7);
+		expect(resolveCardOpacity(s, c)).toBe(0.5);
+		expect(resolveCardBlur(s, c)).toBe(7);
 	});
 });
 
