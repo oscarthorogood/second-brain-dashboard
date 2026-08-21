@@ -69,7 +69,7 @@ export function renderRss(
 	});
 	let loading = false;
 
-	const wrap = body.createDiv("hearth-rss");
+	const wrap = body.createDiv("sbd-rss");
 
 	const sourceById = (id: string): RssSource | undefined =>
 		sources.find((s) => s.id === id);
@@ -97,12 +97,12 @@ export function renderRss(
 		item: RssItem,
 		badge: string,
 	): void => {
-		const row = container.createDiv("hearth-rss-item");
+		const row = container.createDiv("sbd-rss-item");
 		makeClickable(row, () => openItem(item), item.title || t().cards.rss.untitled);
 		row.addEventListener("click", () => openItem(item));
 
 		if (layout === "cards" && cfg.showImages !== false && item.image) {
-			const thumb = row.createDiv("hearth-rss-thumb");
+			const thumb = row.createDiv("sbd-rss-thumb");
 			const img = thumb.createEl("img");
 			img.setAttribute("src", item.image);
 			img.setAttribute("loading", "lazy");
@@ -111,13 +111,13 @@ export function renderRss(
 			img.addEventListener("error", () => thumb.remove());
 		}
 
-		const main = row.createDiv("hearth-rss-main");
+		const main = row.createDiv("sbd-rss-main");
 		main.createDiv({
-			cls: "hearth-rss-title",
+			cls: "sbd-rss-title",
 			text: item.title || t().cards.rss.untitled,
 		});
 		if (layout === "cards" && cfg.showExcerpt !== false && item.excerpt) {
-			main.createDiv({ cls: "hearth-rss-excerpt", text: item.excerpt });
+			main.createDiv({ cls: "sbd-rss-excerpt", text: item.excerpt });
 		}
 
 		const metaBits: string[] = [];
@@ -128,7 +128,7 @@ export function renderRss(
 			);
 		}
 		if (metaBits.length) {
-			main.createDiv({ cls: "hearth-rss-meta", text: metaBits.join(" · ") });
+			main.createDiv({ cls: "sbd-rss-meta", text: metaBits.join(" · ") });
 		}
 	};
 
@@ -170,12 +170,12 @@ export function renderRss(
 	const rebuild = (): void => {
 		wrap.empty();
 
-		const bar = wrap.createDiv("hearth-rss-tabs");
-		const tabsEl = bar.createDiv("hearth-rss-tablist");
+		const bar = wrap.createDiv("sbd-rss-tabs");
+		const tabsEl = bar.createDiv("sbd-rss-tablist");
 		if (tabs.length > 1) {
 			for (const tab of tabs) {
 				const btn = tabsEl.createEl("button", {
-					cls: "hearth-rss-tab",
+					cls: "sbd-rss-tab",
 					text: tabLabel(tab),
 				});
 				if (tab.id === activeId) btn.addClass("is-active");
@@ -187,14 +187,14 @@ export function renderRss(
 			}
 		}
 		const refresh = bar.createEl("button", {
-			cls: "hearth-rss-refresh",
+			cls: "sbd-rss-refresh",
 			attr: { "aria-label": t().cards.rss.refresh },
 		});
 		setIcon(refresh, "refresh-cw");
 		if (loading) refresh.addClass("is-loading");
 		refresh.addEventListener("click", () => load(true));
 
-		const content = wrap.createDiv(`hearth-rss-content hearth-rss-${layout}`);
+		const content = wrap.createDiv(`sbd-rss-content sbd-rss-${layout}`);
 		paint(content);
 	};
 
@@ -291,7 +291,7 @@ export function rssEditor(ctx: CardEditorContext, containerEl: HTMLElement): voi
 	new Setting(containerEl).setName(t().editors.rss.feeds).setHeading();
 
 	sources.forEach((source, index) => {
-		const row = new Setting(containerEl).setClass("hearth-rss-setting");
+		const row = new Setting(containerEl).setClass("sbd-rss-setting");
 		row.addText((txt) =>
 			txt
 				.setPlaceholder(t().editors.rss.namePlaceholder)
@@ -310,7 +310,7 @@ export function rssEditor(ctx: CardEditorContext, containerEl: HTMLElement): voi
 					ctx.opts.save();
 					ctx.opts.rerender();
 				});
-			txt.inputEl.addClass("hearth-rss-url");
+			txt.inputEl.addClass("sbd-rss-url");
 		});
 		row.addExtraButton((b) =>
 			b
@@ -477,7 +477,7 @@ export function githubFeedAdder(ctx: CardEditorContext, containerEl: HTMLElement
 	const setting = new Setting(containerEl)
 		.setName(t().editors.rss.github)
 		.setDesc(t().editors.rss.githubDesc)
-		.setClass("hearth-rss-github");
+		.setClass("sbd-rss-github");
 
 	setting.addText((txt) => {
 		txt
@@ -486,7 +486,7 @@ export function githubFeedAdder(ctx: CardEditorContext, containerEl: HTMLElement
 			.onChange((v) => {
 				ctx.session.ghRepo = v;
 			});
-		txt.inputEl.addClass("hearth-rss-github-repo");
+		txt.inputEl.addClass("sbd-rss-github-repo");
 	});
 
 	setting.addDropdown((d) => {

@@ -1,4 +1,4 @@
-# Releasing Hearth
+# Releasing Second Brain Dashboard
 
 Releases are cut **exclusively by the
 [`Release Obsidian plugin`](.github/workflows/release.yml) workflow**, which
@@ -34,7 +34,7 @@ the community store never touches. CI enforces this: a non-`x.y.z` version in
 
 ## Release cadence: a train, not a freeze
 
-Hearth releases run as a **train**. `main` never freezes:
+Second Brain Dashboard releases run as a **train**. `main` never freezes:
 
 1. Work lands on `main` and is tested there commit by commit.
 2. When a version's worth of work is ready, **cut a beta snapshot** of `main`

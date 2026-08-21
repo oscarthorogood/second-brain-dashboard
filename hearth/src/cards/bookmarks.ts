@@ -63,7 +63,7 @@ export function renderBookmarks(view: HomeView, body: HTMLElement): void {
 		return;
 	}
 
-	renderBookmarkItems(view, body.createDiv("hearth-list"), tree);
+	renderBookmarkItems(view, body.createDiv("sbd-list"), tree);
 }
 
 
@@ -92,13 +92,13 @@ function renderBookmarkGroup(
 	group: BookmarkItem,
 ): void {
 	const label = group.title || t().cards.bookmarks.untitled;
-	const wrap = container.createDiv("hearth-bookmark-group");
-	const header = wrap.createDiv("hearth-list-item hearth-bookmark-group-header");
-	setIcon(header.createDiv("hearth-list-icon hearth-bookmark-chevron"), "chevron-right");
-	setIcon(header.createDiv("hearth-list-icon"), "folder");
-	header.createDiv({ cls: "hearth-list-label", text: label });
+	const wrap = container.createDiv("sbd-bookmark-group");
+	const header = wrap.createDiv("sbd-list-item sbd-bookmark-group-header");
+	setIcon(header.createDiv("sbd-list-icon sbd-bookmark-chevron"), "chevron-right");
+	setIcon(header.createDiv("sbd-list-icon"), "folder");
+	header.createDiv({ cls: "sbd-list-label", text: label });
 
-	const children = wrap.createDiv("hearth-bookmark-group-children");
+	const children = wrap.createDiv("sbd-bookmark-group-children");
 	renderBookmarkItems(view, children, group.items ?? []);
 
 	const toggle = () => wrap.classList.toggle("is-collapsed");
@@ -131,8 +131,8 @@ function renderBookmarkLeaf(
 		item.url ||
 		item.query ||
 		t().cards.bookmarks.untitled;
-	const row = container.createDiv("hearth-list-item");
-	const iconEl = row.createDiv("hearth-list-icon");
+	const row = container.createDiv("sbd-list-item");
+	const iconEl = row.createDiv("sbd-list-icon");
 	// A bookmark that points at a vault file or folder gets that target's icon —
 	// its Iconize/Iconic icon when one is set, otherwise its file-type icon — so
 	// the same note looks the same here as in Recent or Favorites (#132). Every
@@ -153,7 +153,7 @@ function renderBookmarkLeaf(
 			item.type === "graph" ? "git-fork" : "file-text";
 		setIcon(iconEl, icon);
 	}
-	row.createDiv({ cls: "hearth-list-label", text: label });
+	row.createDiv({ cls: "sbd-list-label", text: label });
 	const open = () => openBookmark(view, item);
 	row.addEventListener("click", open);
 	makeClickable(row, open, label);
@@ -170,7 +170,7 @@ function renderFavicon(iconEl: HTMLElement, url: string): void {
 		setIcon(iconEl, "globe");
 		return;
 	}
-	const img = iconEl.createEl("img", { cls: "hearth-favicon" });
+	const img = iconEl.createEl("img", { cls: "sbd-favicon" });
 	img.setAttribute("loading", "lazy");
 	img.setAttribute("referrerpolicy", "no-referrer");
 	img.addEventListener("error", () => {

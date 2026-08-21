@@ -1,4 +1,4 @@
-name: Hearth CI
+name: Second Brain Dashboard CI
 
 on:
     push:

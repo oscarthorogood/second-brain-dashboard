@@ -3,10 +3,10 @@ import { HomeView, VIEW_TYPE_HOME } from "./view";
 import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings } from "./types";
 import { HomeSettingTab } from "./settings";
 import {
-	HEARTH_ICON_ID,
-	HEARTH_ICON_SVG,
-	HEARTH_ICON_THEMED_ID,
-	HEARTH_ICON_THEMED_SVG,
+	SBD_ICON_ID,
+	SBD_ICON_SVG,
+	SBD_ICON_THEMED_ID,
+	SBD_ICON_THEMED_SVG,
 	tabIconIdFor,
 } from "./icon";
 import type { WorkspacesInstance } from "./obsidian-ext";
@@ -20,7 +20,7 @@ import { clearContentSearchCache } from "./query";
 /** Core "Audio recorder" plugin id, used by the "Record voice" mobile action. */
 const AUDIO_RECORDER_PLUGIN_ID = "audio-recorder";
 
-export default class HearthPlugin extends Plugin {
+export default class SbdPlugin extends Plugin {
 	settings: HomeSettings;
 	/** True when this load had no persisted data at all (a brand-new install),
 	 * as opposed to an existing vault that simply predates a given setting.
@@ -54,7 +54,7 @@ export default class HearthPlugin extends Plugin {
 		// warns once #52 is closed out.
 		const proc = (window as unknown as { process?: { versions?: Record<string, string>; arch?: string } }).process;
 		console.warn(
-			`Hearth ${this.manifest.version} loaded (Obsidian API ${apiVersion}, ` +
+			`Second Brain Dashboard ${this.manifest.version} loaded (Obsidian API ${apiVersion}, ` +
 				`electron ${proc?.versions?.electron ?? "n/a"}, arch ${proc?.arch ?? "n/a"})`,
 		);
 
@@ -64,11 +64,11 @@ export default class HearthPlugin extends Plugin {
 
 		await this.loadSettings();
 
-		// Register both Hearth crystals (brand purple and themeable) so either
+		// Register both Second Brain Dashboard crystals (brand purple and themeable) so either
 		// can be used as the ribbon, tab and header icon per the
 		// themeColorTarget setting.
-		addIcon(HEARTH_ICON_ID, HEARTH_ICON_SVG);
-		addIcon(HEARTH_ICON_THEMED_ID, HEARTH_ICON_THEMED_SVG);
+		addIcon(SBD_ICON_ID, SBD_ICON_SVG);
+		addIcon(SBD_ICON_THEMED_ID, SBD_ICON_THEMED_SVG);
 
 		this.registerView(VIEW_TYPE_HOME, (leaf) => new HomeView(leaf, this));
 
@@ -272,7 +272,7 @@ export default class HearthPlugin extends Plugin {
 
 	/** Create a new note in the user's configured default location and open it.
 	 * `from` is the view the "New note" button was pressed in, so the note can
-	 * replace that Hearth tab when the user asked for "same tab" (#106); the
+	 * replace that Second Brain Dashboard tab when the user asked for "same tab" (#106); the
 	 * command palette has no view and falls back to the active leaf. */
 	async createNewNote(from?: HomeView) {
 		try {
@@ -290,7 +290,7 @@ export default class HearthPlugin extends Plugin {
 			// Fall back to the core command if the internal API shape changes.
 			if (!this.app.commands.executeCommandById("file-explorer:new-file")) {
 				new Notice(t().notices.couldNotCreateNote);
-				console.error("Hearth new note error", err);
+				console.error("Second Brain Dashboard new note error", err);
 			}
 		}
 	}
@@ -372,7 +372,7 @@ export default class HearthPlugin extends Plugin {
 		this.refreshViews();
 	}
 
-	/** The mark Hearth wears in the ribbon and on its tab: the user's Lucide tab
+	/** The mark Second Brain Dashboard wears in the ribbon and on its tab: the user's Lucide tab
 	 * icon, or the brand/themed crystal. */
 	private brandIconId(): string {
 		return tabIconIdFor(this.settings.themeColorTarget, this.settings.tabIcon);
@@ -419,7 +419,7 @@ export default class HearthPlugin extends Plugin {
 		if (!this.settings.liveRefresh) return;
 		// Low power mode suppresses it without clearing the setting: a full board
 		// rebuild on every burst of vault writes is the most expensive thing
-		// Hearth does off its own render path. Views still refresh when their tab
+		// Second Brain Dashboard does off its own render path. Views still refresh when their tab
 		// is focused again, so nothing goes permanently stale.
 		if (lowPowerActive(this.settings)) return;
 		this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME).forEach((leaf) => {

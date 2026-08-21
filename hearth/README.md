@@ -1,13 +1,11 @@
-# Hearth — a home screen for Obsidian
+# Second Brain Dashboard — a home screen for Obsidian
 
-[![Build](https://img.shields.io/github/actions/workflow/status/ondreu/Hearth/ci.yml?branch=main&label=build)](https://github.com/ondreu/Hearth/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/ondreu/Hearth?sort=semver)](https://github.com/ondreu/Hearth/releases/latest)
-[![Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json&query=%24.hearth.downloads&label=downloads)](https://obsidian.md/plugins?id=hearth)
-[![License](https://img.shields.io/github/license/ondreu/Hearth)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/oscarthorogood/second-brain-dashboard/lint.yml?branch=main&label=build)](https://github.com/oscarthorogood/second-brain-dashboard/actions/workflows/lint.yml)
+[![License](https://img.shields.io/github/license/oscarthorogood/second-brain-dashboard)](LICENSE)
 
-![Hearth — customizable Obsidian dashboard, search and launcher](assets/2.png)
+![Second Brain Dashboard — customizable Obsidian dashboard, search and launcher](assets/2.png)
 
-**Hearth turns your Obsidian vault into a welcoming front page.** A fast fuzzy
+**Second Brain Dashboard turns your Obsidian vault into a welcoming front page.** A fast fuzzy
 search bar, quick file-type filters, and a freely arrangeable grid of live
 widgets — notes, tasks, kanban boards, calendars, web pages, stats, clocks and
 launchers — on desktop and mobile.
@@ -28,7 +26,7 @@ Think of it as a new-tab dashboard, start page and command launcher in one.
 | ![Full dashboard](assets/Full_Dash.png) | ![Search-only launcher](assets/Just_search.png) |
 | ![Dashboard variant](assets/Full_Dash2.png) | ![Card gallery](assets/cards.png) |
 
-<img src="assets/mobile.png" width="280" alt="Hearth on mobile" />
+<img src="assets/mobile.png" width="280" alt="Second Brain Dashboard on mobile" />
 
 ## Disclaimer
 
@@ -38,11 +36,11 @@ All PR are tested in testing vault by human before merging, and all releases are
 
 ## Quick start
 
-1. Install **Hearth** from Obsidian's community plugin browser — or drop
+1. Install **Second Brain Dashboard** from Obsidian's community plugin browser — or drop
    `main.js`, `manifest.json` and `styles.css` into
-   `<vault>/.obsidian/plugins/hearth/` and enable it.
-2. Hearth opens on startup and replaces empty new tabs (both toggleable in
-   **Settings → Hearth**).
+   `<vault>/.obsidian/plugins/second-brain-dashboard/` and enable it.
+2. Second Brain Dashboard opens on startup and replaces empty new tabs (both toggleable in
+   **Settings → Second Brain Dashboard**).
 3. Open it any time from the ribbon **home** icon or the **Open home
    dashboard** command.
 4. Hit **Arrange** (top-right) to add, move, resize and configure cards right
@@ -50,27 +48,27 @@ All PR are tested in testing vault by human before merging, and all releases are
 
 ## Setup wizard
 
-On a fresh install Hearth offers to build your first dashboard for you. It asks
+On a fresh install Second Brain Dashboard offers to build your first dashboard for you. It asks
 a handful of questions — a title, a look, what you use your vault for — and lays
 out a board from the answers rather than dropping you on a generic starter grid.
 
 It also **looks at what you already have**. Every supported plugin that is
 installed and enabled is offered with the one thing accepting it will do:
 
-| Found | What Hearth does with it |
+| Found | What Second Brain Dashboard does with it |
 | --- | --- |
 | **TaskNotes** | Adds a Tasks card on the TaskNotes source, using TaskNotes' *own* field names and completed statuses |
 | **Kanban** | Adds a Tasks card showing your board as draggable columns |
 | **Dataview** / **Datacore** | Adds a card, seeded with an editable query |
 | **Templater** | Adds a launchpad with a button per template you already have |
 | **Git** | Adds a Git card with status, commit and sync |
-| **Omnisearch** | Makes it the engine behind Hearth's search bar |
+| **Omnisearch** | Makes it the engine behind Second Brain Dashboard's search bar |
 | **Iconic** / **Iconize** | Shows the file icons you already set |
 | **Bases** | Embeds a base from your vault |
 | **Daily notes** / **Bookmarks** | Adds the matching card |
 
 The TaskNotes case is the one worth calling out: its field names are
-user-remappable and its statuses user-defined, so Hearth reads them from the
+user-remappable and its statuses user-defined, so Second Brain Dashboard reads them from the
 plugin and copies them across. A vault that renamed `due` to `deadline` gets a
 Tasks card that works on its first render.
 
@@ -78,8 +76,8 @@ The last step previews the board — a scale drawing plus a list of every card a
 why it's there — before anything is written. Nothing is applied until you press
 **Build my dashboard**.
 
-You can run it again any time from **Settings → Hearth → About → Build a
-dashboard**, or the **Set up Hearth** command. Run that way it *always* adds a
+You can run it again any time from **Settings → Second Brain Dashboard → About → Build a
+dashboard**, or the **Set up Second Brain Dashboard** command. Run that way it *always* adds a
 new dashboard: every board you already have is left exactly as it is.
 
 ## Search
@@ -284,11 +282,11 @@ calls**.
 - **Card corner radius** — from the default 14 px down to sharp 0 px.
 - **Per-card colors** — an accent and a background tint for any card.
 - **Title, logo and compact spacing** for the dashboard header.
-- **Lucide icons** — pick any icon from the Lucide set for Hearth's **tab and
+- **Lucide icons** — pick any icon from the Lucide set for Second Brain Dashboard's **tab and
   ribbon** button and for the **title** beside the board's heading, searched
   from a picker rather than typed from memory. Each dashboard can override the
   title icon, so one board can show a flame and the next a rocket; leave a field
-  empty and the Hearth crystal (or your emoji logo) stays as it was.
+  empty and the Second Brain Dashboard crystal (or your emoji logo) stays as it was.
 
 ## Mobile
 
@@ -301,7 +299,7 @@ calls**.
 
 ## Settings
 
-Everything lives under **Settings → Hearth**, grouped by a category ribbon:
+Everything lives under **Settings → Second Brain Dashboard**, grouped by a category ribbon:
 **Appearance**, **Search**, **Dashboard**, **Behaviour** (startup, new tabs,
 where notes open, mobile, privacy), **Integrations**, **Backup** and **About**.
 Per-card settings are edited from the card itself in arrange mode.
@@ -326,7 +324,7 @@ npm run typecheck
 ```
 
 To test in a vault, symlink or copy `main.js`, `manifest.json` and `styles.css`
-into `<vault>/.obsidian/plugins/hearth/`.
+into `<vault>/.obsidian/plugins/second-brain-dashboard/`.
 
 **Translations** — user-facing strings live in [`src/locales/`](src/locales/).
 English (`en.ts`) is the source of truth; copy it, translate the values and
@@ -334,7 +332,7 @@ register the file. See [`src/locales/README.md`](src/locales/README.md).
 
 ## Contributing
 
-Hearth moves fast, so the most valuable contributions right now are **bug
+Second Brain Dashboard moves fast, so the most valuable contributions right now are **bug
 reports**, **feature ideas** and **translations**. Small, obvious fixes are
 always welcome; for anything larger, please open an issue first — big PRs
 against a fast-moving codebase tend to go stale. See
@@ -342,7 +340,7 @@ against a fast-moving codebase tend to go stale. See
 
 ## Support
 
-Hearth is free and open source. If it's earned a place on your vault's front
+Second Brain Dashboard is free and open source. If it's earned a place on your vault's front
 page, you can buy me a coffee — it genuinely helps keep the updates coming.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B7K822EW68)

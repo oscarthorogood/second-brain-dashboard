@@ -20,14 +20,14 @@
 export const CARD_REQUEST_EMAIL = "ondrej.uhnavy@proton.me";
 
 /** GitHub's issue-form endpoint, and the form the request opens. */
-const GITHUB_NEW_ISSUE_URL = "https://github.com/ondreu/hearth/issues/new";
+const GITHUB_NEW_ISSUE_URL = "https://github.com/oscarthorogood/second-brain-dashboard/issues/new";
 const FEATURE_REQUEST_FORM = "feature_request.yml";
 
 /** Everything the templates stamp into a request so the maintainer doesn't have
  * to ask "which version, on what?" first. */
 export interface CardRequestContext {
-	/** The running Hearth version, from the plugin manifest. */
-	hearthVersion: string;
+	/** The running Second Brain Dashboard version, from the plugin manifest. */
+	sbdVersion: string;
 	/** Obsidian's `apiVersion`. */
 	obsidianVersion: string;
 	/** "Desktop" / "Mobile" — enough to tell whether a card idea is even
@@ -63,7 +63,7 @@ const IDEA_PROMPT = [
 /** The environment footer both templates end with. */
 function environmentLines(ctx: CardRequestContext): string {
 	return [
-		`Hearth ${ctx.hearthVersion}`,
+		`Second Brain Dashboard ${ctx.sbdVersion}`,
 		`Obsidian ${ctx.obsidianVersion}`,
 		ctx.platform,
 	].join(" · ");
@@ -100,7 +100,7 @@ export function cardRequestMailtoUrl(ctx: CardRequestContext): string {
 	const body = [
 		"Hi Ondrej,",
 		"",
-		"I'd like to suggest a new card for Hearth.",
+		"I'd like to suggest a new card for Second Brain Dashboard.",
 		"",
 		PROBLEM_PROMPT,
 		"",

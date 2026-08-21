@@ -2,7 +2,7 @@ import { App, Component, MarkdownRenderer, Modal, Setting } from "obsidian";
 import changelogMarkdown from "../CHANGELOG.md";
 import { isNewer, parseChangelog, type ChangelogEntry } from "./changelog";
 import { t } from "./i18n";
-import type HearthPlugin from "./main";
+import type SbdPlugin from "./main";
 
 export type { ChangelogEntry };
 
@@ -41,22 +41,22 @@ export class WhatsNewModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl, modalEl } = this;
-		modalEl.addClass("hearth-whatsnew-modal");
+		modalEl.addClass("sbd-whatsnew-modal");
 		this.titleEl.setText(t().whatsNew.title);
 
 		contentEl.createEl("p", {
-			cls: "hearth-whatsnew-intro",
+			cls: "sbd-whatsnew-intro",
 			text: t().whatsNew.intro,
 		});
 
 		// Only this scrolls, so the intro stays put and the close button below
 		// stays reachable no matter how long the log is.
-		const body = contentEl.createDiv({ cls: "hearth-whatsnew-body" });
+		const body = contentEl.createDiv({ cls: "sbd-whatsnew-body" });
 		this.renderComponent.load();
 		for (const entry of this.entries) this.renderEntry(body, entry);
 
 		contentEl.createEl("p", {
-			cls: "hearth-whatsnew-footer",
+			cls: "sbd-whatsnew-footer",
 			text: t().whatsNew.footer,
 		});
 
@@ -70,15 +70,15 @@ export class WhatsNewModal extends Modal {
 
 	/** One release: a version header, then the section body as Markdown. */
 	private renderEntry(parent: HTMLElement, entry: ChangelogEntry): void {
-		const section = parent.createDiv({ cls: "hearth-whatsnew-release" });
-		const header = section.createDiv({ cls: "hearth-whatsnew-release-header" });
+		const section = parent.createDiv({ cls: "sbd-whatsnew-release" });
+		const header = section.createDiv({ cls: "sbd-whatsnew-release-header" });
 
-		const version = header.createEl("h2", { cls: "hearth-whatsnew-version" });
+		const version = header.createEl("h2", { cls: "sbd-whatsnew-version" });
 		if (entry.url) {
 			version.createEl("a", {
 				text: entry.version,
 				href: entry.url,
-				cls: "hearth-whatsnew-version-link",
+				cls: "sbd-whatsnew-version-link",
 				attr: { rel: "noopener" },
 			});
 		} else {
@@ -86,10 +86,10 @@ export class WhatsNewModal extends Modal {
 		}
 
 		if (entry.date) {
-			header.createSpan({ cls: "hearth-whatsnew-date", text: entry.date });
+			header.createSpan({ cls: "sbd-whatsnew-date", text: entry.date });
 		}
 
-		const bodyEl = section.createDiv({ cls: "hearth-whatsnew-release-body" });
+		const bodyEl = section.createDiv({ cls: "sbd-whatsnew-release-body" });
 		void MarkdownRenderer.render(this.app, entry.markdown, bodyEl, "", this.renderComponent);
 	}
 
@@ -108,7 +108,7 @@ export class WhatsNewModal extends Modal {
  * the dialog and records the new version so it won't show again until the next
  * update.
  */
-export async function maybeShowWhatsNew(plugin: HearthPlugin): Promise<void> {
+export async function maybeShowWhatsNew(plugin: SbdPlugin): Promise<void> {
 	const current = plugin.manifest.version;
 	const seen = plugin.settings.lastSeenVersion;
 

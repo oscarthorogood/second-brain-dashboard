@@ -71,12 +71,12 @@ export const LAYOUT_SCHEMA = 2;
 
 /** Current full-settings export schema version. A settings export is a superset
  * of a layout export: it embeds the whole layout (so it imports cleanly through
- * `importLayout` too) plus every other configurable Hearth setting. */
+ * `importLayout` too) plus every other configurable Second Brain Dashboard setting. */
 export const SETTINGS_SCHEMA = 1;
 
 /** The portable subset of settings that describes the whole dashboard setup. */
 export interface LayoutExport {
-	hearthLayout: number;
+	sbdLayout: number;
 	dashboards: Dashboard[];
 	activeDashboardId: string;
 	pinnedCards: DashboardCard[];
@@ -117,7 +117,7 @@ function layoutPayload(s: HomeSettings): LayoutExport {
 		cards: dashboard.cards.map(scrubCard),
 	}));
 	return {
-		hearthLayout: LAYOUT_SCHEMA,
+		sbdLayout: LAYOUT_SCHEMA,
 		dashboards,
 		activeDashboardId: s.activeDashboardId,
 		pinnedCards: s.pinnedCards.map(scrubCard),
@@ -134,13 +134,13 @@ export function exportLayout(s: HomeSettings): string {
 	return JSON.stringify(layoutPayload(s), null, 2);
 }
 
-/** Serialize every configurable Hearth setting — the full layout plus header,
+/** Serialize every configurable Second Brain Dashboard setting — the full layout plus header,
  * background, behaviour, appearance, filters and TaskNotes field mappings — to a
  * pretty JSON string. Internal bookkeeping (e.g. `lastSeenVersion`) is omitted
  * so a shared backup can't rewind another vault's "What's new" state. */
 export function exportSettings(s: HomeSettings): string {
 	const data = {
-		hearthSettings: SETTINGS_SCHEMA,
+		sbdSettings: SETTINGS_SCHEMA,
 		...layoutPayload(s),
 
 		// Header
@@ -235,7 +235,7 @@ function sanitizeBaseViewName(raw: unknown): string | undefined {
 	return isEmbeddableBaseViewName(name) ? name : undefined;
 }
 
-/** An embed's picture-fit mode, or undefined when the import names one Hearth
+/** An embed's picture-fit mode, or undefined when the import names one Second Brain Dashboard
  * doesn't have (a newer file, or a hand-edited one). */
 function sanitizeImageFit(raw: unknown): EmbedImageFit | undefined {
 	return EMBED_IMAGE_FITS.includes(raw as EmbedImageFit)
@@ -916,7 +916,7 @@ function sanitizeDatacore(r: Record<string, unknown>): DatacoreConfig {
 }
 
 /** An imported Git card. The section and action lists are run through the same
- * normalizers the card uses, so an unknown id from a newer Hearth (or a hand
+ * normalizers the card uses, so an unknown id from a newer Second Brain Dashboard (or a hand
  * edit) is dropped rather than rendered as a dead button. */
 function sanitizeGit(r: Record<string, unknown>): GitConfig {
 	const cfg: GitConfig = {};
@@ -1179,7 +1179,7 @@ function applyLayout(
 		return null;
 	}
 
-	return t().layout.notAHearthLayout;
+	return t().layout.notASbdLayout;
 }
 
 /**
@@ -1202,8 +1202,8 @@ export function importSettings(s: HomeSettings, json: string): string | null {
 	const data = parsed as Record<string, unknown>;
 
 	const hasLayout = Array.isArray(data.dashboards) || Array.isArray(data.cards);
-	if (!hasLayout && typeof data.hearthSettings !== "number") {
-		return t().layout.notHearthSettings;
+	if (!hasLayout && typeof data.sbdSettings !== "number") {
+		return t().layout.notSbdSettings;
 	}
 
 	// Apply the embedded layout first so any malformed dashboards abort before we

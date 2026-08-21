@@ -153,7 +153,7 @@ export function jiraEditor(ctx: CardEditorContext, containerEl: HTMLElement): vo
 		txt.inputEl.type = "number";
 		txt.inputEl.min = "1";
 		txt.inputEl.max = "200";
-		txt.inputEl.addClass("hearth-count-input");
+		txt.inputEl.addClass("sbd-count-input");
 	});
 
 	const numberSetting = (
@@ -173,7 +173,7 @@ export function jiraEditor(ctx: CardEditorContext, containerEl: HTMLElement): vo
 				});
 				txt.inputEl.type = "number";
 				txt.inputEl.min = "0";
-				txt.inputEl.addClass("hearth-count-input");
+				txt.inputEl.addClass("sbd-count-input");
 			});
 	};
 	numberSetting(

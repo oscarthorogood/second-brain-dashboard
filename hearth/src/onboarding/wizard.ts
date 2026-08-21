@@ -1,7 +1,7 @@
 /**
  * The first-run setup wizard.
  *
- * A new Hearth install used to drop the user straight onto a five-card starter
+ * A new Second Brain Dashboard install used to drop the user straight onto a five-card starter
  * board with a wallpaper they didn't choose and no indication that the plugin
  * can read their tasks, their calendar or their git repository. Everything was
  * configurable; nothing was offered. This asks instead — a handful of questions
@@ -20,7 +20,7 @@
  */
 import { Modal, Notice, Setting, setIcon } from "obsidian";
 import { t } from "../i18n";
-import type HearthPlugin from "../main";
+import type SbdPlugin from "../main";
 import { configuredPlaces, renderSkySource } from "../placepicker";
 import { formatSkyValue, parseSkyValue } from "../sky";
 import { makeClickable } from "../ui";
@@ -87,7 +87,7 @@ export interface SetupWizardOptions {
 }
 
 export class SetupWizardModal extends Modal {
-	private readonly plugin: HearthPlugin;
+	private readonly plugin: SbdPlugin;
 	private readonly detection: SetupDetection;
 	private readonly options: SetupWizardOptions;
 	private answers: SetupAnswers;
@@ -100,7 +100,7 @@ export class SetupWizardModal extends Modal {
 	 * trigger. Dropped with the modal. */
 	private readonly placeSession: Record<string, unknown> = {};
 
-	constructor(plugin: HearthPlugin, options: SetupWizardOptions = {}) {
+	constructor(plugin: SbdPlugin, options: SetupWizardOptions = {}) {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.options = options;
@@ -132,7 +132,7 @@ export class SetupWizardModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.modalEl.addClass("hearth-setup-modal");
+		this.modalEl.addClass("sbd-setup-modal");
 		this.renderWizard();
 	}
 
@@ -166,7 +166,7 @@ export class SetupWizardModal extends Modal {
 	private renderWizard(): void {
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.addClass("hearth-setup");
+		contentEl.addClass("sbd-setup");
 
 		const steps = this.wizardSteps();
 		const step = this.currentStep();
@@ -174,33 +174,33 @@ export class SetupWizardModal extends Modal {
 
 		this.renderRail(contentEl, steps, step);
 
-		const head = contentEl.createDiv("hearth-setup-head");
-		head.createDiv({ cls: "hearth-setup-title", text: strings.stepTitles[step] });
-		head.createDiv({ cls: "hearth-setup-subtitle", text: strings.stepDescs[step] });
+		const head = contentEl.createDiv("sbd-setup-head");
+		head.createDiv({ cls: "sbd-setup-title", text: strings.stepTitles[step] });
+		head.createDiv({ cls: "sbd-setup-subtitle", text: strings.stepDescs[step] });
 
-		const body = contentEl.createDiv("hearth-setup-body");
+		const body = contentEl.createDiv("sbd-setup-body");
 		// Per-step backstop, the #52 lesson: a throw while building one step
 		// shows an inline message instead of a blank modal, and the footer below
 		// still lets the user move on or leave.
 		try {
 			this.renderStepBody(body, step);
 		} catch (err) {
-			console.error(`Hearth: the "${step}" setup step failed to render`, err);
+			console.error(`Second Brain Dashboard: the "${step}" setup step failed to render`, err);
 			body.empty();
-			const box = body.createDiv("hearth-settings-error");
-			setIcon(box.createSpan("hearth-settings-error-icon"), "alert-triangle");
-			const text = box.createDiv("hearth-settings-error-text");
+			const box = body.createDiv("sbd-settings-error");
+			setIcon(box.createSpan("sbd-settings-error-icon"), "alert-triangle");
+			const text = box.createDiv("sbd-settings-error-text");
 			text.createDiv({
-				cls: "hearth-settings-error-title",
+				cls: "sbd-settings-error-title",
 				text: t().settings.sectionError(strings.stepTitles[step]),
 			});
 			text.createDiv({
-				cls: "hearth-settings-error-hint",
+				cls: "sbd-settings-error-hint",
 				text: t().settings.sectionErrorHint,
 			});
 		}
 
-		this.renderFooter(contentEl.createDiv("hearth-setup-foot"), steps);
+		this.renderFooter(contentEl.createDiv("sbd-setup-foot"), steps);
 	}
 
 	/** The progress rail: one pill per step, showing where the user is and how
@@ -212,17 +212,17 @@ export class SetupWizardModal extends Modal {
 		active: SetupStepId,
 	): void {
 		const strings = t().setup;
-		const rail = parent.createDiv("hearth-setup-rail");
+		const rail = parent.createDiv("sbd-setup-rail");
 		const activeIndex = steps.indexOf(active);
 		steps.forEach((step, index) => {
-			const pill = rail.createDiv("hearth-setup-rail-step");
+			const pill = rail.createDiv("sbd-setup-rail-step");
 			pill.toggleClass("is-active", index === activeIndex);
 			pill.toggleClass("is-done", index < activeIndex);
 			setIcon(
-				pill.createSpan("hearth-setup-rail-icon"),
+				pill.createSpan("sbd-setup-rail-icon"),
 				index < activeIndex ? "check" : STEP_ICONS[step],
 			);
-			pill.createSpan({ cls: "hearth-setup-rail-label", text: strings.stepNames[step] });
+			pill.createSpan({ cls: "sbd-setup-rail-label", text: strings.stepNames[step] });
 			if (index < activeIndex) {
 				const go = () => {
 					this.stepIndex = index;
@@ -239,16 +239,16 @@ export class SetupWizardModal extends Modal {
 		const strings = t().setup;
 		const last = this.stepIndex >= steps.length - 1;
 
-		const left = footer.createDiv("hearth-setup-foot-left");
+		const left = footer.createDiv("sbd-setup-foot-left");
 		if (this.stepIndex === 0) {
 			const skip = left.createEl("button", {
-				cls: "hearth-setup-skip",
+				cls: "sbd-setup-skip",
 				text: strings.nav.skip,
 			});
 			skip.addEventListener("click", () => this.close());
 		}
 
-		const right = footer.createDiv("hearth-setup-foot-right");
+		const right = footer.createDiv("sbd-setup-foot-right");
 		if (this.stepIndex > 0) {
 			const back = right.createEl("button", { text: strings.nav.back });
 			back.addEventListener("click", () => {
@@ -300,20 +300,20 @@ export class SetupWizardModal extends Modal {
 
 	private renderWelcomeStep(body: HTMLElement): void {
 		const strings = t().setup.welcome;
-		body.createEl("p", { cls: "hearth-setup-lead", text: strings.lead });
+		body.createEl("p", { cls: "sbd-setup-lead", text: strings.lead });
 
-		const list = body.createDiv("hearth-setup-bullets");
+		const list = body.createDiv("sbd-setup-bullets");
 		for (const bullet of strings.bullets) {
-			const row = list.createDiv("hearth-setup-bullet");
-			setIcon(row.createSpan("hearth-setup-bullet-icon"), bullet.icon);
-			const text = row.createDiv("hearth-setup-bullet-text");
-			text.createDiv({ cls: "hearth-setup-bullet-title", text: bullet.title });
-			text.createDiv({ cls: "hearth-setup-bullet-desc", text: bullet.desc });
+			const row = list.createDiv("sbd-setup-bullet");
+			setIcon(row.createSpan("sbd-setup-bullet-icon"), bullet.icon);
+			const text = row.createDiv("sbd-setup-bullet-text");
+			text.createDiv({ cls: "sbd-setup-bullet-title", text: bullet.title });
+			text.createDiv({ cls: "sbd-setup-bullet-desc", text: bullet.desc });
 		}
 
 		const found = this.detection.integrations;
 		body.createDiv({
-			cls: "hearth-setup-note",
+			cls: "sbd-setup-note",
 			text: found.length
 				? strings.detected(found.map((i) => i.name).join(", "))
 				: strings.detectedNone,
@@ -385,7 +385,7 @@ export class SetupWizardModal extends Modal {
 		const strings = t().setup.look;
 		const a = this.answers;
 
-		body.createDiv({ cls: "hearth-setup-grouplabel", text: strings.surfaceHeading });
+		body.createDiv({ cls: "sbd-setup-grouplabel", text: strings.surfaceHeading });
 		this.optionGrid(
 			body,
 			SETUP_SURFACES,
@@ -401,7 +401,7 @@ export class SetupWizardModal extends Modal {
 			},
 		);
 
-		body.createDiv({ cls: "hearth-setup-grouplabel", text: strings.backgroundHeading });
+		body.createDiv({ cls: "sbd-setup-grouplabel", text: strings.backgroundHeading });
 		this.optionGrid(
 			body,
 			SETUP_BACKGROUNDS,
@@ -427,7 +427,7 @@ export class SetupWizardModal extends Modal {
 
 		if (a.background === "weather") {
 			const sky = parseSkyValue(a.skyValue);
-			body.createDiv({ cls: "hearth-setup-note", text: strings.weatherDesc });
+			body.createDiv({ cls: "sbd-setup-note", text: strings.weatherDesc });
 			renderSkySource(body, {
 				current: sky,
 				onChange: (next) => {
@@ -484,14 +484,14 @@ export class SetupWizardModal extends Modal {
 		);
 
 		const count = planCards(a, this.detection, (i) => `preview-${i}`).length;
-		body.createDiv({ cls: "hearth-setup-note", text: t().setup.purpose.count(count) });
+		body.createDiv({ cls: "sbd-setup-note", text: t().setup.purpose.count(count) });
 	}
 
 	private renderIntegrationsStep(body: HTMLElement): void {
 		const strings = t().setup.integrations;
 		const a = this.answers;
 
-		body.createDiv({ cls: "hearth-setup-note", text: strings.lead });
+		body.createDiv({ cls: "sbd-setup-note", text: strings.lead });
 
 		for (const found of this.detection.integrations) {
 			const setting = new Setting(body)
@@ -508,10 +508,10 @@ export class SetupWizardModal extends Modal {
 						this.renderWizard();
 					}),
 				);
-			setting.settingEl.addClass("hearth-setup-integration");
+			setting.settingEl.addClass("sbd-setup-integration");
 			if (found.recommended) {
 				setting.nameEl.createSpan({
-					cls: "hearth-setup-badge",
+					cls: "sbd-setup-badge",
 					text: strings.recommended,
 				});
 			}
@@ -522,13 +522,13 @@ export class SetupWizardModal extends Modal {
 		// up empty, so say what was read rather than merely that something was.
 		const taskNotes = this.detection.taskNotes;
 		if (taskNotes && a.integrations.includes("tasknotes")) {
-			const box = body.createDiv("hearth-setup-detected");
-			box.createDiv({ cls: "hearth-setup-detected-title", text: strings.taskNotesTitle });
-			const fields = box.createDiv("hearth-setup-detected-list");
+			const box = body.createDiv("sbd-setup-detected");
+			box.createDiv({ cls: "sbd-setup-detected-title", text: strings.taskNotesTitle });
+			const fields = box.createDiv("sbd-setup-detected-list");
 			const row = (label: string, value: string): void => {
-				const line = fields.createDiv("hearth-setup-detected-row");
-				line.createSpan({ cls: "hearth-setup-detected-key", text: label });
-				line.createSpan({ cls: "hearth-setup-detected-value", text: value });
+				const line = fields.createDiv("sbd-setup-detected-row");
+				line.createSpan({ cls: "sbd-setup-detected-key", text: label });
+				line.createSpan({ cls: "sbd-setup-detected-value", text: value });
 			};
 			row(strings.taskNotesStatus, taskNotes.fields.status);
 			row(strings.taskNotesDue, taskNotes.fields.due);
@@ -598,21 +598,21 @@ export class SetupWizardModal extends Modal {
 		this.renderCustomizeCallout(body);
 
 		if (planned.length === 0) {
-			body.createDiv({ cls: "hearth-setup-note", text: strings.empty });
+			body.createDiv({ cls: "sbd-setup-note", text: strings.empty });
 		} else {
 			this.renderBoardPreview(body, planned);
-			const list = body.createDiv("hearth-setup-plan");
+			const list = body.createDiv("sbd-setup-plan");
 			for (const entry of planned) {
-				const row = list.createDiv("hearth-setup-plan-row");
-				row.createSpan({ cls: "hearth-setup-plan-name", text: plannedName(entry) });
-				row.createSpan({ cls: "hearth-setup-plan-why", text: plannedReason(entry) });
+				const row = list.createDiv("sbd-setup-plan-row");
+				row.createSpan({ cls: "sbd-setup-plan-name", text: plannedName(entry) });
+				row.createSpan({ cls: "sbd-setup-plan-why", text: plannedReason(entry) });
 			}
 		}
 
 		if (this.options.forceNewDashboard) {
 			// No dropdown at all: an option that is never selectable is noise, and
 			// stating the guarantee outright is the reassurance this run needs.
-			body.createDiv({ cls: "hearth-setup-note is-safe", text: strings.targetForcedNew });
+			body.createDiv({ cls: "sbd-setup-note is-safe", text: strings.targetForcedNew });
 		} else {
 			new Setting(body)
 				.setName(strings.target)
@@ -643,7 +643,7 @@ export class SetupWizardModal extends Modal {
 	 * The most important thing on the step, and so the first thing on it.
 	 *
 	 * A wizard that builds a board for you invites exactly the wrong conclusion —
-	 * that the board it built is *the* board, and that Hearth is a plugin with a
+	 * that the board it built is *the* board, and that Second Brain Dashboard is a plugin with a
 	 * few presets. It is the opposite: nearly everything here is adjustable, and
 	 * the generated board is a demonstration of that rather than a destination.
 	 *
@@ -654,15 +654,15 @@ export class SetupWizardModal extends Modal {
 	 */
 	private renderCustomizeCallout(body: HTMLElement): void {
 		const strings = t().setup.finish;
-		const callout = body.createDiv("hearth-setup-callout");
+		const callout = body.createDiv("sbd-setup-callout");
 
-		const head = callout.createDiv("hearth-setup-callout-head");
-		setIcon(head.createSpan("hearth-setup-callout-icon"), "sliders-horizontal");
-		head.createSpan({ cls: "hearth-setup-callout-title", text: strings.calloutTitle });
+		const head = callout.createDiv("sbd-setup-callout-head");
+		setIcon(head.createSpan("sbd-setup-callout-icon"), "sliders-horizontal");
+		head.createSpan({ cls: "sbd-setup-callout-title", text: strings.calloutTitle });
 
-		callout.createEl("p", { cls: "hearth-setup-callout-text", text: strings.calloutLead });
-		callout.createEl("p", { cls: "hearth-setup-callout-text", text: strings.calloutBody });
-		callout.createDiv({ cls: "hearth-setup-callout-hint", text: strings.calloutHint });
+		callout.createEl("p", { cls: "sbd-setup-callout-text", text: strings.calloutLead });
+		callout.createEl("p", { cls: "sbd-setup-callout-text", text: strings.calloutBody });
+		callout.createDiv({ cls: "sbd-setup-callout-hint", text: strings.calloutHint });
 	}
 
 	/**
@@ -675,14 +675,14 @@ export class SetupWizardModal extends Modal {
 	 */
 	private renderBoardPreview(body: HTMLElement, planned: PlannedCard[]): void {
 		const rows = planned.reduce((max, p) => Math.max(max, p.card.y + p.card.h), 0);
-		const preview = body.createDiv("hearth-setup-preview");
+		const preview = body.createDiv("sbd-setup-preview");
 		preview.style.gridTemplateColumns = `repeat(${PREVIEW_COLUMNS}, 1fr)`;
 		preview.style.gridTemplateRows = `repeat(${Math.max(1, rows)}, 1fr)`;
 		for (const entry of planned) {
-			const cell = preview.createDiv("hearth-setup-preview-card");
+			const cell = preview.createDiv("sbd-setup-preview-card");
 			cell.style.gridColumn = `${entry.card.x + 1} / span ${entry.card.w}`;
 			cell.style.gridRow = `${entry.card.y + 1} / span ${entry.card.h}`;
-			cell.createSpan({ cls: "hearth-setup-preview-label", text: plannedName(entry) });
+			cell.createSpan({ cls: "sbd-setup-preview-label", text: plannedName(entry) });
 		}
 	}
 
@@ -703,16 +703,16 @@ export class SetupWizardModal extends Modal {
 		onPick: (option: T) => void,
 		extraClass?: string,
 	): void {
-		const grid = parent.createDiv("hearth-setup-options");
+		const grid = parent.createDiv("sbd-setup-options");
 		if (extraClass) grid.addClass(extraClass);
 		for (const option of options) {
 			const info = describe(option);
-			const tile = grid.createDiv("hearth-setup-option");
+			const tile = grid.createDiv("sbd-setup-option");
 			tile.toggleClass("is-selected", info.selected);
-			setIcon(tile.createSpan("hearth-setup-option-icon"), info.icon);
-			const text = tile.createDiv("hearth-setup-option-text");
-			text.createDiv({ cls: "hearth-setup-option-name", text: info.name });
-			text.createDiv({ cls: "hearth-setup-option-desc", text: info.desc });
+			setIcon(tile.createSpan("sbd-setup-option-icon"), info.icon);
+			const text = tile.createDiv("sbd-setup-option-text");
+			text.createDiv({ cls: "sbd-setup-option-name", text: info.name });
+			text.createDiv({ cls: "sbd-setup-option-desc", text: info.desc });
 			const pick = () => onPick(option);
 			makeClickable(tile, pick, info.name);
 			tile.setAttribute("aria-pressed", String(info.selected));
@@ -763,18 +763,18 @@ function plannedReason(entry: PlannedCard): string {
  * prompt all come through here, so there is one place that decides what
  * "running setup" means.
  */
-export function openSetupWizard(plugin: HearthPlugin, options: SetupWizardOptions = {}): void {
+export function openSetupWizard(plugin: SbdPlugin, options: SetupWizardOptions = {}): void {
 	new SetupWizardModal(plugin, options).open();
 }
 
 /**
  * Offer the wizard on a genuinely fresh install, once.
  *
- * `setupStatus` is `pending` only for a vault with no persisted Hearth settings
+ * `setupStatus` is `pending` only for a vault with no persisted Second Brain Dashboard settings
  * at all (see `migrateSettings`), and the modal itself moves it off `pending`
  * whether it is completed or dismissed — so this can never nag.
  */
-export function maybeRunSetup(plugin: HearthPlugin): boolean {
+export function maybeRunSetup(plugin: SbdPlugin): boolean {
 	if (plugin.settings.setupStatus !== "pending") return false;
 	openSetupWizard(plugin);
 	return true;

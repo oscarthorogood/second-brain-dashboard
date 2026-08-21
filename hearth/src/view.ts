@@ -1,5 +1,5 @@
 import { Component, ItemView, Platform, type WorkspaceLeaf } from "obsidian";
-import type HearthPlugin from "./main";
+import type SbdPlugin from "./main";
 import { renderHeader } from "./header";
 import { renderDashboard } from "./dashboard";
 import { renderDashboardSwitcher } from "./dashboards";
@@ -16,13 +16,13 @@ import {
 	renderCards,
 } from "./types";
 import { tabIconIdFor } from "./icon";
-import { hearthLeafIsNavigable } from "./opener";
+import { sbdLeafIsNavigable } from "./opener";
 import { t } from "./i18n";
 
-export const VIEW_TYPE_HOME = "hearth-home-view";
+export const VIEW_TYPE_HOME = "sbd-home-view";
 
 export class HomeView extends ItemView {
-	plugin: HearthPlugin;
+	plugin: SbdPlugin;
 	/**
 	 * Whether the dashboard is a navigable pane (the base `View` default is
 	 * `false`). A non-navigable leaf is treated like the file explorer or
@@ -33,8 +33,8 @@ export class HomeView extends ItemView {
 	 * dashboard behaves like any editor tab and the selection tracks correctly.
 	 *
 	 * That is still the default, but it is now the user's call: it is also the
-	 * only lever over opens Hearth never sees (#106), so `render()` keeps it in
-	 * step with the "Notes opened from outside Hearth" setting.
+	 * only lever over opens Second Brain Dashboard never sees (#106), so `render()` keeps it in
+	 * step with the "Notes opened from outside Second Brain Dashboard" setting.
 	 */
 	navigation = true;
 	/** Whether the dashboard is in layout/arrange mode (drag & resize). */
@@ -49,7 +49,7 @@ export class HomeView extends ItemView {
 	 * listener it registers lives on `contentEl`, which outlives every render). */
 	private heldLiveRender: (() => void) | null = null;
 
-	constructor(leaf: WorkspaceLeaf, plugin: HearthPlugin) {
+	constructor(leaf: WorkspaceLeaf, plugin: SbdPlugin) {
 		super(leaf);
 		this.plugin = plugin;
 	}
@@ -75,14 +75,14 @@ export class HomeView extends ItemView {
 
 	/**
 	 * When enabled, move keyboard focus into the search field as the view opens
-	 * so a freshly-opened Hearth tab is ready to type into (#115). Only runs from
+	 * so a freshly-opened Second Brain Dashboard tab is ready to type into (#115). Only runs from
 	 * onOpen — not on every re-render — so a background refresh never steals focus
 	 * while the user is working. Desktop only: focusing an input on mobile pops
 	 * the on-screen keyboard, which would be jarring on every open.
 	 */
 	private maybeFocusSearch(): void {
 		if (!this.plugin.settings.focusSearchOnOpen || Platform.isMobile) return;
-		const input = this.contentEl.querySelector<HTMLInputElement>(".hearth-search-input");
+		const input = this.contentEl.querySelector<HTMLInputElement>(".sbd-search-input");
 		if (input) input.focus();
 	}
 
@@ -100,13 +100,13 @@ export class HomeView extends ItemView {
 			const top = this.contentEl.getBoundingClientRect().top;
 			const visibleBottom = vv.offsetTop + vv.height;
 			this.contentEl.style.setProperty(
-				"--hearth-vh",
+				"--sbd-vh",
 				`${Math.max(0, Math.round(visibleBottom - top))}px`,
 			);
 			// Keyboard up when the visual viewport is meaningfully shorter than
 			// the layout viewport.
 			this.contentEl.toggleClass(
-				"hearth-kbd-open",
+				"sbd-kbd-open",
 				vv.height < window.innerHeight - 120,
 			);
 		};
@@ -150,7 +150,7 @@ export class HomeView extends ItemView {
 		// choice takes effect without reopening the tab. Obsidian reads this at
 		// the moment it looks for a leaf to open a file in, so the current value
 		// is the one that counts.
-		this.navigation = hearthLeafIsNavigable(this.plugin.settings);
+		this.navigation = sbdLeafIsNavigable(this.plugin.settings);
 
 		this.cleanupChild();
 		const child = new Component();
@@ -159,24 +159,24 @@ export class HomeView extends ItemView {
 
 		const root = this.contentEl;
 		root.empty();
-		root.addClass("hearth-view");
-		root.toggleClass("hearth-compact", this.plugin.settings.compact);
+		root.addClass("sbd-view");
+		root.toggleClass("sbd-compact", this.plugin.settings.compact);
 		// Low power mode: the flag CSS keys off to drop transitions, animations,
 		// shadows and hover transforms across the whole view. The background and
 		// card-surface side of the mode is handled by the effective* resolvers, so
 		// this class only covers what has no setting behind it.
-		root.toggleClass("hearth-low-power", lowPowerActive(this.plugin.settings));
+		root.toggleClass("sbd-low-power", lowPowerActive(this.plugin.settings));
 		// In arrange mode the user can hide the per-card headers to see each
 		// card's full body. The class is only applied while arranging so the
 		// headers come back automatically when arranging ends.
 		root.toggleClass(
-			"hearth-hide-header",
+			"sbd-hide-header",
 			this.arrangeMode && this.hideHeaderInArrange,
 		);
 
 		// Mobile-only mode: on a phone/tablet, collapse to just the search field.
 		const mobileOnly = Platform.isMobile && this.plugin.settings.mobileSearchOnly;
-		root.toggleClass("hearth-mobile-only", mobileOnly);
+		root.toggleClass("sbd-mobile-only", mobileOnly);
 
 		// With no cards to show (and not arranging), centre the search field
 		// vertically so the page reads as a clean launcher.
@@ -184,7 +184,7 @@ export class HomeView extends ItemView {
 			!mobileOnly &&
 			!this.arrangeMode &&
 			renderCards(this.plugin.settings).length === 0;
-		root.toggleClass("hearth-empty-board", emptyBoard);
+		root.toggleClass("sbd-empty-board", emptyBoard);
 
 		// The backdrop is painted one of two ways. As a wallpaper it goes behind
 		// everything, so it is laid down before the scroll area; as a banner it is
@@ -196,26 +196,26 @@ export class HomeView extends ItemView {
 		// painted as a wallpaper there rather than as a strip floating above a
 		// launcher.
 		const banner = !mobileOnly && bannerActive(this.plugin.settings);
-		root.toggleClass("hearth-has-banner", banner);
+		root.toggleClass("sbd-has-banner", banner);
 		if (!banner) applyBackground(this, root, child);
 
-		const scroll = root.createDiv("hearth-scroll");
-		scroll.toggleClass("hearth-fit", effectiveFitToPage(this.plugin.settings));
+		const scroll = root.createDiv("sbd-scroll");
+		scroll.toggleClass("sbd-fit", effectiveFitToPage(this.plugin.settings));
 
 		if (banner) renderBanner(this, scroll, child);
 
-		const inner = scroll.createDiv("hearth-inner");
+		const inner = scroll.createDiv("sbd-inner");
 		inner.style.maxWidth = `${effectiveMaxWidth(this.plugin.settings)}px`;
 
 		if (!mobileOnly) renderDashboardSwitcher(this, inner);
 
 		if (effectiveShowTitle(this.plugin.settings) || effectiveShowSearch(this.plugin.settings)) {
-			const header = inner.createDiv("hearth-header");
+			const header = inner.createDiv("sbd-header");
 			renderHeader(this, header, child);
 		}
 
 		if (!mobileOnly) {
-			const dashboard = inner.createDiv("hearth-dashboard");
+			const dashboard = inner.createDiv("sbd-dashboard");
 			renderDashboard(this, dashboard, child);
 		} else if (this.plugin.settings.showMobileActionBar) {
 			// Pinned to the scroll area (not the flex flow shared with `inner`) so

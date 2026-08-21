@@ -118,7 +118,7 @@ export interface TaskNotesSubscription {
 
 
 /** Which layers TaskNotes' own calendar view is showing. Used as the default
- * for the card's per-layer toggles, so an unconfigured Hearth calendar mirrors
+ * for the card's per-layer toggles, so an unconfigured Second Brain Dashboard calendar mirrors
  * whatever the user already set up inside TaskNotes. */
 export interface TaskNotesCalendarDefaults {
 	scheduled: boolean;

@@ -1,5 +1,5 @@
 /**
- * Hearth's brand mark: the four-facet crystal, traced from assets/icon.png
+ * Second Brain Dashboard's brand mark: the four-facet crystal, traced from assets/icon.png
  * into four closed vector subpaths (one per facet, mirroring the transparent
  * gaps that separated the facets in the raster).
  *
@@ -15,8 +15,8 @@
  */
 import { resolveIconId } from "./lucide";
 
-export const HEARTH_ICON_ID = "hearth-crystal";
-export const HEARTH_ICON_THEMED_ID = "hearth-crystal-themed";
+export const SBD_ICON_ID = "sbd-crystal";
+export const SBD_ICON_THEMED_ID = "sbd-crystal-themed";
 
 /** The flat purple of assets/icon.png. */
 const BRAND_PURPLE = "#A179FF";
@@ -27,17 +27,17 @@ const FACETS =
 const FACETS_INSET =
 	"M51.4 1.4L53.9 1.6L55.4 3.3L56.6 6.3L56.5 9.6L48.3 25.7L47 33.5L47.1 44.8L49.8 54.6L39.2 56.7L34.4 46.5L25.3 35.3L25.3 33.9L28.3 21.5L48.2 3.1L51.2 1.6ZM62.3 9.3L75.8 27.6L76 39.5L77.8 46.6L87.6 61.5L86.7 64.7L80.1 75.6L75.7 67.4L69.5 60.2L63.6 56.4L56.2 55.1L55.9 54.3L53.5 45.8L53.1 37.6L54.9 29.3L60.6 16.5L62.3 9.5ZM23.1 42.9L28.1 49.4L32.2 57.5L35 68.2L34.6 79.1L33.2 84L29.8 90.1L13.4 72.3L12.5 69.8L13 67L23.1 43.1ZM51.3 61.9L57.4 62.4L62.9 64.5L69.1 69.7L72.6 74.3L76 82L73.1 93.3L71.5 96.2L68.9 97.9L65.2 98.4L49.1 93.8L35.5 93.1L39.9 85.6L42.1 78.7L42.5 69.9L41.3 63.6L51.1 62.1Z";
 
-export const HEARTH_ICON_SVG = `<path fill="${BRAND_PURPLE}" d="${FACETS}"/>`;
-export const HEARTH_ICON_THEMED_SVG = `<path fill="currentColor" d="${FACETS_INSET}"/>`;
+export const SBD_ICON_SVG = `<path fill="${BRAND_PURPLE}" d="${FACETS}"/>`;
+export const SBD_ICON_THEMED_SVG = `<path fill="currentColor" d="${FACETS_INSET}"/>`;
 
 /** Icon id for a theme-color target: the themed (currentColor) mark when the
  * icon follows the theme, the brand-purple mark otherwise. */
-export function hearthIconIdFor(target: "none" | "icon" | "title" | "both"): string {
-	return target === "icon" || target === "both" ? HEARTH_ICON_THEMED_ID : HEARTH_ICON_ID;
+export function sbdIconIdFor(target: "none" | "icon" | "title" | "both"): string {
+	return target === "icon" || target === "both" ? SBD_ICON_THEMED_ID : SBD_ICON_ID;
 }
 
 /**
- * The icon for Hearth's tab header and ribbon button: the user's chosen Lucide
+ * The icon for Second Brain Dashboard's tab header and ribbon button: the user's chosen Lucide
  * icon, or the crystal when they haven't chosen one.
  *
  * The chosen id is resolved against the icons Obsidian actually has, so a typo
@@ -49,5 +49,5 @@ export function tabIconIdFor(
 	target: "none" | "icon" | "title" | "both",
 	custom: string | undefined,
 ): string {
-	return resolveIconId(custom) ?? hearthIconIdFor(target);
+	return resolveIconId(custom) ?? sbdIconIdFor(target);
 }

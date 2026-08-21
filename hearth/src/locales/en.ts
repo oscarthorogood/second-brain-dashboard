@@ -1,6 +1,6 @@
 /**
  * English base locale — the source of truth for every user-facing string in
- * Hearth. All other locales are typed against `typeof en` (see
+ * Second Brain Dashboard. All other locales are typed against `typeof en` (see
  * `src/locales/index.ts`), so this file defines the complete set of keys a
  * translation must provide.
  *
@@ -21,53 +21,53 @@ export const en = {
 		newDrawing: "Create new Excalidraw drawing",
 		recordVoice: "Start/stop voice recording",
 		openDailyNote: "Open today's daily note",
-		runSetup: "Set up Hearth (first-run wizard)",
+		runSetup: "Set up Second Brain Dashboard (first-run wizard)",
 		switchDashboard: (n: number) => `Switch to dashboard ${n}`,
 		nextDashboard: "Next dashboard",
 		previousDashboard: "Previous dashboard",
 	},
 	ribbon: {
-		openHome: "Open Hearth home",
+		openHome: "Open Second Brain Dashboard home",
 	},
 
 	// ---- Notices (transient toasts) ------------------------------------
 	notices: {
-		couldNotCreateNote: "Hearth: could not create a new note.",
+		couldNotCreateNote: "Second Brain Dashboard: could not create a new note.",
 		enableExcalidraw:
-			"Hearth: enable the Excalidraw plugin to create drawings.",
+			"Second Brain Dashboard: enable the Excalidraw plugin to create drawings.",
 		excalidrawCommandMissing:
-			"Hearth: couldn't find Excalidraw's \"new drawing\" command.",
-		enableAudioRecorder: "Hearth: enable the core Audio recorder plugin.",
-		couldNotRecordVoice: "Hearth: couldn't start voice recording.",
-		enableDailyNotes: "Hearth: enable the core Daily notes plugin.",
-		couldNotOpenDaily: "Hearth: couldn't open today's daily note.",
-		commandNotFound: (id: string) => `Hearth: command not found: ${id}`,
+			"Second Brain Dashboard: couldn't find Excalidraw's \"new drawing\" command.",
+		enableAudioRecorder: "Second Brain Dashboard: enable the core Audio recorder plugin.",
+		couldNotRecordVoice: "Second Brain Dashboard: couldn't start voice recording.",
+		enableDailyNotes: "Second Brain Dashboard: enable the core Daily notes plugin.",
+		couldNotOpenDaily: "Second Brain Dashboard: couldn't open today's daily note.",
+		commandNotFound: (id: string) => `Second Brain Dashboard: command not found: ${id}`,
 		couldNotCreateNoteForDay: (day: string) =>
-			`Hearth: couldn't create a note for ${day}.`,
-		couldNotCreateEventNote: "Hearth: couldn't create a note for that event.",
-		taskNotesCreateFailed: "Hearth: couldn't run TaskNotes: Create new task.",
-		taskChangedOnDisk: "Hearth: that task changed on disk — refreshed.",
-		couldNotOpenTaskNote: "Hearth: couldn't open that task's note.",
-		couldNotUpdateTaskStatus: "Hearth: couldn't update the task status.",
+			`Second Brain Dashboard: couldn't create a note for ${day}.`,
+		couldNotCreateEventNote: "Second Brain Dashboard: couldn't create a note for that event.",
+		taskNotesCreateFailed: "Second Brain Dashboard: couldn't run TaskNotes: Create new task.",
+		taskChangedOnDisk: "Second Brain Dashboard: that task changed on disk — refreshed.",
+		couldNotOpenTaskNote: "Second Brain Dashboard: couldn't open that task's note.",
+		couldNotUpdateTaskStatus: "Second Brain Dashboard: couldn't update the task status.",
 		couldNotCompleteRecurring:
-			"Hearth: couldn't mark the recurring task instance complete.",
+			"Second Brain Dashboard: couldn't mark the recurring task instance complete.",
 		couldNotUndoRecurring:
-			"Hearth: couldn't undo the recurring task completion.",
-		couldNotAddKanbanCard: "Hearth: couldn't add the card to the Kanban board.",
-		couldNotConvertCard: "Hearth: couldn't convert the card into a note.",
+			"Second Brain Dashboard: couldn't undo the recurring task completion.",
+		couldNotAddKanbanCard: "Second Brain Dashboard: couldn't add the card to the Kanban board.",
+		couldNotConvertCard: "Second Brain Dashboard: couldn't convert the card into a note.",
 		templaterNoTemplate: (path: string) =>
-			`Hearth: template not found: ${path}`,
+			`Second Brain Dashboard: template not found: ${path}`,
 		templaterFailed: (name: string) =>
-			`Hearth: Templater didn't create a note from ${name}.`,
-		templaterCreated: (path: string) => `Hearth: created ${path}`,
-		layoutExported: "Hearth: layout exported.",
-		layoutImported: "Hearth: layout imported.",
-		layoutImportError: (error: string) => `Hearth: ${error}`,
-		settingsExported: "Hearth: settings exported.",
-		settingsImported: "Hearth: settings imported.",
+			`Second Brain Dashboard: Templater didn't create a note from ${name}.`,
+		templaterCreated: (path: string) => `Second Brain Dashboard: created ${path}`,
+		layoutExported: "Second Brain Dashboard: layout exported.",
+		layoutImported: "Second Brain Dashboard: layout imported.",
+		layoutImportError: (error: string) => `Second Brain Dashboard: ${error}`,
+		settingsExported: "Second Brain Dashboard: settings exported.",
+		settingsImported: "Second Brain Dashboard: settings imported.",
 		exportedToVault: (file: string) =>
-			`Hearth: saved ${file} to your vault's root folder.`,
-		exportFailed: "Hearth: couldn't save the export file.",
+			`Second Brain Dashboard: saved ${file} to your vault's root folder.`,
+		exportFailed: "Second Brain Dashboard: couldn't save the export file.",
 		cardCopied: "Card copied to the dashboard.",
 	},
 
@@ -98,7 +98,7 @@ export const en = {
 
 	// ---- "What's new" release-notes dialog -----------------------------
 	whatsNew: {
-		title: "What's new in Hearth",
+		title: "What's new in Second Brain Dashboard",
 		intro: "Thanks for updating! Here's what's changed since you last checked.",
 		close: "Got it",
 		footer: "Full details live in the plugin's README.",
@@ -118,22 +118,22 @@ export const en = {
 		},
 		/** The heading at the top of each step. */
 		stepTitles: {
-			welcome: "Welcome to Hearth",
+			welcome: "Welcome to Second Brain Dashboard",
 			vault: "Name your home screen",
 			look: "Pick a look",
 			purpose: "What do you use your vault for?",
 			integrations: "Found in your vault",
-			behaviour: "How Hearth behaves",
+			behaviour: "How Second Brain Dashboard behaves",
 			finish: "Here's your dashboard",
 		},
 		/** The line under each heading. */
 		stepDescs: {
-			welcome: "A few questions, then Hearth builds your first dashboard.",
+			welcome: "A few questions, then Second Brain Dashboard builds your first dashboard.",
 			vault: "The title and logo across the top of the board.",
 			look: "You can change any of this later in Settings → Appearance.",
 			purpose: "Pick as many as you like — each one adds cards to your board.",
 			integrations:
-				"Hearth found these already installed. Turn on the ones you'd like it to use.",
+				"Second Brain Dashboard found these already installed. Turn on the ones you'd like it to use.",
 			behaviour: "What happens when Obsidian starts and when you open a note.",
 			finish: "Nothing has been changed yet. Here's what will be built.",
 		},
@@ -145,20 +145,20 @@ export const en = {
 		},
 		welcome: {
 			lead:
-				"Hearth turns a tab into a home screen for your vault — search, a dashboard " +
+				"Second Brain Dashboard turns a tab into a home screen for your vault — search, a dashboard " +
 				"of cards, and a launcher. This wizard sets up a board that fits how you " +
 				"actually work, so you're not starting from a blank grid.",
 			bullets: [
 				{
 					icon: "layout-dashboard",
 					title: "A dashboard built for you",
-					desc: "Tell Hearth what you use your vault for and it picks the cards.",
+					desc: "Tell Second Brain Dashboard what you use your vault for and it picks the cards.",
 				},
 				{
 					icon: "plug",
 					title: "Your plugins, already wired up",
 					desc:
-						"Hearth looks for TaskNotes, Dataview, Git and more, and offers to " +
+						"Second Brain Dashboard looks for TaskNotes, Dataview, Git and more, and offers to " +
 						"connect them — reading their own settings so cards work right away.",
 				},
 				{
@@ -169,7 +169,7 @@ export const en = {
 			],
 			detected: (names: string) => `Found in this vault: ${names}.`,
 			detectedNone:
-				"No supported plugins detected yet — that's fine, Hearth works on its own " +
+				"No supported plugins detected yet — that's fine, Second Brain Dashboard works on its own " +
 				"and you can connect them later.",
 		},
 		vault: {
@@ -180,7 +180,7 @@ export const en = {
 			logo: "Logo",
 			logoDesc:
 				"An emoji or a couple of characters shown beside the title. Leave empty for " +
-				"the Hearth crystal.",
+				"the Second Brain Dashboard crystal.",
 			themeColor: "Follow the theme's accent colour",
 			themeColorDesc: "Which parts of the brand mark take your theme's colour.",
 			themeColorOptions: {
@@ -229,8 +229,8 @@ export const en = {
 		backgrounds: {
 			default: {
 				icon: "image",
-				name: "Hearth's wallpaper",
-				desc: "The image that ships with Hearth.",
+				name: "Second Brain Dashboard's wallpaper",
+				desc: "The image that ships with Second Brain Dashboard.",
 			},
 			weather: {
 				icon: "cloud-sun",
@@ -288,7 +288,7 @@ export const en = {
 		},
 		integrations: {
 			lead:
-				"Each one Hearth turns on here is configured for you — nothing is installed " +
+				"Each one Second Brain Dashboard turns on here is configured for you — nothing is installed " +
 				"or changed in the other plugin.",
 			recommended: "Recommended",
 			effects: {
@@ -302,8 +302,8 @@ export const en = {
 					"Add a card of buttons — one per template you already have — that make a " +
 					"note from it in one click.",
 				git: "Add a Git card showing your repository's status, with commit and sync buttons.",
-				omnisearch: "Use Omnisearch as the engine behind Hearth's search bar.",
-				fileIcons: "Show the per-file icons you've already set, instead of Hearth's file-type icons.",
+				omnisearch: "Use Omnisearch as the engine behind Second Brain Dashboard's search bar.",
+				fileIcons: "Show the per-file icons you've already set, instead of Second Brain Dashboard's file-type icons.",
 				bases: "Add a card embedding a base from your vault.",
 				dailyNotes: "Add a card showing today's daily note, editable in place.",
 				bookmarks: "Add a card listing your bookmarks.",
@@ -313,15 +313,15 @@ export const en = {
 			taskNotesDue: "Due field",
 			taskNotesPriority: "Priority field",
 			taskNotesDone: "Counts as done",
-			taskNotesDoneNone: "none defined — Hearth will use \"done\"",
+			taskNotesDoneNone: "none defined — Second Brain Dashboard will use \"done\"",
 		},
 		behaviour: {
-			openOnStartup: "Open Hearth when Obsidian starts",
+			openOnStartup: "Open Second Brain Dashboard when Obsidian starts",
 			openOnStartupDesc: "Your dashboard is the first thing you see.",
-			replaceNewTabs: "Use Hearth for new empty tabs",
+			replaceNewTabs: "Use Second Brain Dashboard for new empty tabs",
 			replaceNewTabsDesc: "A new tab opens on the dashboard instead of the empty state.",
 			focusSearch: "Focus the search field on open",
-			focusSearchDesc: "Start typing the moment a Hearth tab opens. Desktop only.",
+			focusSearchDesc: "Start typing the moment a Second Brain Dashboard tab opens. Desktop only.",
 			openIn: "Open notes in",
 			openInDesc: "Where a note goes when you open one from the dashboard.",
 		},
@@ -343,17 +343,17 @@ export const en = {
 			defaultName: "Home",
 			calloutTitle: "A starting point, not a preset",
 			calloutLead:
-				"This board should be a solid start — enough to show you what Hearth can " +
+				"This board should be a solid start — enough to show you what Second Brain Dashboard can " +
 				"do for you.",
 			calloutBody:
-				"But Hearth is built above all to be heavily customizable, and this wizard " +
+				"But Second Brain Dashboard is built above all to be heavily customizable, and this wizard " +
 				"only touches a fraction of it. Every card can be moved, resized, retitled, " +
 				"recoloured, reconfigured or thrown out, boards can be added and switched " +
 				"between, and there is a great deal more in the settings than was asked " +
 				"about here. Dig around in there and edit everything to your liking — that " +
-				"is what Hearth is for.",
+				"is what Second Brain Dashboard is for.",
 			calloutHint:
-				"Arrange (top-right of the board) edits the cards; Settings → Hearth has the " +
+				"Arrange (top-right of the board) edits the cards; Settings → Second Brain Dashboard has the " +
 				"rest. You can run this wizard again any time from Settings → About.",
 		},
 		plan: {
@@ -381,7 +381,7 @@ export const en = {
 			},
 			/** Why each card is on the board, shown beside it in the review list. */
 			reasons: {
-				always: "Every Hearth board starts with one",
+				always: "Every Second Brain Dashboard board starts with one",
 				daily: "Daily notes & journaling",
 				dailyNotes: "Daily notes is enabled",
 				tasks: "Tasks & to-dos",
@@ -404,8 +404,8 @@ export const en = {
 		notice: {
 			done: (n: number) =>
 				n === 1
-					? "Hearth: your dashboard is ready — 1 card added."
-					: `Hearth: your dashboard is ready — ${n} cards added.`,
+					? "Second Brain Dashboard: your dashboard is ready — 1 card added."
+					: `Second Brain Dashboard: your dashboard is ready — ${n} cards added.`,
 		},
 	},
 
@@ -481,7 +481,7 @@ export const en = {
 			linkedWorkspaceNone: "None",
 			mobileDefault: "Default on mobile",
 			mobileDefaultDesc:
-				"Open this dashboard when Hearth loads on a phone or tablet. Only one board can be the mobile default; enabling this clears it on the others.",
+				"Open this dashboard when Second Brain Dashboard loads on a phone or tablet. Only one board can be the mobile default; enabling this clears it on the others.",
 			titleVisibility: "Title visibility",
 			titleVisibilityDesc:
 				"Show or hide only the title/logo block for this dashboard. Overrides the global setting.",
@@ -500,10 +500,10 @@ export const en = {
 			titleTextDesc: "Override the global title text for this dashboard.",
 			logoText: "Logo text",
 			logoTextDesc:
-				"Override the global logo for this dashboard. Empty uses the Hearth crystal icon.",
+				"Override the global logo for this dashboard. Empty uses the Second Brain Dashboard crystal icon.",
 			logoIcon: "Title icon",
 			logoIconDesc:
-				"A Lucide icon drawn beside this dashboard's title instead of the logo text. Clear it to show the logo text (or the Hearth crystal) on this board alone.",
+				"A Lucide icon drawn beside this dashboard's title instead of the logo text. Clear it to show the logo text (or the Second Brain Dashboard crystal) on this board alone.",
 			titleAlign: "Title alignment",
 			titleAlignDesc:
 				"Align only the title/logo block. The search bar keeps its own layout.",
@@ -556,7 +556,7 @@ export const en = {
 		backgroundOptions: {
 			default: "Use global default",
 			none: "None",
-			hdefault: "Hearth default",
+			hdefault: "Second Brain Dashboard default",
 			color: "Solid color",
 			image: "Vault image",
 			url: "Image URL",
@@ -594,7 +594,7 @@ export const en = {
 			search: "The search bar and which results it offers.",
 			dashboard: "Grid, card surface, and the controls around the board.",
 			behaviour: "Startup, how notes open, mobile, and privacy.",
-			integrations: "TaskNotes, file icons, and every plugin Hearth reads.",
+			integrations: "TaskNotes, file icons, and every plugin Second Brain Dashboard reads.",
 			backup: "Export and import your layout and settings.",
 			about: "Version, what's new, and where to report things.",
 		},
@@ -633,18 +633,18 @@ export const en = {
 			startup: "Startup & tabs",
 			startupDesc: "When and where the home view opens.",
 			opening: "Opening notes",
-			openingDesc: "Where a note opens when you click it in Hearth.",
+			openingDesc: "Where a note opens when you click it in Second Brain Dashboard.",
 			mobileMode: "Mobile mode",
-			mobileModeDesc: "How Hearth behaves on phones and tablets.",
+			mobileModeDesc: "How Second Brain Dashboard behaves on phones and tablets.",
 			privacy: "Privacy & network",
-			privacyDesc: "Control the outbound requests Hearth is allowed to make.",
+			privacyDesc: "Control the outbound requests Second Brain Dashboard is allowed to make.",
 		},
 		about: {
-			heading: "About Hearth",
+			heading: "About Second Brain Dashboard",
 			headingDesc: "Project links, support and version.",
-			setup: "Set up Hearth",
+			setup: "Set up Second Brain Dashboard",
 			setupDesc:
-				"Answer a few questions about how you work and what's installed, and Hearth " +
+				"Answer a few questions about how you work and what's installed, and Second Brain Dashboard " +
 				"builds a dashboard to match. It's added as a new board — nothing you " +
 				"already have is changed.",
 			setupAgain: "Build a dashboard",
@@ -662,13 +662,13 @@ export const en = {
 			reportIssueDesc:
 				"Hit a bug or have a feature idea? Open an issue on GitHub.",
 			reportIssueButton: "Report issue",
-			kofi: "Support Hearth",
+			kofi: "Support Second Brain Dashboard",
 			kofiDesc:
-				"Hearth is free and always will be. If it's earned a spot on your home " +
+				"Second Brain Dashboard is free and always will be. If it's earned a spot on your home " +
 				"screen, you can leave a tip — completely optional, no features are locked.",
 			kofiButton: "Tip me on Ko-fi",
 			version: (v: string) => `Version ${v}`,
-			versionDesc: "The Hearth build you're running.",
+			versionDesc: "The Second Brain Dashboard build you're running.",
 		},
 		appearance: {
 			heading: "Appearance",
@@ -683,7 +683,7 @@ export const en = {
 			titleDesc: "The heading text shown at the top of the home view.",
 			logo: "Logo",
 			logoDesc:
-				"An emoji or short text shown next to the title. Leave empty for the Hearth crystal icon.",
+				"An emoji or short text shown next to the title. Leave empty for the Second Brain Dashboard crystal icon.",
 			logoIcon: "Title icon",
 			logoIconDesc:
 				"A Lucide icon drawn next to the title instead of the logo text. " +
@@ -691,8 +691,8 @@ export const en = {
 				"Each dashboard can override it in its own settings.",
 			tabIcon: "Tab icon",
 			tabIconDesc:
-				"A Lucide icon for Hearth's tab header and ribbon button, in place of " +
-				"the Hearth crystal. Browse the set or type an id; leave empty for the crystal.",
+				"A Lucide icon for Second Brain Dashboard's tab header and ribbon button, in place of " +
+				"the Second Brain Dashboard crystal. Browse the set or type an id; leave empty for the crystal.",
 			themeColorTarget: "Follow theme icon color",
 			themeColorTargetDesc:
 				"Draw the crystal icon and/or the title text in your theme's icon " +
@@ -710,7 +710,7 @@ export const en = {
 			searchEngineDesc:
 				"Which engine powers the search bar. Omnisearch requires the " +
 				"Omnisearch community plugin to be installed and enabled.",
-			searchEngineBuiltin: "Hearth (built-in)",
+			searchEngineBuiltin: "Second Brain Dashboard (built-in)",
 			searchEngineOmnisearch: "Omnisearch",
 			omnisearchMissing:
 				"Omnisearch isn’t installed or enabled. Install and enable it, " +
@@ -787,7 +787,7 @@ export const en = {
 			bannerFullWidthDesc:
 				"Run the banner edge to edge instead of lining it up with the content below.",
 			labels: {
-				default: "Hearth default",
+				default: "Second Brain Dashboard default",
 				none: "None",
 				color: "Solid color",
 				image: "Vault image",
@@ -822,7 +822,7 @@ export const en = {
 		behaviour: {
 			heading: "Behaviour",
 			headingDesc:
-				"When and where Hearth opens, and the phone/tablet search-only mode.",
+				"When and where Second Brain Dashboard opens, and the phone/tablet search-only mode.",
 			openOnStartup: "Open on startup",
 			openOnStartupDesc: "Open the home view when the vault loads.",
 			replaceNewTabs: "Replace new tabs",
@@ -835,23 +835,23 @@ export const en = {
 			liveRefreshDesc:
 				"Keep an open home view current as the vault changes — Recent, Bookmarks " +
 				"and saved-query cards update without reopening the tab. Switching back to " +
-				"the Hearth tab always refreshes it regardless of this setting.",
+				"the Second Brain Dashboard tab always refreshes it regardless of this setting.",
 			mobileSearchOnly: "Mobile mode (search only)",
 			mobileSearchOnlyDesc:
 				"On phones and tablets, hide the dashboard and show only the search " +
 				"field. No effect on desktop.",
 			disableExternalCalls: "Disable external calls",
 			disableExternalCallsDesc:
-				"Block all outbound network requests Hearth makes, including Jira, " +
+				"Block all outbound network requests Second Brain Dashboard makes, including Jira, " +
 				"external calendars, RSS feeds, and the calculator's currency-rate lookup.",
 			openIn: "Open notes in",
 			openInDesc:
-				"Where a note goes when you open one from Hearth. \"Current tab\" replaces " +
-				"the home view, so Hearth behaves like any other tab. Ctrl/Cmd-click always " +
+				"Where a note goes when you open one from Second Brain Dashboard. \"Current tab\" replaces " +
+				"the home view, so Second Brain Dashboard behaves like any other tab. Ctrl/Cmd-click always " +
 				"opens a new tab regardless.",
 			openInModes: {
 				tab: "A new tab",
-				same: "The current tab (replace Hearth)",
+				same: "The current tab (replace Second Brain Dashboard)",
 				split: "A split pane",
 				window: "A new window",
 			},
@@ -867,18 +867,18 @@ export const en = {
 				cardDesc:
 					"Notes listed by Recent, Bookmarks, Favourites, Calendar, Heatmap and " +
 					"Tasks cards, and by mobile action buttons.",
-				newNote: "Notes Hearth creates",
+				newNote: "Notes Second Brain Dashboard creates",
 				newNoteDesc: "New notes, daily notes and event notes, opened as they're made.",
 			},
-			openFromOutside: "Notes opened from outside Hearth",
+			openFromOutside: "Notes opened from outside Second Brain Dashboard",
 			openFromOutsideDesc:
 				"The file explorer, the quick switcher, the graph — and anything a card " +
 				"embeds that opens links itself. Obsidian hands those to whichever tab " +
-				"is focused, so a Hearth tab gets taken over. Choose \"a new tab\" to keep " +
-				"the Hearth tab; the file explorer then stops following what you open.",
+				"is focused, so a Second Brain Dashboard tab gets taken over. Choose \"a new tab\" to keep " +
+				"the Second Brain Dashboard tab; the file explorer then stops following what you open.",
 			openFromOutsideModes: {
-				same: "The current tab (replace Hearth)",
-				tab: "A new tab (keep Hearth open)",
+				same: "The current tab (replace Second Brain Dashboard)",
+				tab: "A new tab (keep Second Brain Dashboard open)",
 			},
 		},
 		mobileActions: {
@@ -907,12 +907,12 @@ export const en = {
 		integrations: {
 			heading: "All integrations",
 			headingDesc:
-				"Everything Hearth can work with, listed whether or not it's installed. " +
+				"Everything Second Brain Dashboard can work with, listed whether or not it's installed. " +
 				"Most integrations need no setup — the ones that do say where their " +
 				"settings live.",
 			groups: {
 				plugin: "Community plugins",
-				pluginDesc: "Hearth picks these up automatically once they're enabled.",
+				pluginDesc: "Second Brain Dashboard picks these up automatically once they're enabled.",
 				core: "Obsidian core plugins",
 				coreDesc:
 					"Built into Obsidian. Enable them in Settings → Core plugins if a " +
@@ -929,11 +929,11 @@ export const en = {
 				external: "Network",
 				always: "Always available",
 			},
-			/** Tooltip on the status pill, spelling out what it means for Hearth. */
+			/** Tooltip on the status pill, spelling out what it means for Second Brain Dashboard. */
 			statusTooltip: {
-				enabled: "Installed and enabled — Hearth is using it.",
-				disabled: "Installed but turned off, so Hearth can't use it right now.",
-				missing: "Not installed. Everything else in Hearth works without it.",
+				enabled: "Installed and enabled — Second Brain Dashboard is using it.",
+				disabled: "Installed but turned off, so Second Brain Dashboard can't use it right now.",
+				missing: "Not installed. Everything else in Second Brain Dashboard works without it.",
 				external: "An outbound request, not a plugin.",
 				always: "Nothing to install.",
 			},
@@ -942,7 +942,7 @@ export const en = {
 				section: "Settings below on this tab.",
 				tab: (tab: string) => `Settings under ${tab}.`,
 				card: "Configured on the card itself, on your dashboard.",
-				pluginSettings: "Uses that plugin's own settings — nothing to set in Hearth.",
+				pluginSettings: "Uses that plugin's own settings — nothing to set in Second Brain Dashboard.",
 				none: "Nothing to configure.",
 			},
 			/** Row buttons. */
@@ -956,7 +956,7 @@ export const en = {
 					name: "Omnisearch",
 					desc:
 						"Swaps the search bar over to Omnisearch's fuzzy, full-text index " +
-						"instead of Hearth's built-in engine. Pick the engine under " +
+						"instead of Second Brain Dashboard's built-in engine. Pick the engine under " +
 						"Search → Search bar; the choice only sticks while Omnisearch is enabled.",
 				},
 				tasknotes: {
@@ -997,7 +997,7 @@ export const en = {
 				iconic: {
 					name: "Iconic",
 					desc:
-						"Per-file icons set with Iconic show up wherever Hearth lists a file — " +
+						"Per-file icons set with Iconic show up wherever Second Brain Dashboard lists a file — " +
 						"Recent, Favorites, saved searches and search results.",
 				},
 				iconize: {
@@ -1038,7 +1038,7 @@ export const en = {
 				},
 				fileExplorer: {
 					name: "File explorer",
-					desc: "Powers “Reveal in file explorer” on Hearth's search results.",
+					desc: "Powers “Reveal in file explorer” on Second Brain Dashboard's search results.",
 				},
 				workspaces: {
 					name: "Workspaces",
@@ -1114,7 +1114,7 @@ export const en = {
 			fieldsEnable: "Customize task fields",
 			fieldsEnableDesc:
 				"Replace the fixed metadata Tasks cards show with fields you define " +
-				"yourself — any frontmatter property or anything Hearth reads, named, " +
+				"yourself — any frontmatter property or anything Second Brain Dashboard reads, named, " +
 				"colored and ordered how you like. Off by default, and tasks keep " +
 				"their usual look until you turn it on. Turning it on starts from a " +
 				"blank slate: tasks show only the fields you add.",
@@ -1127,16 +1127,16 @@ export const en = {
 			heading: "File icons / Iconic / Iconize",
 			headingDesc:
 				"Use the per-file icons you've set with the Iconic or Iconize " +
-				"plugins wherever Hearth shows a file — Recent, Favorites, saved " +
+				"plugins wherever Second Brain Dashboard shows a file — Recent, Favorites, saved " +
 				"searches and the search bar. Lucide icons and emoji are shown; " +
-				"files using an icon from a downloaded icon pack keep Hearth's own " +
+				"files using an icon from a downloaded icon pack keep Second Brain Dashboard's own " +
 				"file-type icon.",
 			enable: "Use icons from Iconic / Iconize",
 			enableDesc:
-				"Off shows Hearth's file-type icon for every file, ignoring both plugins.",
+				"Off shows Second Brain Dashboard's file-type icon for every file, ignoring both plugins.",
 			enableDescNoPlugin:
 				"Neither Iconic nor Iconize is enabled right now, so every file " +
-				"shows Hearth's file-type icon. This can stay on — it takes effect " +
+				"shows Second Brain Dashboard's file-type icon. This can stay on — it takes effect " +
 				"as soon as one of them is installed.",
 			property: "Iconize frontmatter property",
 			propertyDesc:
@@ -1191,7 +1191,7 @@ export const en = {
 			heading: "Import / export",
 			headingDesc:
 				"Back up or share your dashboard layout (cards, grid, favorites) — or every " +
-				"Hearth setting — as a JSON file.",
+				"Second Brain Dashboard setting — as a JSON file.",
 			export: "Export layout",
 			exportDesc: "Download the current dashboard layout as a JSON file.",
 			exportButton: "Export file",
@@ -1206,14 +1206,14 @@ export const en = {
 				"This replaces your current dashboards, pinned cards and layout settings. This can't be undone.",
 			exportSettings: "Export settings",
 			exportSettingsDesc:
-				"Download every Hearth setting — the full layout plus header, background, " +
+				"Download every Second Brain Dashboard setting — the full layout plus header, background, " +
 				"behaviour, appearance and TaskNotes options — as a JSON backup file.",
 			importSettings: "Import settings",
 			importSettingsDesc:
-				"Choose a previously exported settings file. This replaces all your Hearth settings.",
+				"Choose a previously exported settings file. This replaces all your Second Brain Dashboard settings.",
 			importSettingsTitle: "Import settings?",
 			importSettingsMessage:
-				"This replaces all your Hearth settings — dashboards, layout, header, " +
+				"This replaces all your Second Brain Dashboard settings — dashboards, layout, header, " +
 				"background, behaviour and appearance. This can't be undone.",
 		},
 	},
@@ -1562,7 +1562,7 @@ export const en = {
 				`${count} event${count === 1 ? "" : "s"} loaded.`,
 			taskNotesSubPending: "Not loaded yet — refresh below.",
 			taskNotesSubDisabled: "Disabled in TaskNotes.",
-			taskNotesSubBlocked: "Not fetched: external calls are disabled in Hearth's settings.",
+			taskNotesSubBlocked: "Not fetched: external calls are disabled in Second Brain Dashboard's settings.",
 			taskNotesSubFailed: (reason: string) => `Couldn't load: ${reason}`,
 			taskNotesSubNotCalendar: "the response wasn't an iCalendar feed.",
 			taskNotesSubMissingFile: "that file isn't in the vault.",
@@ -1782,7 +1782,7 @@ export const en = {
 			sourceDesc:
 				"Markdown checkboxes work anywhere. TaskNotes reads that plugin's " +
 				"task notes via frontmatter (field names configurable in Settings → " +
-				"Hearth, since TaskNotes has no API for other plugins to query it). " +
+				"Second Brain Dashboard, since TaskNotes has no API for other plugins to query it). " +
 				"Kanban reads a single Kanban-plugin board note, one column per heading.",
 			sourceCheckbox: "Markdown checkboxes",
 			sourceTaskNotes: "TaskNotes plugin",
@@ -1852,12 +1852,12 @@ export const en = {
 			doneStatusesDesc:
 				"TaskNotes source: which status values are treated as complete (hidden " +
 				"unless “Show completed” is on, and struck through when shown), one per " +
-				"line. Leave empty to use just the done value from Settings → Hearth. " +
+				"line. Leave empty to use just the done value from Settings → Second Brain Dashboard. " +
 				"Add, e.g., “canceled” to count cancelled tasks as complete too.",
 			doneStatusesPlaceholder: "done\ncanceled",
 			fields: "Fields",
 			fieldsFollowGlobal:
-				"Following the fields from Settings → Hearth → Integrations. Turn on " +
+				"Following the fields from Settings → Second Brain Dashboard → Integrations. Turn on " +
 				"to give this card its own.",
 			fieldsCustomize: "Customize…",
 			fieldsTitle: "Task fields",
@@ -1916,15 +1916,15 @@ export const en = {
 			fieldNoKeys: "No keys",
 			fieldAddKey: "Add a key",
 			fieldAddKeyDesc:
-				"Hearth's own values reach a checkbox line's priority, a board column " +
+				"Second Brain Dashboard's own values reach a checkbox line's priority, a board column " +
 				"and the parsed dates; a property reads anything in your frontmatter.",
-			fieldAddBuiltin: "What Hearth reads",
+			fieldAddBuiltin: "What Second Brain Dashboard reads",
 			fieldAddProperty: "Frontmatter property",
 			fieldAddKeyTyped: "Type a property name…",
 			fieldAddKeyPlaceholder: "Property name",
 			fieldRemoveKey: "Remove key",
 			fieldPickProperty: "Properties found in your notes",
-			fieldPickBuiltin: "Values Hearth parses itself",
+			fieldPickBuiltin: "Values Second Brain Dashboard parses itself",
 			fieldKeyAlreadyAdded: (key: string) => `“${key}” is already a key on this field.`,
 			fieldMapValues: "Values & colors",
 			fieldMappedValues: (n: number) => `${n} value(s) mapped`,
@@ -2069,7 +2069,7 @@ export const en = {
 			languageTs: "Script (TS)",
 			query: "Query",
 			queryDesc:
-				"A Datacore query, e.g. @page and #project. Hearth renders the matches as a " +
+				"A Datacore query, e.g. @page and #project. Second Brain Dashboard renders the matches as a " +
 				"live list of links. Runs with no “current note”, so global queries work " +
 				"fully but file-relative ones have no file to resolve to.",
 			queryPlaceholder: "@page and #project",
@@ -2143,7 +2143,7 @@ export const en = {
 			removeFeed: "Remove feed",
 			github: "Add from GitHub",
 			githubDesc:
-				"Enter a repository as owner/repo (or paste its URL) and pick what to follow — Hearth builds the Atom feed for you.",
+				"Enter a repository as owner/repo (or paste its URL) and pick what to follow — Second Brain Dashboard builds the Atom feed for you.",
 			githubPlaceholder: "owner/repo",
 			githubReleases: "Releases",
 			githubCommits: "Commits",
@@ -2176,10 +2176,10 @@ export const en = {
 			location: "Location",
 			search: "Find a place",
 			searchDesc:
-				"Search by name — Hearth stores the coordinates on the card, so this " +
+				"Search by name — Second Brain Dashboard stores the coordinates on the card, so this " +
 				"lookup happens once.",
 			searchDisabled:
-				"Place search is unavailable while external calls are disabled in Hearth " +
+				"Place search is unavailable while external calls are disabled in Second Brain Dashboard " +
 				"settings. You can still enter coordinates below.",
 			searchPlaceholder: "Prague, Lisbon, Kyoto…",
 			searchButton: "Search",
@@ -2253,7 +2253,7 @@ export const en = {
 			hostDesc: "The Jira site origin. HTTPS is required when sending a personal access token.",
 			hostPlaceholder: "https://jira.example.com",
 			pat: "Personal access token",
-			patDesc: "Bearer PAT used for this card. Stored in Hearth's plugin data.",
+			patDesc: "Bearer PAT used for this card. Stored in Second Brain Dashboard's plugin data.",
 			apiBase: "API base path",
 			apiBaseDesc: "A relative Jira REST path. Full URLs are rejected.",
 			apiBasePlaceholder: "/rest/api/latest",
@@ -2265,7 +2265,7 @@ export const en = {
 			noFavoriteFilters: "Jira returned no favorite filters.",
 			loadFailed: "Couldn't load Jira filters. Check the host, API path, and token.",
 			externalCallsDisabled:
-				"Favorite filters can't be loaded while external calls are disabled in Hearth settings.",
+				"Favorite filters can't be loaded while external calls are disabled in Second Brain Dashboard settings.",
 			controls: "Filter controls",
 			maxResults: "Max results",
 			maxResultsDesc: "The most refined issues to show, up to 200.",
@@ -2296,7 +2296,7 @@ export const en = {
 				"arrows and menu. Handy when the card shows a single file.",
 			perfLabel: "Performance",
 			perfNote:
-				"This is by far the heaviest card Hearth has. It runs another " +
+				"This is by far the heaviest card Second Brain Dashboard has. It runs another " +
 				"plugin's full view live inside the dashboard, so it keeps that " +
 				"plugin's own timers, listeners and rendering going for as long as " +
 				"the board is open — every one of these cards costs again. Use one " +
@@ -2926,7 +2926,7 @@ export const en = {
 		daily: "Always today's note, created on first click",
 		web: "A web page in an iframe, refreshed on a timer",
 		bookmarks: "Your Obsidian bookmarks, one click away",
-		favorites: "The notes you starred in Hearth",
+		favorites: "The notes you starred in Second Brain Dashboard",
 		recent: "The files you opened most recently",
 		links: "A launchpad of links, notes and folders",
 		commands: "Buttons that run Obsidian commands",
@@ -2974,7 +2974,7 @@ export const en = {
 			railLabel: "Request a card",
 			heading: "Request a card",
 			intro:
-				"Missing something? Describe the card you wish Hearth had — what it " +
+				"Missing something? Describe the card you wish Second Brain Dashboard had — what it " +
 				"should show and where its data would come from.",
 			footPrompt: "Not what you were looking for?",
 			footLink: "Request a card",
@@ -2986,7 +2986,7 @@ export const en = {
 			emailDesc: "Straight to the maintainer, if you'd rather not use GitHub. Opens your mail app.",
 			emailAction: "Open email",
 			prefilledNote:
-				"Both open pre-filled with a few prompts and your Hearth and Obsidian versions — edit anything before sending.",
+				"Both open pre-filled with a few prompts and your Second Brain Dashboard and Obsidian versions — edit anything before sending.",
 		},
 	},
 
@@ -3014,9 +3014,9 @@ export const en = {
 		notAnObject: "Layout must be a JSON object.",
 		noValidDashboards: "Layout contained no valid dashboards.",
 		noValidCards: "Layout contained no valid cards.",
-		notAHearthLayout:
-			'Not a Hearth layout — no "dashboards" or "cards" array found.',
-		notHearthSettings:
-			'Not a Hearth settings backup — no "hearthSettings" marker or layout found.',
+		notASbdLayout:
+			'Not a Second Brain Dashboard layout — no "dashboards" or "cards" array found.',
+		notSbdSettings:
+			'Not a Second Brain Dashboard settings backup — no "sbdSettings" marker or layout found.',
 	},
 };

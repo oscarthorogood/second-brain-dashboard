@@ -1,14 +1,14 @@
-# Contributing to Hearth
+# Contributing to Second Brain Dashboard
 
 First off — thank you. The fact that you're reading this means you care about
-Hearth, and that already makes my day.
+Second Brain Dashboard, and that already makes my day.
 
 This guide is short and honest about **where help lands best right now**. It
 will change as the project matures.
 
 ## Where the project is today
 
-Hearth is moving fast. The architecture, the card system and the settings are
+Second Brain Dashboard is moving fast. The architecture, the card system and the settings are
 all still shifting release to release, and I'm often mid-rewrite of something
 you can't see yet. That has one practical consequence:
 
@@ -22,13 +22,13 @@ So for the moment, the contributions I can genuinely act on and value most are:
 ### 🐛 Bug reports
 By far the most useful thing you can send me. If something misbehaves, tell me:
 - what you did, what you expected, and what happened instead
-- your Obsidian version, platform (desktop/mobile) and Hearth version
+- your Obsidian version, platform (desktop/mobile) and Second Brain Dashboard version
 - a screenshot, screen recording or console error if you have one
 
 Small, self-contained reproductions are gold.
 
 ### 💡 Feature requests & ideas
-Hearth is opinionated but I love hearing how people actually use their vaults.
+Second Brain Dashboard is opinionated but I love hearing how people actually use their vaults.
 Open an issue describing the problem you're trying to solve (not just the
 feature) — the *why* often points at a better solution than the *what*.
 
@@ -65,6 +65,6 @@ live in [`RELEASING.md`](RELEASING.md).
 
 ## Filing an issue
 
-Use [GitHub Issues](https://github.com/ondreu/Hearth/issues). A quick search
+Use [GitHub Issues](https://github.com/oscarthorogood/second-brain-dashboard/issues). A quick search
 first saves duplicates. Otherwise there are no forms to fill — just be clear,
 and be kind. 🔥

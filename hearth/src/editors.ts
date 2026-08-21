@@ -2,7 +2,7 @@ import { Notice, Setting, type App } from "obsidian";
 import { CARD_KINDS, cardDefinition } from "./cards";
 import { type CardEditorContext } from "./cards/definition";
 import { t } from "./i18n";
-import { HearthTabbedModal, type HearthModalTab } from "./tabbedmodal";
+import { SbdTabbedModal, type SbdModalTab } from "./tabbedmodal";
 import {
 	CARD_BORDER_WIDTH_MAX,
 	effectiveCardBorderWidth,
@@ -49,7 +49,7 @@ export interface CardSettingsOptions {
  * Remove/Done footer, so a card with a dense editor (tasks, RSS) stays as
  * navigable as a plain one.
  */
-export class CardSettingsModal extends HearthTabbedModal {
+export class CardSettingsModal extends SbdTabbedModal {
 	private card: DashboardCard;
 	private opts: CardSettingsOptions;
 
@@ -77,20 +77,20 @@ export class CardSettingsModal extends HearthTabbedModal {
 
 	onOpen(): void {
 		this.titleEl.setText(t().editors.title);
-		this.hearthRenderShell();
+		this.sbdRenderShell();
 	}
 
 	/** Rebuild the modal in place, keeping the active tab. Kind-specific editors
 	 * call this after a change that swaps which controls are shown. */
 	private render(): void {
-		this.hearthRenderShell();
+		this.sbdRenderShell();
 	}
 
-	protected hearthTabStorageKey(): string {
-		return "hearth-card-settings-tab";
+	protected sbdTabStorageKey(): string {
+		return "sbd-card-settings-tab";
 	}
 
-	protected hearthTabs(): HearthModalTab[] {
+	protected sbdTabs(): SbdModalTab[] {
 		const tabs = t().editors.tabs;
 		return [
 			{ id: "content", label: tabs.content, icon: "square-pen" },
@@ -99,7 +99,7 @@ export class CardSettingsModal extends HearthTabbedModal {
 		];
 	}
 
-	protected hearthRenderBody(body: HTMLElement, tabId: string): void {
+	protected sbdRenderBody(body: HTMLElement, tabId: string): void {
 		switch (tabId) {
 			case "content":
 				this.identitySection(body);
@@ -153,7 +153,7 @@ export class CardSettingsModal extends HearthTabbedModal {
 	}
 
 	/** Persistent footer shared by every tab: remove the card, or close. */
-	protected hearthRenderFooter(footer: HTMLElement): void {
+	protected sbdRenderFooter(footer: HTMLElement): void {
 		new Setting(footer)
 			.addButton((b) => {
 				b.setButtonText(t().editors.removeCard).onClick(() => {
@@ -169,7 +169,7 @@ export class CardSettingsModal extends HearthTabbedModal {
 						},
 					});
 				});
-				b.buttonEl.addClass("hearth-danger-btn");
+				b.buttonEl.addClass("sbd-danger-btn");
 			})
 			.addButton((b) =>
 				b
@@ -321,7 +321,7 @@ export class CardSettingsModal extends HearthTabbedModal {
 					this.opts.save();
 				});
 			txt.inputEl.type = "number";
-			txt.inputEl.addClass("hearth-count-input");
+			txt.inputEl.addClass("sbd-count-input");
 			txt.inputEl.setAttribute("aria-label", t().editors.size.widthAria);
 		});
 		row.addText((txt) => {
@@ -332,7 +332,7 @@ export class CardSettingsModal extends HearthTabbedModal {
 				this.opts.save();
 			});
 			txt.inputEl.type = "number";
-			txt.inputEl.addClass("hearth-count-input");
+			txt.inputEl.addClass("sbd-count-input");
 			txt.inputEl.setAttribute("aria-label", t().editors.size.heightAria);
 		});
 		addResetButton(this.editorContext(), row, t().editors.resetSize, () => {

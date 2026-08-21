@@ -5,7 +5,7 @@
  * a settings patch come out. The wizard (`wizard.ts`) only collects the answers
  * and draws the result — none of the decisions below depend on Obsidian, so all
  * of them are unit-testable, which matters because this is the one code path a
- * new user's very first impression of Hearth is built by.
+ * new user's very first impression of Second Brain Dashboard is built by.
  *
  * The two halves are deliberately separate:
  *
@@ -31,7 +31,7 @@ import type { SetupDetection, SetupIntegrationId } from "./detect";
 import { taskNotesImport } from "./detect";
 
 /**
- * What a user says they want Hearth *for*.
+ * What a user says they want Second Brain Dashboard *for*.
  *
  * The wizard asks this instead of asking which cards to add, because a new user
  * has no idea what a "heatmap card" is and every idea of whether they journal.
@@ -83,7 +83,7 @@ export const SURFACE_PRESETS: Record<
 	SetupSurface,
 	Pick<HomeSettings, "cardOpacity" | "cardBlur" | "cardRadius" | "cardBorderWidth">
 > = {
-	// Hearth's signature: translucent cards over the wallpaper, frosted.
+	// Second Brain Dashboard's signature: translucent cards over the wallpaper, frosted.
 	glass: { cardOpacity: 0.5, cardBlur: 7, cardRadius: 14, cardBorderWidth: 1 },
 	// Opaque panels. Reads best against a busy photograph, and costs no blur.
 	solid: { cardOpacity: 1, cardBlur: 0, cardRadius: 12, cardBorderWidth: 1 },
@@ -163,7 +163,7 @@ export interface SetupAnswers {
 /**
  * The answers a vault starts the wizard with.
  *
- * Every default is either Hearth's own default or something the detection pass
+ * Every default is either Second Brain Dashboard's own default or something the detection pass
  * discovered, so a user who clicks straight through to the end still gets a
  * sensible, working board rather than an empty one.
  */
@@ -237,7 +237,7 @@ export interface PlannedCard {
 /** A planned card before it has an id or a packed position. */
 type CardDraft = Omit<DashboardCard, "id">;
 
-/** The default grid width a plan lays out against — Hearth's own default, so a
+/** The default grid width a plan lays out against — Second Brain Dashboard's own default, so a
  * board built here lines up with one built by hand. */
 const PLAN_COLUMNS = 12;
 
@@ -660,7 +660,7 @@ function applyIntegrations(
  * How many grid rows a board may occupy and still be worth squeezing onto one
  * screen.
  *
- * Fit-to-page is Hearth's default and is what makes a board read as a *home
+ * Fit-to-page is Second Brain Dashboard's default and is what makes a board read as a *home
  * screen* rather than a page — but it works by scaling the whole layout down
  * until it fits, so a board twice as tall as the viewport renders every card at
  * half height. The starter board is thirteen rows and squeezes comfortably; a

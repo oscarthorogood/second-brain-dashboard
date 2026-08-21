@@ -648,12 +648,12 @@ export function spriteRuns(rows: string[]): SpriteRun[] {
 }
 
 const RUN_FILL: Record<string, string> = {
-	o: "var(--hearth-pet-outline)",
-	b: "var(--hearth-pet-body)",
-	l: "var(--hearth-pet-light)",
-	a: "var(--hearth-pet-accent)",
-	e: "var(--hearth-pet-eye)",
-	w: "var(--hearth-pet-shine)",
+	o: "var(--sbd-pet-outline)",
+	b: "var(--sbd-pet-body)",
+	l: "var(--sbd-pet-light)",
+	a: "var(--sbd-pet-accent)",
+	e: "var(--sbd-pet-eye)",
+	w: "var(--sbd-pet-shine)",
 };
 
 /**
@@ -664,7 +664,7 @@ const RUN_FILL: Record<string, string> = {
  */
 function drawSprite(parent: HTMLElement, species: PetSpecies, mood: PetMood, still: boolean): void {
 	const svg = parent.createSvg("svg", {
-		cls: "hearth-pet-sprite",
+		cls: "sbd-pet-sprite",
 		attr: {
 			viewBox: `0 0 ${PET_SPRITE_SIZE} ${PET_SPRITE_SIZE}`,
 			"shape-rendering": "crispEdges",
@@ -688,7 +688,7 @@ function drawSprite(parent: HTMLElement, species: PetSpecies, mood: PetMood, sti
 
 	const frames = still ? spriteFrames(species, mood).slice(0, 1) : spriteFrames(species, mood);
 	frames.forEach((frame, index) => {
-		const group = svg.createSvg("g", { cls: "hearth-pet-frame", attr: { "data-f": String(index) } });
+		const group = svg.createSvg("g", { cls: "sbd-pet-frame", attr: { "data-f": String(index) } });
 		// Two layers per frame. The face is drawn *whole* underneath, with the
 		// eye pixels filled in as skin, and the eyes go on top in their own
 		// group — so the stylesheet can shift them a pixel towards the pointer
@@ -696,7 +696,7 @@ function drawSprite(parent: HTMLElement, species: PetSpecies, mood: PetMood, sti
 		// the card being redrawn on every mouse move.
 		paintRuns(group, spriteRuns(frame.map((row) => row.replace(/[ew]/g, "b"))));
 		paintRuns(
-			group.createSvg("g", { cls: "hearth-pet-eyes" }),
+			group.createSvg("g", { cls: "sbd-pet-eyes" }),
 			spriteRuns(frame).filter((run) => run.ch === "e" || run.ch === "w"),
 		);
 	});
@@ -732,7 +732,7 @@ function moodLabel(mood: PetMood): string {
  * when its animation ends, so nothing accumulates however often it's clicked. */
 function burstHearts(stage: HTMLElement): void {
 	for (let i = 0; i < 3; i++) {
-		const heart = stage.createDiv("hearth-pet-heart");
+		const heart = stage.createDiv("sbd-pet-heart");
 		heart.setText("♥");
 		heart.style.setProperty("--i", String(i));
 		heart.addEventListener("animationend", () => heart.remove());
@@ -750,17 +750,17 @@ export function renderPet(
 	const palette = paletteFor(cfg);
 	const still = lowPowerActive(view.plugin.settings);
 
-	const wrap = body.createDiv("hearth-pet");
+	const wrap = body.createDiv("sbd-pet");
 	wrap.addClass(`is-${cfg.size ?? "md"}`);
-	wrap.style.setProperty("--hearth-pet-outline", palette.outline);
-	wrap.style.setProperty("--hearth-pet-body", palette.body);
-	wrap.style.setProperty("--hearth-pet-light", palette.light);
-	wrap.style.setProperty("--hearth-pet-accent", palette.accent);
+	wrap.style.setProperty("--sbd-pet-outline", palette.outline);
+	wrap.style.setProperty("--sbd-pet-body", palette.body);
+	wrap.style.setProperty("--sbd-pet-light", palette.light);
+	wrap.style.setProperty("--sbd-pet-accent", palette.accent);
 
-	const stage = wrap.createDiv("hearth-pet-stage");
-	const name = wrap.createDiv("hearth-pet-name");
-	const moodEl = wrap.createDiv("hearth-pet-mood");
-	const activity = wrap.createDiv("hearth-pet-activity");
+	const stage = wrap.createDiv("sbd-pet-stage");
+	const name = wrap.createDiv("sbd-pet-name");
+	const moodEl = wrap.createDiv("sbd-pet-mood");
+	const activity = wrap.createDiv("sbd-pet-activity");
 
 	/** Re-derive everything from the vault and repaint. Cheap enough to run on
 	 * every vault event: one pass over the file list plus a few dozen rects. */
@@ -772,8 +772,8 @@ export function renderPet(
 	 * every repaint — the fresh sprite starts centred and the variables that
 	 * moved the old one must not outlive it. */
 	const lookAway = () => {
-		stage.style.removeProperty("--hearth-pet-look-x");
-		stage.style.removeProperty("--hearth-pet-look-y");
+		stage.style.removeProperty("--sbd-pet-look-x");
+		stage.style.removeProperty("--sbd-pet-look-y");
 	};
 
 	/**
@@ -794,7 +794,7 @@ export function renderPet(
 		// never comes near it; "card" only looks up when you are on its card.
 		// "card" watches the card body rather than the sprite alone, so the pet
 		// looks up as soon as the pointer is anywhere on its card.
-		const surface: HTMLElement = follow === "board" ? (body.closest(".hearth-grid") ?? body) : body;
+		const surface: HTMLElement = follow === "board" ? (body.closest(".sbd-grid") ?? body) : body;
 
 		let queued = false;
 		let pending: { x: number; y: number } | null = null;
@@ -808,8 +808,8 @@ export function renderPet(
 			// pupils snap between pixels the way pixel art should.
 			const dx = Math.max(-1, Math.min(1, (pending.x - (box.left + box.width / 2)) / (box.width / 2)));
 			const dy = Math.max(-1, Math.min(1, (pending.y - (box.top + box.height / 2)) / (box.height / 2)));
-			stage.style.setProperty("--hearth-pet-look-x", `${(dx * 0.9).toFixed(2)}px`);
-			stage.style.setProperty("--hearth-pet-look-y", `${(dy * 0.6).toFixed(2)}px`);
+			stage.style.setProperty("--sbd-pet-look-x", `${(dx * 0.9).toFixed(2)}px`);
+			stage.style.setProperty("--sbd-pet-look-y", `${(dy * 0.6).toFixed(2)}px`);
 		};
 		component.registerDomEvent(surface, "pointermove", (ev: PointerEvent) => {
 			if (shown === "sleepy") return;
@@ -846,11 +846,11 @@ export function renderPet(
 		// Sleeping pets get their z's — but not while animation is suppressed,
 		// since they are nothing but a float animation.
 		if (mood === "sleepy" && !still) {
-			const zzz = stage.createDiv(night ? "hearth-pet-zzz is-moon" : "hearth-pet-zzz");
+			const zzz = stage.createDiv(night ? "sbd-pet-zzz is-moon" : "sbd-pet-zzz");
 			for (let i = 0; i < (night ? 1 : 3); i++) {
 				// The glyph itself is drawn in CSS (::after) — it is decoration,
 				// not text, and must not be picked up as a translatable string.
-				const z = zzz.createDiv("hearth-pet-z");
+				const z = zzz.createDiv("sbd-pet-z");
 				z.style.setProperty("--i", String(i));
 			}
 		}

@@ -89,7 +89,7 @@ export const CARD_DEFINITIONS: { [K in CardKind]: CardDefinition<K> } = {
 export const CARD_KINDS = Object.keys(CARD_DEFINITIONS) as CardKind[];
 
 /** Inert definition served for a kind this build doesn't know — persisted data
- * written by a newer Hearth version (then downgraded), a sync conflict, or a
+ * written by a newer Second Brain Dashboard version (then downgraded), a sync conflict, or a
  * hand-edited data.json. The card renders an empty body (the old render
  * switch's default) instead of a lookup on `undefined` taking down the whole
  * dashboard render; the card itself keeps its data and its slot, and the

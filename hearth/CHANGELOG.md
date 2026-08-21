@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Hearth are documented in this file.
+All notable changes to Second Brain Dashboard are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to a numeric-only versioning scheme
@@ -12,6 +12,14 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 [GitHub Releases](https://github.com/ondreu/Hearth/releases) page.
 
 ## [2.1.0]
+
+### Changed
+
+- **Renamed to Second Brain Dashboard.** The plugin id, display name, CSS
+  class/custom-property prefix (`hearth-` → `sbd-`) and every other Hearth
+  branding mention have been renamed to Second Brain Dashboard. This changes
+  the plugin id, so existing installs start from a fresh settings/layout store
+  on upgrade.
 
 ### Added
 

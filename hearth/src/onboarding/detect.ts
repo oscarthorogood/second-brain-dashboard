@@ -2,7 +2,7 @@
  * What the setup wizard can find in a vault before it asks a single question.
  *
  * The wizard's promise is that it does the looking: rather than presenting a
- * list of everything Hearth *could* talk to (that is the Integrations
+ * list of everything Second Brain Dashboard *could* talk to (that is the Integrations
  * catalogue's job — see `src/integrations.ts`), it reports only what is
  * actually installed and enabled *here*, and offers to wire each one up.
  *
@@ -30,7 +30,7 @@ export const KANBAN_PLUGIN_ID = "obsidian-kanban";
  *
  * Deliberately a *subset* of `INTEGRATIONS`: an entry earns a place here only
  * when accepting it has a concrete, automatic effect — a card added and
- * configured, or a setting flipped. Anything Hearth merely tolerates (Canvas,
+ * configured, or a setting flipped. Anything Second Brain Dashboard merely tolerates (Canvas,
  * Excalidraw, the file explorer) has nothing for the wizard to do and would
  * only be a question with no answer worth giving.
  */
@@ -133,7 +133,7 @@ const KANBAN_FRONTMATTER_KEY = "kanban-plugin";
 
 /** A Kanban board note in the vault, or null. Looks at frontmatter rather than
  * the plugin, because a board is readable whether or not Kanban is enabled —
- * which is exactly why Hearth can read one at all. */
+ * which is exactly why Second Brain Dashboard can read one at all. */
 function findKanbanBoard(app: App): string | null {
 	const file = findFile(app, (f) => {
 		if (f.extension !== "md") return false;
@@ -164,7 +164,7 @@ export function detectSetup(app: App): SetupDetection {
 
 	const kanbanPath = findKanbanBoard(app);
 	// Offered on the strength of a board existing, not of the plugin being on:
-	// Hearth parses the note itself. But never alongside TaskNotes — one Tasks
+	// Second Brain Dashboard parses the note itself. But never alongside TaskNotes — one Tasks
 	// card has one source, and TaskNotes is the richer of the two.
 	if (kanbanPath && !taskNotesOn) {
 		integrations.push({
@@ -220,7 +220,7 @@ export function detectSetup(app: App): SetupDetection {
 		});
 	}
 
-	// Iconic and Iconize are interchangeable as far as Hearth is concerned —
+	// Iconic and Iconize are interchangeable as far as Second Brain Dashboard is concerned —
 	// both feed the one "use the icons you already set" switch — so they are
 	// offered as a single row named after whichever is actually installed.
 	const iconic = pluginEnabled(app, ICONIC_PLUGIN_ID);
@@ -282,7 +282,7 @@ function safeVaultName(app: App): string {
 }
 
 /**
- * The slice of TaskNotes' configuration Hearth needs to mirror, reduced to the
+ * The slice of TaskNotes' configuration Second Brain Dashboard needs to mirror, reduced to the
  * four settings a Tasks card reads.
  *
  * This is the whole point of detecting TaskNotes rather than merely noticing
@@ -303,7 +303,7 @@ export interface TaskNotesImport {
 }
 
 /**
- * Reduce a parsed TaskNotes configuration to the mapping Hearth stores.
+ * Reduce a parsed TaskNotes configuration to the mapping Second Brain Dashboard stores.
  *
  * Pure, and total: a vault whose TaskNotes defines no completed status at all
  * still yields a usable `doneValue` (its documented default, "done"), because

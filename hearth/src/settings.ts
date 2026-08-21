@@ -1,5 +1,5 @@
 import { type App, type ButtonComponent, Notice, Platform, PluginSettingTab, setIcon, Setting, type SettingDefinitionItem, type SliderComponent, type TextComponent, TFile } from "obsidian";
-import type HearthPlugin from "./main";
+import type SbdPlugin from "./main";
 import { TaskFieldsModal } from "./cards/tasks";
 import { hasFileIconPlugin } from "./fileicons";
 import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
@@ -52,13 +52,13 @@ type StringSettingKey =
 	| "iconizeIconProperty";
 
 /** The GitHub repository and support links surfaced in the About tab. */
-const GITHUB_URL = "https://github.com/ondreu/hearth";
-const GITHUB_ISSUES_URL = "https://github.com/ondreu/hearth/issues/new";
+const GITHUB_URL = "https://github.com/oscarthorogood/second-brain-dashboard";
+const GITHUB_ISSUES_URL = "https://github.com/oscarthorogood/second-brain-dashboard/issues/new";
 const KOFI_URL = "https://ko-fi.com/ondru";
 
 /** Download filenames for the JSON exports. */
-const LAYOUT_FILE = "hearth-layout.json";
-const SETTINGS_FILE = "hearth-settings.json";
+const LAYOUT_FILE = "sbd-layout.json";
+const SETTINGS_FILE = "sbd-settings.json";
 
 /** A tab in the settings ribbon: an id (keys `t().settings.tabs`, declared in
  * `integrations.ts` so the catalogue can point at one) and a Lucide icon shown
@@ -91,7 +91,7 @@ const SETTINGS_INDEX: { id: "lookFeel" | "howItWorks" | "data" | "etc"; tabs: Se
 ];
 
 /** localStorage key for where the pane was last left — a tab id, or "index". */
-const ACTIVE_TAB_KEY = "hearth-settings-tab";
+const ACTIVE_TAB_KEY = "sbd-settings-tab";
 
 /**
  * ⚠️ Naming hazard: members of this class live on the same prototype chain as
@@ -102,11 +102,11 @@ const ACTIVE_TAB_KEY = "hearth-settings-tab";
  * that Obsidian 1.13's settings window calls to open a tab. Obsidian invoked
  * it with no arguments, the `switch (undefined)` matched nothing, and the pane
  * came up completely blank — no error, on every reopen. Keep member names
- * unmistakably Hearth-specific; the constructor tripwire below turns any
+ * unmistakably Second Brain Dashboard-specific; the constructor tripwire below turns any
  * future collision into a loud console error instead of a silent blank pane.
  */
 export class HomeSettingTab extends PluginSettingTab {
-	plugin: HearthPlugin;
+	plugin: SbdPlugin;
 
 	/** Scratch space for the background place picker (its query and the last
 	 * search's results). Kept on the tab so it survives the in-place rerenders
@@ -125,7 +125,7 @@ export class HomeSettingTab extends PluginSettingTab {
 		"setControlValue",
 	]);
 
-	constructor(app: App, plugin: HearthPlugin) {
+	constructor(app: App, plugin: SbdPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.warnOnBaseMemberShadowing();
@@ -140,7 +140,7 @@ export class HomeSettingTab extends PluginSettingTab {
 		for (const name of Object.getOwnPropertyNames(HomeSettingTab.prototype)) {
 			if (!HomeSettingTab.INTENDED_OVERRIDES.has(name) && name in base) {
 				console.error(
-					`Hearth: HomeSettingTab.${name} shadows an internal Obsidian SettingTab member and will break settings rendering — rename it (see issue #52)`,
+					`Second Brain Dashboard: HomeSettingTab.${name} shadows an internal Obsidian SettingTab member and will break settings rendering — rename it (see issue #52)`,
 				);
 			}
 		}
@@ -200,7 +200,7 @@ export class HomeSettingTab extends PluginSettingTab {
 		if (!this.loggedDefinitionsQuery) {
 			this.loggedDefinitionsQuery = true;
 			console.warn(
-				`Hearth ${this.plugin.manifest.version}: settings tab queried on the 1.13 definitions pipeline`,
+				`Second Brain Dashboard ${this.plugin.manifest.version}: settings tab queried on the 1.13 definitions pipeline`,
 			);
 		}
 		return [
@@ -214,13 +214,13 @@ export class HomeSettingTab extends PluginSettingTab {
 					// Drop the empty name/desc/control skeleton and the
 					// setting-row flex layout; the pane is a plain block.
 					host.empty();
-					host.addClass("hearth-settings-host");
+					host.addClass("sbd-settings-host");
 					this.renderTarget = host;
 					// Temporary #52 diagnostic: names the render path in the
 					// console of whichever window hosts settings. Remove once
 					// the blank-pane report is confirmed fixed.
 					console.warn(
-						`Hearth ${this.plugin.manifest.version}: rendering settings via setting definitions (Obsidian 1.13+)`,
+						`Second Brain Dashboard ${this.plugin.manifest.version}: rendering settings via setting definitions (Obsidian 1.13+)`,
 					);
 					this.renderInto(host);
 					return () => {
@@ -235,7 +235,7 @@ export class HomeSettingTab extends PluginSettingTab {
 		this.renderTarget = this.containerEl;
 		// Temporary #52 diagnostic — see getSettingDefinitions above.
 		console.warn(
-			`Hearth ${this.plugin.manifest.version}: rendering settings via legacy display()`,
+			`Second Brain Dashboard ${this.plugin.manifest.version}: rendering settings via legacy display()`,
 		);
 		this.renderInto(this.containerEl);
 	}
@@ -250,7 +250,7 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * paths (legacy `display()` and the 1.13 setting-definition host). */
 	private renderInto(containerEl: HTMLElement): void {
 		containerEl.empty();
-		containerEl.addClass("hearth-settings");
+		containerEl.addClass("sbd-settings");
 
 		// Whole-pane backstop. #52 reports a completely blank settings pane — no
 		// content, no error in the (main-window) console — for some users on
@@ -275,7 +275,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			this.fileDatalist(containerEl);
 			this.renderCategoryHead(containerEl, route);
 
-			const body = containerEl.createDiv("hearth-settings-tabbody");
+			const body = containerEl.createDiv("sbd-settings-tabbody");
 			// A page-level backstop nested inside: individual sections already
 			// isolate their own failures (see `section`), but the About page and a
 			// couple of bare rows render straight into the body. Guard here too so
@@ -291,7 +291,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			// The datalist or the navigation itself failed to build. Append the
 			// error rather than empty()-ing, so anything that survived still lets
 			// the user navigate.
-			this.renderError(containerEl, "Hearth", err);
+			this.renderError(containerEl, "Second Brain Dashboard", err);
 		}
 	}
 
@@ -299,15 +299,15 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * and log the real stack to the console so it can be reported. Keeps one
 	 * broken section from blanking the entire settings pane. */
 	private renderError(containerEl: HTMLElement, name: string, err: unknown): void {
-		console.error(`Hearth: the "${name}" settings section failed to render`, err);
-		const box = containerEl.createDiv("hearth-settings-error");
-		setIcon(box.createSpan("hearth-settings-error-icon"), "alert-triangle");
-		const text = box.createDiv("hearth-settings-error-text");
+		console.error(`Second Brain Dashboard: the "${name}" settings section failed to render`, err);
+		const box = containerEl.createDiv("sbd-settings-error");
+		setIcon(box.createSpan("sbd-settings-error-icon"), "alert-triangle");
+		const text = box.createDiv("sbd-settings-error-text");
 		text.createDiv({
-			cls: "hearth-settings-error-title",
+			cls: "sbd-settings-error-title",
 			text: t().settings.sectionError(name),
 		});
-		text.createDiv({ cls: "hearth-settings-error-hint", text: t().settings.sectionErrorHint });
+		text.createDiv({ cls: "sbd-settings-error-hint", text: t().settings.sectionErrorHint });
 	}
 
 	/** Where the pane was last left. Anything unrecognised — including the absent
@@ -332,16 +332,16 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * are vertical, they are not pinned, and an eighth category costs nothing. */
 	private renderIndex(containerEl: HTMLElement): void {
 		const s = t().settings;
-		const head = containerEl.createDiv("hearth-settings-index-head");
-		head.createDiv({ cls: "hearth-settings-index-title", text: this.plugin.manifest.name });
-		head.createDiv({ cls: "hearth-settings-index-sub", text: s.indexSub });
+		const head = containerEl.createDiv("sbd-settings-index-head");
+		head.createDiv({ cls: "sbd-settings-index-title", text: this.plugin.manifest.name });
+		head.createDiv({ cls: "sbd-settings-index-sub", text: s.indexSub });
 
 		for (const group of SETTINGS_INDEX) {
 			containerEl.createDiv({
-				cls: "hearth-settings-index-grouplabel",
+				cls: "sbd-settings-index-grouplabel",
 				text: s.indexGroups[group.id],
 			});
-			const rows = containerEl.createDiv("hearth-settings-index-rows");
+			const rows = containerEl.createDiv("sbd-settings-index-rows");
 			for (const id of group.tabs) {
 				const entry = SETTINGS_TABS.find((tab) => tab.id === id);
 				if (!entry) continue;
@@ -359,14 +359,14 @@ export class HomeSettingTab extends PluginSettingTab {
 	private indexRow(rowsEl: HTMLElement, entry: { id: SettingsTabId; icon: string }): void {
 		const s = t().settings;
 		const label = s.tabs[entry.id];
-		const row = rowsEl.createDiv("hearth-settings-index-row");
+		const row = rowsEl.createDiv("sbd-settings-index-row");
 		const open = () => this.navigate(entry.id);
 		makeClickable(row, open, label);
-		setIcon(row.createSpan("hearth-settings-index-glyph"), entry.icon);
-		const text = row.createDiv("hearth-settings-index-rowtext");
-		text.createDiv({ cls: "hearth-settings-index-rowname", text: label });
-		text.createDiv({ cls: "hearth-settings-index-rowdesc", text: s.tabDescs[entry.id] });
-		setIcon(row.createSpan("hearth-settings-index-go"), "chevron-right");
+		setIcon(row.createSpan("sbd-settings-index-glyph"), entry.icon);
+		const text = row.createDiv("sbd-settings-index-rowtext");
+		text.createDiv({ cls: "sbd-settings-index-rowname", text: label });
+		text.createDiv({ cls: "sbd-settings-index-rowdesc", text: s.tabDescs[entry.id] });
+		setIcon(row.createSpan("sbd-settings-index-go"), "chevron-right");
 		row.addEventListener("click", open);
 	}
 
@@ -376,15 +376,15 @@ export class HomeSettingTab extends PluginSettingTab {
 	private renderCategoryHead(containerEl: HTMLElement, tab: SettingsTabId): void {
 		const s = t().settings;
 		// A div, for the same reason as an index row — see `indexRow`.
-		const back = containerEl.createDiv("hearth-settings-back");
+		const back = containerEl.createDiv("sbd-settings-back");
 		const leave = () => this.navigate("index");
 		makeClickable(back, leave, s.backToIndex);
-		setIcon(back.createSpan("hearth-settings-back-icon"), "chevron-left");
+		setIcon(back.createSpan("sbd-settings-back-icon"), "chevron-left");
 		back.createSpan({ text: this.plugin.manifest.name });
 		back.addEventListener("click", leave);
 
-		containerEl.createDiv({ cls: "hearth-settings-page-title", text: s.tabs[tab] });
-		containerEl.createDiv({ cls: "hearth-settings-page-desc", text: s.tabDescs[tab] });
+		containerEl.createDiv({ cls: "sbd-settings-page-title", text: s.tabs[tab] });
+		containerEl.createDiv({ cls: "sbd-settings-page-desc", text: s.tabDescs[tab] });
 	}
 
 	/** Render the sections that belong to a given ribbon tab. (Named
@@ -436,7 +436,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				);
 				break;
 			case "integrations":
-				// The catalogue first: every integration Hearth has, listed whether
+				// The catalogue first: every integration Second Brain Dashboard has, listed whether
 				// or not it is installed and whether or not it has a setting. The two
 				// sections below are the only ones that *do* have settings, and rows
 				// in the catalogue link down to them.
@@ -460,7 +460,7 @@ export class HomeSettingTab extends PluginSettingTab {
 	/** A shared <datalist> of vault files used by file-path inputs. */
 	private fileDatalist(containerEl: HTMLElement): void {
 		const datalist = containerEl.createEl("datalist", {
-			attr: { id: "hearth-file-list" },
+			attr: { id: "sbd-file-list" },
 		});
 		for (const file of this.app.vault.getFiles()) {
 			datalist.createEl("option", { attr: { value: file.path } });
@@ -497,12 +497,12 @@ export class HomeSettingTab extends PluginSettingTab {
 		const desc = typeof descOrRender === "string" ? descOrRender : undefined;
 		const render = typeof descOrRender === "function" ? descOrRender : maybeRender!;
 
-		const wrap = containerEl.createDiv("hearth-section");
-		const head = wrap.createDiv("hearth-section-head");
-		head.createDiv({ cls: "hearth-section-title", text: title });
-		if (desc) head.createDiv({ cls: "hearth-section-desc", text: desc });
+		const wrap = containerEl.createDiv("sbd-section");
+		const head = wrap.createDiv("sbd-section-head");
+		head.createDiv({ cls: "sbd-section-title", text: title });
+		if (desc) head.createDiv({ cls: "sbd-section-desc", text: desc });
 
-		const body = wrap.createDiv("hearth-section-body");
+		const body = wrap.createDiv("sbd-section-body");
 		// Isolate each section: a throw while rendering one section shows an inline
 		// error there instead of blanking the whole page, so its siblings still
 		// render.
@@ -789,8 +789,8 @@ export class HomeSettingTab extends PluginSettingTab {
 		});
 
 		const effects = new Setting(containerEl).setName(strings.effects);
-		effects.settingEl.addClass("hearth-setting-note");
-		const list = effects.descEl.createEl("ul", { cls: "hearth-setting-note-list" });
+		effects.settingEl.addClass("sbd-setting-note");
+		const list = effects.descEl.createEl("ul", { cls: "sbd-setting-note-list" });
 		for (const line of [
 			strings.effectBackground,
 			strings.effectFrost,
@@ -809,10 +809,10 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * that dims them so it's obvious they aren't what's on screen right now. */
 	private lowPowerOverrideNote(containerEl: HTMLElement): void {
 		if (!this.plugin.settings.lowPower) return;
-		containerEl.addClass("hearth-settings-overridden");
+		containerEl.addClass("sbd-settings-overridden");
 		const note = new Setting(containerEl).setDesc(t().settings.lowPower.overridden);
-		note.settingEl.addClass("hearth-setting-note");
-		const icon = createSpan("hearth-setting-note-icon");
+		note.settingEl.addClass("sbd-setting-note");
+		const icon = createSpan("sbd-setting-note-icon");
 		setIcon(icon, "gauge");
 		note.descEl.prepend(icon);
 	}
@@ -880,7 +880,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			if (s.backgroundKind === "image") {
 				setting.controlEl
 					.querySelector("input")
-					?.setAttribute("list", "hearth-file-list");
+					?.setAttribute("list", "sbd-file-list");
 			}
 		}
 
@@ -999,7 +999,7 @@ export class HomeSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName(strings.weatherHeading).setHeading();
 		containerEl.createDiv({
-			cls: "setting-item-description hearth-setting-note",
+			cls: "setting-item-description sbd-setting-note",
 			text: sky ? strings.weatherDesc : `${strings.weatherNoPlace} ${strings.weatherDesc}`,
 		});
 
@@ -1077,7 +1077,7 @@ export class HomeSettingTab extends PluginSettingTab {
 	// ---- Opening notes ---------------------------------------------------
 
 	/**
-	 * Where notes Hearth opens end up (#106). One dropdown decides it for
+	 * Where notes Second Brain Dashboard opens end up (#106). One dropdown decides it for
 	 * everything; the per-source rows below it start on "Same as above", so the
 	 * detail is there for anyone who wants a link to behave differently from a
 	 * search hit without getting in the way of anyone who doesn't.
@@ -1117,10 +1117,10 @@ export class HomeSettingTab extends PluginSettingTab {
 				});
 		}
 
-		// Not one of the four sources above: Obsidian, not Hearth, decides where
-		// these land, and the only say Hearth has is whether its tab may be taken
+		// Not one of the four sources above: Obsidian, not Second Brain Dashboard, decides where
+		// these land, and the only say Second Brain Dashboard has is whether its tab may be taken
 		// over — so the choice is two-way, and it defaults to being taken over
-		// (what Hearth has done since #84) rather than following the global
+		// (what Second Brain Dashboard has done since #84) rather than following the global
 		// dropdown, which would change that for everyone on upgrade.
 		const outside = t().settings.behaviour.openFromOutsideModes;
 		new Setting(containerEl)
@@ -1186,7 +1186,7 @@ export class HomeSettingTab extends PluginSettingTab {
 
 		const buttons = s.mobileActionButtons;
 		buttons.forEach((btn, index) => {
-			const row = new Setting(containerEl).setClass("hearth-link-setting");
+			const row = new Setting(containerEl).setClass("sbd-link-setting");
 			row.addText((txt) =>
 				txt.setPlaceholder(t().settings.mobileActions.labelPlaceholder).setValue(btn.label).onChange(async (v) => {
 					btn.label = v;
@@ -1316,10 +1316,10 @@ export class HomeSettingTab extends PluginSettingTab {
 	// ---- Integrations catalogue -------------------------------------------
 
 	/**
-	 * The full list of everything Hearth works with.
+	 * The full list of everything Second Brain Dashboard works with.
 	 *
 	 * Deliberately not filtered by what's installed: the point of the list is to
-	 * answer "what does Hearth work with?" as much as "is it working?", so every
+	 * answer "what does Second Brain Dashboard work with?" as much as "is it working?", so every
 	 * entry in {@link INTEGRATIONS} renders, with a live status pill and a line
 	 * saying where its settings are — including when the honest answer is "there
 	 * aren't any" or "on the card". Integrations whose settings sit elsewhere
@@ -1335,7 +1335,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				.setName(strings.groups[group])
 				.setDesc(strings.groups[groupDescKey[group]])
 				.setHeading();
-			head.settingEl.addClass("hearth-integration-group");
+			head.settingEl.addClass("sbd-integration-group");
 			for (const entry of integrationsInGroup(group)) {
 				this.integrationRow(containerEl, entry);
 			}
@@ -1350,20 +1350,20 @@ export class HomeSettingTab extends PluginSettingTab {
 		const status = integrationStatus(this.plugin.app, entry);
 
 		const row = new Setting(containerEl).setName(item.name).setDesc(item.desc);
-		row.settingEl.addClass("hearth-integration-row");
+		row.settingEl.addClass("sbd-integration-row");
 
 		// The pill sits with the name rather than in the control column, so the
 		// row still reads as a sentence at narrow widths (and on mobile, where
 		// Obsidian stacks name and control).
 		const pill = row.nameEl.createSpan({
-			cls: `hearth-integration-status is-${status}`,
+			cls: `sbd-integration-status is-${status}`,
 			text: strings.status[status],
 		});
 		pill.setAttribute("aria-label", strings.statusTooltip[status]);
 		pill.setAttribute("title", strings.statusTooltip[status]);
 
 		row.descEl.createDiv({
-			cls: "hearth-integration-where",
+			cls: "sbd-integration-where",
 			text: this.integrationWhereText(entry),
 		});
 
@@ -1705,7 +1705,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			.setName(t().settings.layout.import)
 			.setDesc(t().settings.layout.importDesc)
 			.addButton((b) => {
-				b.buttonEl.addClass("hearth-danger-btn");
+				b.buttonEl.addClass("sbd-danger-btn");
 				b.setButtonText(t().settings.layout.importButton).onClick(() =>
 					this.importFromFile({
 						title: t().settings.layout.importTitle,
@@ -1716,7 +1716,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				);
 			});
 
-		// Export every Hearth setting as a JSON file.
+		// Export every Second Brain Dashboard setting as a JSON file.
 		new Setting(containerEl)
 			.setName(t().settings.layout.exportSettings)
 			.setDesc(t().settings.layout.exportSettingsDesc)
@@ -1729,7 +1729,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			.setName(t().settings.layout.importSettings)
 			.setDesc(t().settings.layout.importSettingsDesc)
 			.addButton((b) => {
-				b.buttonEl.addClass("hearth-danger-btn");
+				b.buttonEl.addClass("sbd-danger-btn");
 				b.setButtonText(t().settings.layout.importButton).onClick(() =>
 					this.importFromFile({
 						title: t().settings.layout.importSettingsTitle,
@@ -1866,7 +1866,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				.setDesc(about.kofiDesc)
 				.addButton((b) => {
 					this.linkButton(b, "coffee", about.kofiButton, KOFI_URL);
-					b.buttonEl.addClass("hearth-kofi-btn");
+					b.buttonEl.addClass("sbd-kofi-btn");
 				});
 
 			new Setting(body)
@@ -1889,8 +1889,8 @@ export class HomeSettingTab extends PluginSettingTab {
 		if (tooltip) b.setTooltip(tooltip);
 		const el = b.buttonEl;
 		el.empty();
-		el.addClass("hearth-about-btn");
-		setIcon(el.createSpan("hearth-about-btn-icon"), icon);
+		el.addClass("sbd-about-btn");
+		setIcon(el.createSpan("sbd-about-btn-icon"), icon);
 		el.createSpan({ text: label });
 	}
 

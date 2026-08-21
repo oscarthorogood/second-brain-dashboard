@@ -36,12 +36,12 @@ export function renderRecent(view: HomeView, card: DashboardCard, body: HTMLElem
 		return;
 	}
 
-	const list = body.createDiv("hearth-list");
+	const list = body.createDiv("sbd-list");
 	const icons = fileIconOptions(view.plugin.settings);
 	for (const file of files) {
-		const row = list.createDiv("hearth-list-item");
-		applyFileIcon(row.createDiv("hearth-list-icon"), resolveFileIcon(view.app, file, icons));
-		row.createDiv({ cls: "hearth-list-label", text: file.basename });
+		const row = list.createDiv("sbd-list-item");
+		applyFileIcon(row.createDiv("sbd-list-icon"), resolveFileIcon(view.app, file, icons));
+		row.createDiv({ cls: "sbd-list-label", text: file.basename });
 		const open = () => void openFile(view, file, "card");
 		row.addEventListener("click", open);
 		makeClickable(row, open, file.basename);
@@ -61,7 +61,7 @@ export function recentEditor(ctx: CardEditorContext, containerEl: HTMLElement): 
 			ctx.opts.save();
 		});
 		txt.inputEl.type = "number";
-		txt.inputEl.addClass("hearth-count-input");
+		txt.inputEl.addClass("sbd-count-input");
 	});
 	addResetButton(ctx, recent, t().settings.resetField, () => {
 		card.count = undefined;
@@ -82,15 +82,15 @@ export function recentTypesEditor(ctx: CardEditorContext, containerEl: HTMLEleme
 	});
 
 	const selected = new Set(card.recentTypes ?? []);
-	const row = containerEl.createDiv("hearth-type-filter");
+	const row = containerEl.createDiv("sbd-type-filter");
 	// Folders can never appear among recently-opened files, so offer every
 	// search-filter type except that one.
 	const groups = FILE_TYPE_GROUPS.filter((g) => g.id !== FOLDERS_GROUP_ID);
 	for (const group of groups) {
-		const chip = row.createDiv("hearth-type-filter-chip");
+		const chip = row.createDiv("sbd-type-filter-chip");
 		chip.toggleClass("is-active", selected.has(group.id));
-		setIcon(chip.createDiv("hearth-type-filter-icon"), group.icon);
-		chip.createDiv({ cls: "hearth-type-filter-label", text: fileTypeLabel(group) });
+		setIcon(chip.createDiv("sbd-type-filter-icon"), group.icon);
+		chip.createDiv({ cls: "sbd-type-filter-label", text: fileTypeLabel(group) });
 		chip.setAttribute("role", "button");
 		chip.setAttribute("tabindex", "0");
 		chip.setAttribute("aria-pressed", String(selected.has(group.id)));

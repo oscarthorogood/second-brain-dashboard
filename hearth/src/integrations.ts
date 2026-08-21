@@ -1,18 +1,18 @@
 /**
- * The catalogue of everything Hearth talks to: community plugins, Obsidian's
+ * The catalogue of everything Second Brain Dashboard talks to: community plugins, Obsidian's
  * own core plugins, and the external services a few cards fetch from.
  *
- * Why a catalogue at all — Hearth's integrations are, by nature, scattered.
+ * Why a catalogue at all — Second Brain Dashboard's integrations are, by nature, scattered.
  * Some carry global settings (TaskNotes' field names, the Iconic/Iconize
  * switch), some are a single option on a different tab (Omnisearch is a choice
  * in the search-engine dropdown), and most are configured per-card on the board
  * or need no configuration whatsoever. Before this, that meant the Integrations
  * tab showed only the two integrations that happened to have settings, and
- * there was nowhere to answer "what does Hearth work with, and is it working
+ * there was nowhere to answer "what does Second Brain Dashboard work with, and is it working
  * right now?".
  *
  * So the catalogue is deliberately *complete and static*: every entry is listed
- * whether or not the plugin is installed and whether or not Hearth has a
+ * whether or not the plugin is installed and whether or not Second Brain Dashboard has a
  * setting for it. Status is resolved live at render time; the row says where
  * the setting lives (or that there isn't one) either way.
  *
@@ -57,11 +57,11 @@ export type IntegrationGroup = "plugin" | "core" | "service";
 export type IntegrationWhere =
 	/** A settings section further down the Integrations tab. */
 	| { kind: "section"; section: IntegrationSectionId }
-	/** A setting on another tab of Hearth's settings. */
+	/** A setting on another tab of Second Brain Dashboard's settings. */
 	| { kind: "tab"; tab: SettingsTabId }
 	/** Configured per-card, in that card's own settings on the board. */
 	| { kind: "card" }
-	/** Hearth reads the other plugin's own settings; nothing to set here. */
+	/** Second Brain Dashboard reads the other plugin's own settings; nothing to set here. */
 	| { kind: "pluginSettings" }
 	/** Nothing to configure anywhere. */
 	| { kind: "none" };
@@ -106,7 +106,7 @@ export interface IntegrationEntry {
 }
 
 /**
- * Every integration Hearth has, in the order they're listed.
+ * Every integration Second Brain Dashboard has, in the order they're listed.
  *
  * Adding one here is all it takes to have it appear — add the matching strings
  * under `settings.integrations.items` and TypeScript will point at the gap if
@@ -213,7 +213,7 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
 
 /** The live state of an integration.
  *
- * - `enabled`  — the plugin is on right now and Hearth can use it.
+ * - `enabled`  — the plugin is on right now and Second Brain Dashboard can use it.
  * - `disabled` — installed (or, for a core plugin, always present) but off.
  * - `missing`  — not installed at all.
  * - `external` — an outbound service rather than a plugin.
