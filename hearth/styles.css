@@ -971,13 +971,19 @@ body.theme-dark .sbd-view {
 
 /* Small uppercase eyebrow label (e.g. "BUDGET USED") rather than a plain
  * heading — the tracked-out caps read as a stat tile's label above the big
- * value that fills the card body, matching the rest of the glass chrome. */
+ * value that fills the card body, matching the rest of the glass chrome.
+ * --text-normal (not --text-muted) plus a soft shadow: on a translucent glass
+ * card the label sits over whatever wallpaper shows through the tint, and a
+ * light, low-contrast muted colour can all but disappear against a busy or
+ * light-toned image. The shadow is faint enough to be invisible on an opaque
+ * card but keeps the label readable over any backdrop. */
 .sbd-card-title {
 	font-weight: 600;
 	font-size: 0.72rem;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--text-muted);
+	color: var(--text-normal);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 /* Hidden via the .is-untitled class (set in dashboard.ts) instead of :has, which
