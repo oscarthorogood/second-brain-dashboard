@@ -6,7 +6,7 @@ import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
 import { addIconPicker } from "./lucide";
 import { CommandPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, CARD_BORDER_WIDTH_MAX, clampBannerHeight, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule } from "./types";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule } from "./types";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
 import { isOmnisearchAvailable, OMNISEARCH_PLUGIN_ID } from "./omnisearch";
@@ -412,9 +412,6 @@ export class HomeSettingTab extends PluginSettingTab {
 				this.section(body, s.sections.grid, s.sections.gridDesc, (b) => this.gridSection(b));
 				this.section(body, s.sections.dashboardControls, s.sections.dashboardControlsDesc, (b) =>
 					this.dashboardControlsSection(b),
-				);
-				this.section(body, s.sections.cardSurface, s.sections.cardSurfaceDesc, (b) =>
-					this.cardSurfaceSection(b),
 				);
 				// The cards themselves are added and configured on the board, not
 				// here — surface that as a plain informational row.
@@ -1617,74 +1614,6 @@ export class HomeSettingTab extends PluginSettingTab {
 						await this.save();
 					});
 			});
-	}
-
-	// ---- Dashboard: card surface (opacity / blur) -----------------------
-
-	private cardSurfaceSection(containerEl: HTMLElement): void {
-		const s = this.plugin.settings;
-
-		// Radius and border width below are untouched by low power mode; opacity
-		// and blur are, hence the note covering the section.
-		this.lowPowerOverrideNote(containerEl);
-
-		const cardOpacity = new Setting(containerEl)
-			.setName(t().settings.dashboard.cardOpacity)
-			.setDesc(t().settings.dashboard.cardOpacityDesc);
-		cardOpacity.addSlider((sl) => {
-			sl.setLimits(0, 1, 0.05)
-				.setValue(s.cardOpacity)
-				.setDynamicTooltip()
-				.onChange(async (v) => {
-					s.cardOpacity = v;
-					await this.save();
-				});
-			this.addSliderReset(cardOpacity, sl, "cardOpacity");
-		});
-
-		const cardBlur = new Setting(containerEl)
-			.setName(t().settings.dashboard.cardBlur)
-			.setDesc(t().settings.dashboard.cardBlurDesc);
-		cardBlur.addSlider((sl) => {
-			sl.setLimits(0, 24, 1)
-				.setValue(s.cardBlur)
-				.setDynamicTooltip()
-				.onChange(async (v) => {
-					s.cardBlur = v;
-					await this.save();
-				});
-			this.addSliderReset(cardBlur, sl, "cardBlur");
-		});
-
-		const cardRadius = new Setting(containerEl)
-			.setName(t().settings.dashboard.cardRadius)
-			.setDesc(t().settings.dashboard.cardRadiusDesc);
-		cardRadius.addSlider((sl) => {
-			// Capped at the design baseline (14): only sharper corners are offered,
-			// since rounding beyond it was never tuned for.
-			sl.setLimits(0, DEFAULT_SETTINGS.cardRadius, 1)
-				.setValue(s.cardRadius)
-				.setDynamicTooltip()
-				.onChange(async (v) => {
-					s.cardRadius = v;
-					await this.save();
-				});
-			this.addSliderReset(cardRadius, sl, "cardRadius");
-		});
-
-		const cardBorderWidth = new Setting(containerEl)
-			.setName(t().settings.dashboard.cardBorderWidth)
-			.setDesc(t().settings.dashboard.cardBorderWidthDesc);
-		cardBorderWidth.addSlider((sl) => {
-			sl.setLimits(0, CARD_BORDER_WIDTH_MAX, 1)
-				.setValue(s.cardBorderWidth)
-				.setDynamicTooltip()
-				.onChange(async (v) => {
-					s.cardBorderWidth = v;
-					await this.save();
-				});
-			this.addSliderReset(cardBorderWidth, sl, "cardBorderWidth");
-		});
 	}
 
 	// ---- Layout import / export ----------------------------------------

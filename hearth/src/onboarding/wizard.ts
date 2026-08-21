@@ -35,12 +35,10 @@ import {
 	PURPOSE_ICONS,
 	SETUP_BACKGROUNDS,
 	SETUP_PURPOSES,
-	SETUP_SURFACES,
 	type PlannedCard,
 	type SetupAnswers,
 	type SetupBackground,
 	type SetupPurpose,
-	type SetupSurface,
 } from "./plan";
 
 /** The wizard's steps, in order. `integrations` is dropped when the vault has
@@ -385,22 +383,9 @@ export class SetupWizardModal extends Modal {
 		const strings = t().setup.look;
 		const a = this.answers;
 
-		body.createDiv({ cls: "sbd-setup-grouplabel", text: strings.surfaceHeading });
-		this.optionGrid(
-			body,
-			SETUP_SURFACES,
-			(surface: SetupSurface) => ({
-				icon: t().setup.surfaces[surface].icon,
-				name: t().setup.surfaces[surface].name,
-				desc: t().setup.surfaces[surface].desc,
-				selected: a.surface === surface,
-			}),
-			(surface) => {
-				a.surface = surface;
-				this.renderWizard();
-			},
-		);
-
+		// Card surface (Glass/Solid/Minimal) used to be a choice here — the
+		// dashboard's frosted-glass identity is fixed now, so there is nothing
+		// left to ask.
 		body.createDiv({ cls: "sbd-setup-grouplabel", text: strings.backgroundHeading });
 		this.optionGrid(
 			body,

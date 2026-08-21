@@ -9,9 +9,7 @@ import {
 	type HeaderAlign,
 	BANNER_HEIGHT_MAX,
 	BANNER_HEIGHT_MIN,
-	CARD_RADIUS_MAX,
 	clampBannerHeight,
-	CARD_BORDER_WIDTH_MAX,
 	HEADER_MARGIN_TOP_MAX,
 	HEADER_MARGIN_TOP_MIN,
 	HEADER_SCALE_MAX,
@@ -258,7 +256,6 @@ class DashboardSettingsModal extends SbdTabbedModal {
 			{ id: "general", label: tabs.general, icon: "settings-2" },
 			{ id: "header", label: tabs.header, icon: "heading" },
 			{ id: "layout", label: tabs.layout, icon: "layout-dashboard" },
-			{ id: "style", label: tabs.style, icon: "palette" },
 			{ id: "background", label: tabs.background, icon: "image" },
 		];
 	}
@@ -273,9 +270,6 @@ class DashboardSettingsModal extends SbdTabbedModal {
 				break;
 			case "layout":
 				this.layoutSection(body);
-				break;
-			case "style":
-				this.styleSection(body);
 				break;
 			case "background":
 				this.backgroundSection(body);
@@ -712,70 +706,6 @@ class DashboardSettingsModal extends SbdTabbedModal {
 					this.commit();
 				});
 			});
-	}
-
-	/** Card surface overrides: opacity, blur and corner radius. */
-	private styleSection(containerEl: HTMLElement): void {
-		const dash = this.dash;
-		const s = this.view.plugin.settings;
-
-		this.overrideSlider(
-			containerEl,
-			t().dashboards.modal.cardOpacity,
-			dash.cardOpacity,
-			s.cardOpacity,
-			0,
-			1,
-			0.05,
-			(v) => {
-				dash.cardOpacity = v;
-				this.commit();
-			},
-		);
-
-		this.overrideSlider(
-			containerEl,
-			t().dashboards.modal.cardBlur,
-			dash.cardBlur,
-			s.cardBlur,
-			0,
-			24,
-			1,
-			(v) => {
-				dash.cardBlur = v;
-				this.commit();
-			},
-		);
-
-		// Corner radius is capped at the design baseline (CARD_RADIUS_MAX): only
-		// sharper corners are offered, since rounding beyond it was never tuned for.
-		this.overrideSlider(
-			containerEl,
-			t().dashboards.modal.cardRadius,
-			dash.cardRadius,
-			s.cardRadius,
-			0,
-			CARD_RADIUS_MAX,
-			1,
-			(v) => {
-				dash.cardRadius = v;
-				this.commit();
-			},
-		);
-
-		this.overrideSlider(
-			containerEl,
-			t().dashboards.modal.cardBorderWidth,
-			dash.cardBorderWidth,
-			s.cardBorderWidth,
-			0,
-			CARD_BORDER_WIDTH_MAX,
-			1,
-			(v) => {
-				dash.cardBorderWidth = v;
-				this.commit();
-			},
-		);
 	}
 
 	/** A labelled override: a toggle that, when on, reveals a slider. Off clears

@@ -52,27 +52,14 @@ body.theme-dark {
 	font-family: var(--sbd-font-family);
 }
 
-/* Cupertino's own system-background palette (light: systemBackground /
- * systemGroupedBackground; dark: their black-based counterparts), scoped to
- * the dashboard only — not the settings tab or modals, whose outer chrome is
- * painted by Obsidian outside this class and would otherwise mismatch a
- * recoloured inner pane. The accent stays whatever the user has chosen (real
- * Cupertino derives its accent from it too, rather than forcing iOS blue). */
+/* A fixed dark-glass palette, scoped to the dashboard only (not the settings
+ * tab or modals, whose outer chrome is painted by Obsidian outside this class
+ * and would otherwise mismatch a recoloured inner pane) — deliberately NOT
+ * conditioned on body.theme-dark. The dashboard's whole look (dark charcoal
+ * surfaces, a warm brass accent) is a fixed identity of the board, not a
+ * light/dark pair that follows Obsidian's own appearance setting: switching
+ * the app to Light must not wash the board out to white. */
 .sbd-view {
-	--background-primary: #ffffff;
-	--background-primary-alt: #f2f2f7;
-	--background-secondary: #f2f2f7;
-	--background-secondary-alt: #e5e5ea;
-	--background-modifier-border: rgba(60, 60, 67, 0.16);
-	--background-modifier-hover: rgba(120, 120, 128, 0.12);
-	--background-modifier-active-hover: rgba(120, 120, 128, 0.2);
-	--text-normal: #1c1c1e;
-	--text-muted: #6e6e73;
-	--text-faint: #8e8e93;
-	--text-on-accent: #ffffff;
-}
-
-body.theme-dark .sbd-view {
 	--background-primary: #1c1c1e;
 	--background-primary-alt: #000000;
 	--background-secondary: #2c2c2e;
@@ -83,7 +70,20 @@ body.theme-dark .sbd-view {
 	--text-normal: #f2f2f7;
 	--text-muted: #98989d;
 	--text-faint: #636366;
-	--text-on-accent: #ffffff;
+	--text-on-accent: #1c1206;
+	/* A fixed warm brass/gold accent, not the user's chosen Obsidian accent —
+	 * the dashboard's identity is meant to read the same for every viewer, the
+	 * way the reference KPI-tile design does, rather than shifting with
+	 * whatever accent colour someone happens to have picked for note editing. */
+	--interactive-accent: #c9974c;
+	--interactive-accent-hover: #d9ac66;
+	/* The elevation shadows default to the light-theme values at :root and only
+	 * strengthen under body.theme-dark; since the board is always dark now,
+	 * pin them to that stronger variant here too so a card's drop shadow still
+	 * reads against the board regardless of Obsidian's real appearance setting. */
+	--sbd-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.18), 0 4px 14px rgba(0, 0, 0, 0.16);
+	--sbd-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.22);
+	--sbd-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.34);
 }
 
 .sbd-view {
@@ -5278,38 +5278,59 @@ body.theme-dark .sbd-view {
 	padding: 0 8px 4px 14px;
 }
 
-/* Vault statistics card */
+/* Vault statistics card: a grid of KPI tiles — a small uppercase label, a big
+ * bold value, and a corner accent icon — the same grammar as the card's own
+ * chrome (see .sbd-card-title) applied one level down, since this is the one
+ * card kind whose content is already number-shaped. */
 .sbd-stats {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
 	gap: 10px;
 	height: 100%;
 	align-content: center;
 }
 
 .sbd-stat {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: center;
-	gap: 4px;
-	text-align: center;
+	gap: 2px;
+	text-align: left;
+	padding: 14px 16px;
+	border-radius: var(--sbd-radius-m);
+	border: 1px solid
+		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	background: var(--sbd-card-surface, var(--background-secondary));
 }
 
+/* A small corner accent, like the reference KPI tile's arrow glyph — out of
+ * the flex flow so it doesn't disturb the label/value stack's order. */
 .sbd-stat-icon {
+	position: absolute;
+	top: 10px;
+	right: 10px;
 	display: flex;
+	color: var(--interactive-accent);
+	opacity: 0.85;
+}
+
+.sbd-stat-label {
+	order: 1;
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 	color: var(--text-muted);
 }
 
 .sbd-stat-value {
-	font-size: 1.3rem;
+	order: 2;
+	font-size: 1.7rem;
 	font-weight: 700;
+	line-height: 1.15;
 	color: var(--text-normal);
-}
-
-.sbd-stat-label {
-	font-size: 0.72rem;
-	color: var(--text-faint);
 }
 
 /* ---- Toolbar -------------------------------------------------------- */
