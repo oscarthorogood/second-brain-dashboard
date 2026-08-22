@@ -55,18 +55,20 @@ body.theme-dark {
 	font-family: var(--sbd-font-family);
 }
 
-/* A fixed dark-glass palette, scoped to the dashboard only (not the settings
- * tab or modals, whose outer chrome is painted by Obsidian outside this class
- * and would otherwise mismatch a recoloured inner pane) — deliberately NOT
- * conditioned on body.theme-dark. The dashboard's whole look (dark charcoal
- * surfaces, a warm brass accent) is a fixed identity of the board, not a
- * light/dark pair that follows Obsidian's own appearance setting: switching
- * the app to Light must not wash the board out to white. */
+/* A fixed neutral-glass palette, scoped to the dashboard only (not the
+ * settings tab or modals, whose outer chrome is painted by Obsidian outside
+ * this class and would otherwise mismatch a recoloured inner pane) —
+ * deliberately NOT conditioned on body.theme-dark. The dashboard's whole
+ * look (a true mid-grey surface, a warm brass accent) is a fixed identity of
+ * the board, not a light/dark pair that follows Obsidian's own appearance
+ * setting: switching the app's theme must not wash the board toward white or
+ * black. Mid-grey rather than either extreme is also what actually reads as
+ * "glass" — a pane of frosted glass tints neutral, it doesn't go black. */
 .sbd-view {
-	--background-primary: #1c1c1e;
-	--background-primary-alt: #000000;
-	--background-secondary: #2c2c2e;
-	--background-secondary-alt: #3a3a3c;
+	--background-primary: #75757a;
+	--background-primary-alt: #5c5c61;
+	--background-secondary: #85858a;
+	--background-secondary-alt: #94949a;
 	/* Brighter than a typical theme border: the reference's glass rim reads as a
 	 * crisp, clearly visible line, not a barely-there hairline. */
 	--background-modifier-border: rgba(255, 255, 255, 0.32);
