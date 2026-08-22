@@ -25,7 +25,10 @@
 	--sbd-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
 	--sbd-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.09);
 	--sbd-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.16);
-	--sbd-glass-blur: blur(20px) saturate(1.6) brightness(1.02);
+	/* Liquid-glass material: heavier blur, pushed saturation and brightness so
+	 * the colour behind the glass reads as vivid and alive rather than a muddy
+	 * grey wash — the defining quality of the reference's frosted surfaces. */
+	--sbd-glass-blur: blur(32px) saturate(2.2) brightness(1.15) contrast(1.05);
 }
 
 body.theme-dark {
@@ -67,9 +70,13 @@ body.theme-dark {
 	--background-modifier-border: rgba(255, 255, 255, 0.12);
 	--background-modifier-hover: rgba(120, 120, 128, 0.24);
 	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
-	--text-normal: #f2f2f7;
-	--text-muted: #98989d;
-	--text-faint: #636366;
+	/* All white, differentiated by opacity rather than by shifting toward grey —
+	 * a grey-toned muted/faint read as unreadable low-contrast smudges over a
+	 * busy or light wallpaper. White at full/high/medium opacity keeps every
+	 * tier legible over any backdrop while still reading as a hierarchy. */
+	--text-normal: #ffffff;
+	--text-muted: rgba(255, 255, 255, 0.78);
+	--text-faint: rgba(255, 255, 255, 0.56);
 	--text-on-accent: #1c1206;
 	/* A fixed warm brass/gold accent, not the user's chosen Obsidian accent —
 	 * the dashboard's identity is meant to read the same for every viewer, the
@@ -877,7 +884,7 @@ body.theme-dark {
 	 * blended toward transparent so it reads as a highlight on the frosted
 	 * surface instead of a hard outline, in both light and dark themes. */
 	border: var(--card-border-width, 1px) solid
-		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+		color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
 	/* --card-opacity (0..1) tints the card surface without dimming content.
 	 * Published as a variable so content INSIDE the card that has to paint its
 	 * own surface (a Bases table's sticky header, say) can reuse the exact same
@@ -888,13 +895,26 @@ body.theme-dark {
 		var(--background-primary) calc(var(--card-opacity, 1) * 100%),
 		transparent
 	);
-	background: var(--sbd-card-surface);
+	/* The tint plus a diagonal specular sheen — brightest at the top-left
+	 * corner, fading out before the middle — the highlight a real pane of
+	 * glass catches from a light source, rather than a flat tinted panel. */
+	background-color: var(--sbd-card-surface);
+	background-image: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.16) 0%,
+		rgba(255, 255, 255, 0.04) 35%,
+		rgba(255, 255, 255, 0) 60%
+	);
+	/* Every text node in a card inherits this: a soft dark shadow keeps type
+	 * legible over any wallpaper showing through the glass, in place of
+	 * hand-tuning contrast per element. */
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 	/* Drop shadow via a variable so merged edges can drop it (see below) and
-	 * hover can lift it without re-declaring the whole shadow. A thin inset
+	 * hover can lift it without re-declaring the whole shadow. A brighter inset
 	 * top highlight rides along on every card (merged edges zero it via
 	 * --sbd-card-lift the same as the drop shadow) for the glass bevel seen
 	 * where the frosted surface catches light along its top edge. */
-	--sbd-card-lift: var(--sbd-shadow-s), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+	--sbd-card-lift: var(--sbd-shadow-s), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
 	box-shadow: var(--sbd-card-lift);
 	overflow: hidden;
 	transition:
