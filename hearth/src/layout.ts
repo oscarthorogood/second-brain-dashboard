@@ -1,12 +1,10 @@
 import {
-	type BackgroundConfig,
 	type BackgroundKind,
 	type CalculatorConfig,
 	type CalendarConfig,
 	type CardKind,
 	type ClockConfig,
 	type CommandItem,
-	type Dashboard,
 	type DashboardCard,
 	type DatacoreConfig,
 	type DataviewConfig,
@@ -20,7 +18,6 @@ import {
 	type MobileActionButton,
 	type JiraConfig,
 	type JiraControl,
-	newDashboardId,
 	OPEN_IN_MODES,
 	OPEN_OUTSIDE_RULES,
 	OPEN_SOURCES,
@@ -40,7 +37,6 @@ import {
 	type TaskFilterConfig,
 	type TaskSortRule,
 	type TasksConfig,
-	activeDashboard,
 	CARD_BORDER_WIDTH_MAX,
 	clampBannerHeight,
 } from "./types";
@@ -64,10 +60,17 @@ import {
 } from "./git";
 import { t } from "./i18n";
 
-/** Current dashboard-layout export schema version. v2 carries every dashboard
- * (with per-board overrides and backgrounds) plus pinned cards and globals;
- * v1 (a single `cards` array) is still imported for backward compatibility. */
-export const LAYOUT_SCHEMA = 2;
+/** Current dashboard-layout export schema version.
+ *
+ * v3 (current): a single `cards` array plus globals, same shape as v1 — multi-
+ * page support (and the intervening v2 multi-dashboard export) was removed.
+ * v2: every dashboard (with per-board overrides and backgrounds) plus pinned
+ * cards; still imported for backward compatibility, folding onto a single
+ * board by keeping the active dashboard's cards plus every pinned card and
+ * discarding every other board and its overrides — the same collapse
+ * `migrateSettings` performs on upgrade.
+ * v1: a bare single `cards` array; still imported. */
+export const LAYOUT_SCHEMA = 3;
 
 /** Current full-settings export schema version. A settings export is a superset
  * of a layout export: it embeds the whole layout (so it imports cleanly through
@@ -77,9 +80,7 @@ export const SETTINGS_SCHEMA = 1;
 /** The portable subset of settings that describes the whole dashboard setup. */
 export interface LayoutExport {
 	sbdLayout: number;
-	dashboards: Dashboard[];
-	activeDashboardId: string;
-	pinnedCards: DashboardCard[];
+	cards: DashboardCard[];
 	gridColumns: number;
 	rowHeight: number;
 	fitToPage: boolean;
@@ -98,9 +99,6 @@ const RANGE = {
 	cardBlur: { min: 0, max: 24 },
 	cardRadius: { min: 0, max: 14 },
 	cardBorderWidth: { min: 0, max: CARD_BORDER_WIDTH_MAX },
-	headerScale: { min: 0.6, max: 1.8 },
-	headerMarginTop: { min: 0, max: 96 },
-	headerSpacingBelow: { min: 0, max: 96 },
 };
 
 /** Build the portable layout payload (the dashboard setup and its globals). */
@@ -112,15 +110,9 @@ function layoutPayload(s: HomeSettings): LayoutExport {
 		card.jira?.pat === undefined
 			? card
 			: { ...card, jira: { ...card.jira, pat: undefined } };
-	const dashboards = s.dashboards.map((dashboard) => ({
-		...dashboard,
-		cards: dashboard.cards.map(scrubCard),
-	}));
 	return {
 		sbdLayout: LAYOUT_SCHEMA,
-		dashboards,
-		activeDashboardId: s.activeDashboardId,
-		pinnedCards: s.pinnedCards.map(scrubCard),
+		cards: s.cards.map(scrubCard),
 		gridColumns: s.gridColumns,
 		rowHeight: s.rowHeight,
 		fitToPage: s.fitToPage,
@@ -214,15 +206,6 @@ function clampNum(
 	fallback: number,
 ): number {
 	return Math.max(min, Math.min(max, Math.round(num(value, fallback))));
-}
-
-function clampFloat(
-	value: unknown,
-	min: number,
-	max: number,
-	fallback: number,
-): number {
-	return Math.max(min, Math.min(max, num(value, fallback)));
 }
 
 function str(value: unknown): string | undefined {
@@ -360,7 +343,6 @@ function sanitizeCard(raw: unknown, index: number): DashboardCard | null {
 		card.hideBaseHeader = r.hideBaseHeader;
 	if (typeof r.sandboxTrusted === "boolean")
 		card.sandboxTrusted = r.sandboxTrusted;
-	if (typeof r.pinned === "boolean") card.pinned = r.pinned;
 	if (typeof r.cardOpacity === "number") card.cardOpacity = r.cardOpacity;
 	if (typeof r.cardBlur === "number") card.cardBlur = r.cardBlur;
 	if (typeof r.cardBorderWidth === "number") {
@@ -959,173 +941,10 @@ function sanitizeLeafView(r: Record<string, unknown>): LeafViewConfig {
 	return cfg;
 }
 
-function sanitizeBackground(raw: unknown): BackgroundConfig | undefined {
-	if (!raw || typeof raw !== "object") return undefined;
-	const r = raw as Record<string, unknown>;
-	const kinds: BackgroundKind[] = ["none", "color", "image", "url", "weather"];
-	if (!kinds.includes(r.kind as BackgroundKind)) return undefined;
-	return {
-		kind: r.kind as BackgroundKind,
-		value: str(r.value) ?? "",
-		opacity: Math.max(0, Math.min(1, num(r.opacity, 0.15))),
-		blur: Math.max(0, Math.min(40, num(r.blur, 0))),
-	};
-}
-
-/** Read a board's banner overrides off an imported dashboard. Each stays absent
- * when the file has nothing for it, so an imported board falls back to the
- * global setting exactly as an unset override should. */
-function applyBannerOverrides(dash: Dashboard, r: Record<string, unknown>): void {
-	if (r.backgroundLayout === "banner" || r.backgroundLayout === "full") {
-		dash.backgroundLayout = r.backgroundLayout;
-	}
-	if (typeof r.bannerHeight === "number") {
-		dash.bannerHeight = clampBannerHeight(r.bannerHeight);
-	}
-	if (typeof r.bannerFade === "boolean") dash.bannerFade = r.bannerFade;
-	if (typeof r.bannerFullWidth === "boolean") {
-		dash.bannerFullWidth = r.bannerFullWidth;
-	}
-}
-
-function sanitizeDashboard(
-	raw: unknown,
-	s: HomeSettings,
-	index: number,
-): Dashboard | null {
-	if (!raw || typeof raw !== "object") return null;
-	const r = raw as Record<string, unknown>;
-	const cards = Array.isArray(r.cards)
-		? r.cards
-				.map((c, i) => sanitizeCard(c, i))
-				.filter((c): c is DashboardCard => c !== null)
-		: [];
-	const dash: Dashboard = {
-		id: str(r.id) ?? newDashboardId(),
-		name: str(r.name) ?? `Dashboard ${index + 1}`,
-		cards,
-	};
-	const icon = str(r.icon);
-	if (icon !== undefined && icon.trim()) dash.icon = icon;
-	const iconLucide = str(r.iconLucide);
-	if (iconLucide !== undefined && iconLucide.trim())
-		dash.iconLucide = iconLucide;
-	if (typeof r.gridColumns === "number") {
-		dash.gridColumns = clampNum(
-			r.gridColumns,
-			RANGE.gridColumns.min,
-			RANGE.gridColumns.max,
-			s.gridColumns,
-		);
-	}
-	if (typeof r.rowHeight === "number") {
-		dash.rowHeight = clampNum(
-			r.rowHeight,
-			RANGE.rowHeight.min,
-			RANGE.rowHeight.max,
-			s.rowHeight,
-		);
-	}
-	if (typeof r.fitToPage === "boolean") dash.fitToPage = r.fitToPage;
-	if (typeof r.showSearch === "boolean") dash.showSearch = r.showSearch;
-	const linkedWorkspace = str(r.linkedWorkspace);
-	if (linkedWorkspace !== undefined && linkedWorkspace.trim())
-		dash.linkedWorkspace = linkedWorkspace;
-	const rawHeader = r.header;
-	if (rawHeader && typeof rawHeader === "object") {
-		const h = rawHeader as Record<string, unknown>;
-		const header: NonNullable<Dashboard["header"]> = {};
-		if (typeof h.showTitle === "boolean") header.showTitle = h.showTitle;
-		const title = str(h.title);
-		if (title !== undefined) header.title = title;
-		const logo = str(h.logo);
-		if (logo !== undefined) header.logo = logo;
-		// Kept even when empty: an empty override is a board that deliberately
-		// shows no Lucide title icon, which is not the same as no override.
-		const logoIcon = str(h.logoIcon);
-		if (logoIcon !== undefined) header.logoIcon = logoIcon.trim();
-		if (h.align === "left" || h.align === "center" || h.align === "right") {
-			header.align = h.align;
-		}
-		if (typeof h.titleScale === "number") {
-			header.titleScale = clampFloat(
-				h.titleScale,
-				RANGE.headerScale.min,
-				RANGE.headerScale.max,
-				1,
-			);
-		}
-		if (typeof h.logoScale === "number") {
-			header.logoScale = clampFloat(
-				h.logoScale,
-				RANGE.headerScale.min,
-				RANGE.headerScale.max,
-				1,
-			);
-		}
-		if (typeof h.marginTop === "number") {
-			header.marginTop = clampNum(
-				h.marginTop,
-				RANGE.headerMarginTop.min,
-				RANGE.headerMarginTop.max,
-				0,
-			);
-		}
-		if (typeof h.spacingBelow === "number") {
-			header.spacingBelow = clampNum(
-				h.spacingBelow,
-				RANGE.headerSpacingBelow.min,
-				RANGE.headerSpacingBelow.max,
-				0,
-			);
-		}
-		if (Object.keys(header).length > 0) dash.header = header;
-	}
-	if (typeof r.maxWidth === "number") {
-		dash.maxWidth = clampNum(
-			r.maxWidth,
-			RANGE.maxWidth.min,
-			RANGE.maxWidth.max,
-			s.maxWidth,
-		);
-	}
-	if (typeof r.cardOpacity === "number") {
-		dash.cardOpacity = Math.max(0, Math.min(1, r.cardOpacity));
-	}
-	if (typeof r.cardBlur === "number") {
-		dash.cardBlur = clampNum(
-			r.cardBlur,
-			RANGE.cardBlur.min,
-			RANGE.cardBlur.max,
-			s.cardBlur,
-		);
-	}
-	if (typeof r.cardRadius === "number") {
-		dash.cardRadius = clampNum(
-			r.cardRadius,
-			RANGE.cardRadius.min,
-			RANGE.cardRadius.max,
-			s.cardRadius,
-		);
-	}
-	if (typeof r.cardBorderWidth === "number") {
-		dash.cardBorderWidth = clampNum(
-			r.cardBorderWidth,
-			RANGE.cardBorderWidth.min,
-			RANGE.cardBorderWidth.max,
-			s.cardBorderWidth,
-		);
-	}
-	const bg = sanitizeBackground(r.background);
-	if (bg) dash.background = bg;
-	applyBannerOverrides(dash, r);
-	return dash;
-}
-
 /**
  * Parse and sanitize an exported layout, applying it onto the given settings.
- * Returns an error message on failure, or null on success. Supports both the
- * v2 multi-dashboard format and the legacy v1 single-`cards` format.
+ * Returns an error message on failure, or null on success. Supports the
+ * current single-`cards` format and the legacy multi-dashboard export.
  */
 export function importLayout(s: HomeSettings, json: string): string | null {
 	let parsed: unknown;
@@ -1141,40 +960,42 @@ export function importLayout(s: HomeSettings, json: string): string | null {
 }
 
 /** Apply the dashboard/layout portion of a parsed export onto `s`. Returns an
- * error message on failure, or null on success. Supports the v2 multi-dashboard
- * format and the legacy v1 single-`cards` format. */
+ * error message on failure, or null on success. */
 function applyLayout(
 	s: HomeSettings,
 	data: Record<string, unknown>,
 ): string | null {
-	// v2: a full multi-dashboard layout.
+	// Legacy multi-dashboard export (from before multi-page support was
+	// removed): keep the active dashboard's own cards plus every pinned card
+	// (which rendered on every board), discarding every other board and its
+	// per-board overrides — the same collapse `migrateSettings` performs on
+	// upgrade.
 	if (Array.isArray(data.dashboards)) {
-		const dashboards = data.dashboards
-			.map((d, i) => sanitizeDashboard(d, s, i))
-			.filter((d): d is Dashboard => d !== null);
+		const dashboards = data.dashboards.filter(
+			(d): d is Record<string, unknown> => !!d && typeof d === "object",
+		);
 		if (dashboards.length === 0) return t().layout.noValidDashboards;
-		s.dashboards = dashboards;
-		if (Array.isArray(data.pinnedCards)) {
-			s.pinnedCards = data.pinnedCards
-				.map((c, i) => sanitizeCard(c, i))
-				.filter((c): c is DashboardCard => c !== null);
-		}
 		const activeId = str(data.activeDashboardId);
-		s.activeDashboardId =
-			activeId && dashboards.some((d) => d.id === activeId)
-				? activeId
-				: dashboards[0].id;
+		const active =
+			dashboards.find((d) => str(d.id) === activeId) ?? dashboards[0];
+		const ownCards: unknown[] = Array.isArray(active.cards) ? active.cards : [];
+		const pinned: unknown[] = Array.isArray(data.pinnedCards) ? data.pinnedCards : [];
+		const cards = [...ownCards, ...pinned]
+			.map((c, i) => sanitizeCard(c, i))
+			.filter((c): c is DashboardCard => c !== null);
+		if (cards.length === 0) return t().layout.noValidCards;
+		s.cards = cards;
 		applyGlobals(s, data);
 		return null;
 	}
 
-	// v1 (legacy): a single active-board `cards` array.
+	// The current format: a single `cards` array.
 	if (Array.isArray(data.cards)) {
 		const cards = data.cards
 			.map((c, i) => sanitizeCard(c, i))
 			.filter((c): c is DashboardCard => c !== null);
 		if (cards.length === 0) return t().layout.noValidCards;
-		activeDashboard(s).cards = cards;
+		s.cards = cards;
 		applyGlobals(s, data);
 		return null;
 	}

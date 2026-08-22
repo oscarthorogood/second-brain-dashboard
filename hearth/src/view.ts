@@ -2,7 +2,6 @@ import { Component, ItemView, Platform, type WorkspaceLeaf } from "obsidian";
 import type SbdPlugin from "./main";
 import { renderHeader } from "./header";
 import { renderDashboard } from "./dashboard";
-import { renderDashboardSwitcher } from "./dashboards";
 import { renderMobileActionBar } from "./mobileactions";
 import { applyBackground, renderBanner } from "./background";
 import { deferRedrawWhileTyping } from "./cardfocus";
@@ -206,8 +205,6 @@ export class HomeView extends ItemView {
 
 		const inner = scroll.createDiv("sbd-inner");
 		inner.style.maxWidth = `${effectiveMaxWidth(this.plugin.settings)}px`;
-
-		if (!mobileOnly) renderDashboardSwitcher(this, inner);
 
 		if (effectiveShowTitle(this.plugin.settings) || effectiveShowSearch(this.plugin.settings)) {
 			const header = inner.createDiv("sbd-header");

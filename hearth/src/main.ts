@@ -1,4 +1,4 @@
-import { addIcon, apiVersion, debounce, Platform, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
+import { addIcon, apiVersion, debounce, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
 import { HomeView, VIEW_TYPE_HOME } from "./view";
 import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings } from "./types";
 import { HomeSettingTab } from "./settings";
@@ -9,7 +9,6 @@ import {
 	SBD_ICON_THEMED_SVG,
 	tabIconIdFor,
 } from "./icon";
-import type { WorkspacesInstance } from "./obsidian-ext";
 import { openFile } from "./opener";
 import { EXCALIDRAW_PLUGIN_ID } from "./filetypes";
 import { setLanguage, t } from "./i18n";
@@ -108,16 +107,14 @@ export default class SbdPlugin extends Plugin {
 			callback: () => this.openDailyNote(),
 		});
 
-		// Like the settings button, and for the same reason: run on demand the
-		// wizard builds an *additional* dashboard and never overwrites one. Only
-		// the first-run prompt may offer to replace the starter board.
+		// Like the settings button, and for the same reason: re-running the
+		// wizard on a board the user has already made their own asks for
+		// confirmation before replacing it (see SetupWizardModal).
 		this.addCommand({
 			id: "run-setup",
 			name: t().commands.runSetup,
-			callback: () => openSetupWizard(this, { forceNewDashboard: true }),
+			callback: () => openSetupWizard(this),
 		});
-
-		this.registerDashboardCommands();
 
 		this.addSettingTab(new HomeSettingTab(this.app, this));
 
@@ -141,16 +138,7 @@ export default class SbdPlugin extends Plugin {
 		this.registerEvent(this.app.vault.on("rename", onVaultChange));
 		this.registerEvent(this.app.vault.on("modify", onVaultChange));
 
-		// Follow core-Workspace loads: when the active workspace matches a
-		// dashboard's linked workspace, switch to that dashboard. There is no
-		// dedicated "workspace loaded" event, so listen to layout-change;
-		// setActiveDashboard no-ops when the dashboard is already active.
-		this.registerEvent(
-			this.app.workspace.on("layout-change", () => this.followLinkedWorkspace()),
-		);
-
 		this.app.workspace.onLayoutReady(() => {
-			this.applyMobileDefaultDashboard();
 			if (this.settings.openOnStartup) void this.activateView();
 			// Pop the release-notes dialog after an update (but not on a fresh
 			// install). Runs once layout is ready so it doesn't fight startup.
@@ -172,88 +160,6 @@ export default class SbdPlugin extends Plugin {
 		if (!leaf || !this.settings.replaceNewTabs) return;
 		if (leaf.getViewState().type !== "empty") return;
 		void leaf.setViewState({ type: VIEW_TYPE_HOME });
-	}
-
-	/** Name of the workspace we last reacted to, so the link fires once per
-	 * workspace load instead of pinning the dashboard on every layout-change. */
-	private lastWorkspace?: string;
-
-	/** Switch to the dashboard linked to the currently loaded core-Workspace,
-	 * if any. One-way sync: workspace → dashboard, never the reverse. */
-	private followLinkedWorkspace() {
-		const instance = this.app.internalPlugins.getPluginById("workspaces")
-			?.instance as WorkspacesInstance | undefined;
-		const active = instance?.activeWorkspace;
-		if (!active || active === this.lastWorkspace) return;
-		this.lastWorkspace = active;
-		const match = this.settings.dashboards.find(
-			(d) => d.linkedWorkspace === active,
-		);
-		if (match) this.setActiveDashboard(match.id);
-	}
-
-	/** On mobile, switch to the first dashboard flagged as the mobile default so
-	 * a phone/tablet opens on the board tuned for a small screen (#120). Applied
-	 * in memory only, without saving: `activeDashboardId` is a single field shared
-	 * with desktop through synced settings, so persisting the mobile choice would
-	 * drag the desktop's active board along with it on the next sync. Any already
-	 * open home view is re-rendered to reflect the switch. */
-	private applyMobileDefaultDashboard() {
-		if (!Platform.isMobile) return;
-		const mobile = this.settings.dashboards.find((d) => d.mobileDefault);
-		if (!mobile || this.settings.activeDashboardId === mobile.id) return;
-		this.settings.activeDashboardId = mobile.id;
-		this.refreshViews();
-	}
-
-	/** Switch the active dashboard and refresh any open home views. */
-	setActiveDashboard(id: string) {
-		if (this.settings.activeDashboardId === id) return;
-		this.settings.activeDashboardId = id;
-		void this.saveData(this.settings);
-		this.refreshViews();
-	}
-
-	private cycleDashboard(direction: 1 | -1) {
-		const dashboards = this.settings.dashboards;
-		if (dashboards.length < 2) return;
-		const current = dashboards.findIndex(
-			(d) => d.id === this.settings.activeDashboardId,
-		);
-		const start = current < 0 ? 0 : current;
-		const next = (start + direction + dashboards.length) % dashboards.length;
-		this.setActiveDashboard(dashboards[next].id);
-	}
-
-	/**
-	 * Commands to jump straight to a dashboard by position, plus next/previous.
-	 * No default hotkeys are bound (Mod+number is taken by core tab switching);
-	 * users can assign their own in Settings → Hotkeys.
-	 */
-	private registerDashboardCommands() {
-		for (let i = 1; i <= 9; i++) {
-			this.addCommand({
-				id: `switch-dashboard-${i}`,
-				name: t().commands.switchDashboard(i),
-				checkCallback: (checking) => {
-					const dash = this.settings.dashboards[i - 1];
-					if (!dash) return false;
-					if (!checking) this.setActiveDashboard(dash.id);
-					return true;
-				},
-			});
-		}
-
-		this.addCommand({
-			id: "next-dashboard",
-			name: t().commands.nextDashboard,
-			callback: () => this.cycleDashboard(1),
-		});
-		this.addCommand({
-			id: "previous-dashboard",
-			name: t().commands.previousDashboard,
-			callback: () => this.cycleDashboard(-1),
-		});
 	}
 
 	async activateView() {

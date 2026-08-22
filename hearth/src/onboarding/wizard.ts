@@ -23,7 +23,7 @@ import { t } from "../i18n";
 import type SbdPlugin from "../main";
 import { configuredPlaces, renderSkySource } from "../placepicker";
 import { formatSkyValue, parseSkyValue } from "../sky";
-import { makeClickable } from "../ui";
+import { confirmAction, makeClickable } from "../ui";
 import type { OpenIn } from "../types";
 import { OPEN_IN_MODES } from "../types";
 import { detectSetup, type DetectedIntegration, type SetupDetection } from "./detect";
@@ -67,29 +67,19 @@ const STEP_ICONS: Record<SetupStepId, string> = {
  * width `planCards` lays out to. */
 const PREVIEW_COLUMNS = 12;
 
-/** How a particular run of the wizard behaves. */
-export interface SetupWizardOptions {
-	/**
-	 * Force the built board onto a *new* dashboard, with no option to replace
-	 * an existing one.
-	 *
-	 * Set for every entry point except the first-run prompt. Re-running the
-	 * wizard from settings is something people do to explore — "what would it
-	 * build if I said I plan in here?" — and an exploration that can overwrite a
-	 * board somebody spent an evening arranging is a trap, however clearly the
-	 * dropdown is labelled. So the destructive option simply isn't offered:
-	 * every existing dashboard is left exactly as it is, and the result arrives
-	 * as one more board in the switcher.
-	 */
-	forceNewDashboard?: boolean;
-}
-
 export class SetupWizardModal extends Modal {
 	private readonly plugin: SbdPlugin;
 	private readonly detection: SetupDetection;
-	private readonly options: SetupWizardOptions;
 	private answers: SetupAnswers;
 	private stepIndex = 0;
+	/**
+	 * Whether finishing the wizard will replace a board the user has already
+	 * made their own, decided once up front from what is actually on the board
+	 * — never on a fresh install or a re-run over the untouched starter board,
+	 * always once a single card has been added, moved beyond the starter set or
+	 * removed. Gates the confirmation in {@link finishSetup}.
+	 */
+	private readonly replacingExisting: boolean;
 	/** True once the board has been built, so closing the modal afterwards
 	 * doesn't record the run as skipped. */
 	private finished = false;
@@ -98,35 +88,12 @@ export class SetupWizardModal extends Modal {
 	 * trigger. Dropped with the modal. */
 	private readonly placeSession: Record<string, unknown> = {};
 
-	constructor(plugin: SbdPlugin, options: SetupWizardOptions = {}) {
+	constructor(plugin: SbdPlugin) {
 		super(plugin.app);
 		this.plugin = plugin;
-		this.options = options;
 		this.detection = detectSetup(plugin.app);
 		this.answers = defaultAnswers(plugin.settings, this.detection);
-		// Replacing the board is right on a fresh install and wrong on a re-run
-		// over a board somebody has arranged; decide from what is actually there
-		// rather than making the user think about it. A forced run never replaces
-		// anything regardless.
-		this.answers.target =
-			!options.forceNewDashboard && isUntouchedStarterBoard(plugin.settings)
-				? "replace"
-				: "new";
-		// A second board wants a name that isn't already taken, so the switcher
-		// doesn't end up with two identically-labelled entries.
-		this.answers.dashboardName = this.freeDashboardName();
-	}
-
-	/** "Home", or "Home 2", "Home 3"… when the vault already has one. */
-	private freeDashboardName(): string {
-		const base = t().setup.finish.defaultName;
-		const taken = new Set(this.plugin.settings.dashboards.map((d) => d.name));
-		if (!taken.has(base)) return base;
-		for (let n = 2; n < 100; n++) {
-			const candidate = `${base} ${n}`;
-			if (!taken.has(candidate)) return candidate;
-		}
-		return base;
+		this.replacingExisting = !isUntouchedStarterBoard(plugin.settings);
 	}
 
 	onOpen(): void {
@@ -574,8 +541,7 @@ export class SetupWizardModal extends Modal {
 
 	private renderFinishStep(body: HTMLElement): void {
 		const strings = t().setup.finish;
-		const a = this.answers;
-		const planned = planCards(a, this.detection, (i) => `preview-${i}`);
+		const planned = planCards(this.answers, this.detection, (i) => `preview-${i}`);
 
 		// First, above the preview: the step's body scrolls, and everything below
 		// is a list the reader is about to scroll through and then press a button.
@@ -594,34 +560,9 @@ export class SetupWizardModal extends Modal {
 			}
 		}
 
-		if (this.options.forceNewDashboard) {
-			// No dropdown at all: an option that is never selectable is noise, and
-			// stating the guarantee outright is the reassurance this run needs.
-			body.createDiv({ cls: "sbd-setup-note is-safe", text: strings.targetForcedNew });
-		} else {
-			new Setting(body)
-				.setName(strings.target)
-				.setDesc(strings.targetDesc)
-				.addDropdown((d) => {
-					d.addOption("replace", strings.targetReplace);
-					d.addOption("new", strings.targetNew);
-					d.setValue(a.target).onChange((v) => {
-						a.target = v as SetupAnswers["target"];
-					});
-				});
+		if (this.replacingExisting) {
+			body.createDiv({ cls: "sbd-setup-note", text: strings.replaceWarning });
 		}
-
-		new Setting(body)
-			.setName(strings.name)
-			.setDesc(strings.nameDesc)
-			.addText((text) =>
-				text
-					.setPlaceholder("Home")
-					.setValue(a.dashboardName)
-					.onChange((v) => {
-						a.dashboardName = v;
-					}),
-			);
 	}
 
 	/**
@@ -707,12 +648,24 @@ export class SetupWizardModal extends Modal {
 
 	// ---- Finishing -----------------------------------------------------
 
-	/** Apply everything, persist once, and hand the user their board. */
+	/** Building the board replaces it outright, so a board the user has already
+	 * made their own gets one more confirmation before it goes; a fresh install
+	 * or a re-run over the untouched starter board applies straight away. */
 	private async finishSetup(): Promise<void> {
-		// Belt and braces: the "replace" control is never drawn on a forced run,
-		// so this can only differ if the answers were reached some other way —
-		// and the one thing this run promises is that it touches nothing.
-		if (this.options.forceNewDashboard) this.answers.target = "new";
+		if (this.replacingExisting) {
+			confirmAction(this.app, {
+				title: t().setup.finish.replaceConfirmTitle,
+				message: t().setup.finish.replaceConfirmMessage,
+				confirmText: t().setup.finish.replaceConfirmButton,
+				onConfirm: () => void this.commitSetup(),
+			});
+			return;
+		}
+		await this.commitSetup();
+	}
+
+	/** Apply the answers, persist once, and hand the user their board. */
+	private async commitSetup(): Promise<void> {
 		const outcome = applySetup(this.plugin.settings, this.answers, this.detection);
 		this.finished = true;
 		// Record the version too, so a first-run user isn't shown the changelog
@@ -748,8 +701,8 @@ function plannedReason(entry: PlannedCard): string {
  * prompt all come through here, so there is one place that decides what
  * "running setup" means.
  */
-export function openSetupWizard(plugin: SbdPlugin, options: SetupWizardOptions = {}): void {
-	new SetupWizardModal(plugin, options).open();
+export function openSetupWizard(plugin: SbdPlugin): void {
+	new SetupWizardModal(plugin).open();
 }
 
 /**

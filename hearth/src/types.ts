@@ -1328,10 +1328,6 @@ export interface DashboardCard {
 	 * unless this is `true`, so no existing embed card sprouts a new control. */
 	showOpenButton?: boolean;
 
-	/** Show this card on every dashboard, sharing one definition and position
-	 * across boards ("synced"). Stored once in settings.pinnedCards. */
-	pinned?: boolean;
-
 	// ---- Appearance ----
 	/** Optional accent color (CSS color) for the card header/border. */
 	accent?: string;
@@ -1414,14 +1410,11 @@ export function clampBannerHeight(h: number | undefined): number {
 	return Math.max(BANNER_HEIGHT_MIN, Math.min(BANNER_HEIGHT_MAX, Math.round(h)));
 }
 
-/** A self-contained background configuration (used for per-dashboard overrides
- * as well as the global default).
- *
- * This is *what the backdrop is* and nothing else. How a board wears it — full
- * view or banner, and the banner's shape — is deliberately not in here: those
- * are their own per-dashboard overrides ({@link BannerOverrides}) so a board can
- * turn the vault's background into a banner without having to restate the
- * picture. {@link effectiveBackground} joins the two. */
+/** A self-contained background configuration (the global default). This is
+ * *what the backdrop is* and nothing else. How the board wears it — full view
+ * or banner, and the banner's shape — is deliberately not in here (see the
+ * banner fields on {@link HomeSettings}); {@link effectiveBackground} joins
+ * the two. */
 export interface BackgroundConfig {
 	kind: BackgroundKind;
 	/** A CSS colour, a vault image path, a URL, or — for "weather" — a packed
@@ -1431,32 +1424,7 @@ export interface BackgroundConfig {
 	blur: number;
 }
 
-/**
- * How a board wears its background, as *overrides*: every field is optional and
- * falls back to the global setting, the same way `gridColumns`, `maxWidth` and
- * `cardOpacity` already do.
- *
- * Kept separate from {@link BackgroundConfig} on purpose. A board's background
- * override is all-or-nothing — take it and you restate the kind, the value, the
- * opacity and the blur — and making the banner part of it would have meant a
- * board could only have a banner by re-specifying the whole picture. These
- * override independently, so "the vault's background, but as a banner on this
- * board" is one dropdown.
- */
-export interface BannerOverrides {
-	/** Full-view wallpaper or a banner strip at the top. */
-	backgroundLayout?: BackgroundLayout;
-	/** Banner height in pixels; only read when the layout resolves to "banner". */
-	bannerHeight?: number;
-	/** Fade the banner's lower edge into the page instead of cutting it off with
-	 * a hard line. */
-	bannerFade?: boolean;
-	/** Let the banner run edge to edge instead of lining up with the content
-	 * column. */
-	bannerFullWidth?: boolean;
-}
-
-/** A background resolved for painting: what the backdrop is, plus how this
+/** A background resolved for painting: what the backdrop is, plus how the
  * board wears it, with every fallback already applied. What
  * {@link effectiveBackground} hands to the renderer. */
 export interface ResolvedBackground extends BackgroundConfig {
@@ -1466,80 +1434,7 @@ export interface ResolvedBackground extends BackgroundConfig {
 	bannerFullWidth: boolean;
 }
 
-/** A named dashboard: one arrangeable board of cards. The vault can hold several
- * and switch between them from the top-left switcher. */
 export type HeaderAlign = "left" | "center" | "right";
-
-export interface DashboardHeaderConfig {
-	/** Override the global title visibility (undefined = use global). */
-	showTitle?: boolean;
-	/** Override the global title text for this dashboard. */
-	title?: string;
-	/** Override the global logo text/icon for this dashboard. Empty = Second Brain Dashboard icon. */
-	logo?: string;
-	/** Override the global title Lucide icon for this dashboard. A bare Lucide id
-	 * (`"flame"`), drawn instead of the logo text. An empty string is a real
-	 * override meaning "no icon on this board" — it falls back to the logo text,
-	 * not to the global icon; undefined follows the global setting. */
-	logoIcon?: string;
-	/** Align only the title/logo block; the search section below has its own
-	 * layout. */
-	align?: HeaderAlign;
-	/** Title size multiplier, clamped to a conservative range. */
-	titleScale?: number;
-	/** Logo size multiplier, clamped to a conservative range. */
-	logoScale?: number;
-	/** Title block top margin in pixels. Undefined keeps the stylesheet default. */
-	marginTop?: number;
-	/** Spacing below the whole header block in pixels. Undefined keeps the
-	 * stylesheet default. */
-	spacingBelow?: number;
-}
-
-export interface Dashboard extends BannerOverrides {
-	id: string;
-	name: string;
-	/** Optional emoji/short text shown on the switcher button instead of its
-	 * 1-based number. */
-	icon?: string;
-	/** Optional Lucide icon id shown on the switcher button instead of the
-	 * emoji/number (takes precedence over `icon`). */
-	iconLucide?: string;
-	cards: DashboardCard[];
-	/** Optional overrides; when omitted the global setting is used. */
-	gridColumns?: number;
-	rowHeight?: number;
-	/** Override *what* the backdrop is for this board. Independent of the
-	 * banner overrides inherited from {@link BannerOverrides}, which say how it
-	 * is worn — a board can override either, both, or neither. */
-	background?: BackgroundConfig;
-	/** Override "fit to page" for this board (undefined = use global). */
-	fitToPage?: boolean;
-	/** Override the content max-width (px) for this board (undefined = global). */
-	maxWidth?: number;
-	/** Override the card surface opacity for this board (undefined = global). */
-	cardOpacity?: number;
-	/** Override the card surface backdrop blur (px) for this board (undefined =
-	 * global). */
-	cardBlur?: number;
-	/** Override the card corner radius (px) for this board (undefined = global). */
-	cardRadius?: number;
-	/** Override the card border width (px) for this board (undefined = global). */
-	cardBorderWidth?: number;
-	/** Per-dashboard overrides for the title/logo block. */
-	header?: DashboardHeaderConfig;
-	/** Override the global search/command section visibility for this board
-	 * (undefined = follow {@link HomeSettings.showSearch}). */
-	showSearch?: boolean;
-	/** Name of a core-Workspace; loading that workspace auto-switches to this
-	 * dashboard (one-way, workspace → dashboard). Undefined = not linked. */
-	linkedWorkspace?: string;
-	/** Marks this board as the one to open on phones/tablets. When Second Brain Dashboard loads
-	 * on mobile it switches to the first dashboard with this flag, so a board
-	 * tuned for a small screen can be the mobile default without being the
-	 * desktop default. Undefined/false = not a mobile default. */
-	mobileDefault?: boolean;
-}
 
 export type ChromeVisibility = "always" | "hover";
 
@@ -1603,8 +1498,7 @@ export interface HomeSettings {
 	logo: string;
 	/** A Lucide icon id drawn as the title icon instead of the emoji/text logo
 	 * (`"flame"`, `"layout-dashboard"`). Empty = fall back to {@link logo}, and
-	 * to the Second Brain Dashboard crystal when that is empty too. Each dashboard can override
-	 * it — see {@link DashboardHeaderConfig.logoIcon}. */
+	 * to the Second Brain Dashboard crystal when that is empty too. */
 	logoIcon: string;
 	/** A Lucide icon id used for Second Brain Dashboard's tab header and ribbon button instead of
 	 * the Second Brain Dashboard crystal. Empty = the crystal. */
@@ -1613,8 +1507,7 @@ export interface HomeSettings {
 	 * normal title text, the historical look), the crystal icon, the title
 	 * text, or both. */
 	themeColorTarget: "none" | "icon" | "title" | "both";
-	/** Show the search/command section on every board that doesn't override it
-	 * (see {@link Dashboard.showSearch}). */
+	/** Show the search/command section. */
 	showSearch: boolean;
 	searchPlaceholder: string;
 	showNewNoteButton: boolean;
@@ -1716,8 +1609,6 @@ export interface HomeSettings {
 	compact: boolean;
 	/** Visibility for the arrange/edit mode entry button. */
 	arrangeButtonVisibility: ChromeVisibility;
-	/** Visibility for the top-left dashboard switcher buttons. */
-	dashboardSwitcherVisibility: ChromeVisibility;
 	/** Card background opacity (0 = fully transparent, 1 = fully opaque). */
 	cardOpacity: number;
 	/** Card surface backdrop blur in pixels — the frosted-glass strength behind
@@ -1736,12 +1627,8 @@ export interface HomeSettings {
 	hiddenFilters: string[];
 
 	// ---- Dashboard ----
-	/** All dashboards. Always has at least one entry after migration. */
-	dashboards: Dashboard[];
-	/** Id of the dashboard currently shown. */
-	activeDashboardId: string;
-	/** Cards pinned to every dashboard (rendered on top of each board's cards). */
-	pinnedCards: DashboardCard[];
+	/** The dashboard's cards. */
+	cards: DashboardCard[];
 	gridColumns: number;
 	/** Height of one grid row in pixels. Lower = finer vertical sizing. */
 	rowHeight: number;
@@ -1863,7 +1750,6 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 
 	compact: false,
 	arrangeButtonVisibility: "always",
-	dashboardSwitcherVisibility: "always",
 	cardOpacity: 0.5,
 	// Frosted glass on by default: a translucent card surface with a gentle blur
 	// of the background behind it. Pairs with the 0.5 opacity above.
@@ -1876,11 +1762,9 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 
 	hiddenFilters: [],
 
-	// Built by migration from STARTER_CARDS (fresh install) or the legacy
-	// top-level `cards` array (upgrade). Left empty here so migration always runs.
-	dashboards: [],
-	activeDashboardId: "",
-	pinnedCards: [],
+	// Built by migration from STARTER_CARDS (fresh install) or from whatever
+	// the previous version had (upgrade). Left empty here so migration always runs.
+	cards: [],
 	gridColumns: 12,
 	rowHeight: 92,
 	favorites: [],
@@ -1979,126 +1863,90 @@ export function defaultMobileActionButtons(): MobileActionButton[] {
 	];
 }
 
-/** Generate a unique dashboard id. */
-export function newDashboardId(): string {
-	return `dash-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`;
-}
-
-/** The dashboard currently selected (falls back to the first one). */
-export function activeDashboard(s: HomeSettings): Dashboard {
-	return s.dashboards.find((d) => d.id === s.activeDashboardId) ?? s.dashboards[0];
-}
-
-/** Cards of the currently selected dashboard (its own cards only). */
+/** The dashboard's own cards. */
 export function activeCards(s: HomeSettings): DashboardCard[] {
-	return activeDashboard(s).cards;
+	return s.cards;
 }
 
-/** Cards to render on the active board: its own cards plus every pinned card. */
+/** Cards to render on the board. */
 export function renderCards(s: HomeSettings): DashboardCard[] {
-	return [...activeDashboard(s).cards, ...s.pinnedCards];
+	return s.cards;
 }
 
-/** Effective grid columns for the active board (per-dashboard override or global). */
+/** Grid columns the board renders with. */
 export function effectiveColumns(s: HomeSettings): number {
-	return activeDashboard(s).gridColumns ?? s.gridColumns;
+	return s.gridColumns;
 }
 
-/** Effective row height for the active board (per-dashboard override or global). */
+/** Row height the board renders with. */
 export function effectiveRowHeight(s: HomeSettings): number {
-	return activeDashboard(s).rowHeight ?? s.rowHeight;
+	return s.rowHeight;
 }
 
-/** Effective "fit to page" for the active board (per-dashboard override or global). */
+/** Whether the board fits to one page (vs. scrolling). */
 export function effectiveFitToPage(s: HomeSettings): boolean {
-	return activeDashboard(s).fitToPage ?? s.fitToPage;
+	return s.fitToPage;
 }
 
-/** Whether the active board should show the search/command section
- * (per-dashboard override or global). */
+/** Whether the board should show the search/command section. */
 export function effectiveShowSearch(s: HomeSettings): boolean {
-	return activeDashboard(s).showSearch ?? s.showSearch;
+	return s.showSearch;
 }
 
-export const HEADER_SCALE_MIN = 0.6;
-export const HEADER_SCALE_MAX = 1.8;
-export const HEADER_MARGIN_TOP_MIN = 0;
-export const HEADER_MARGIN_TOP_MAX = 96;
-export const HEADER_SPACING_BELOW_MIN = 0;
-export const HEADER_SPACING_BELOW_MAX = 96;
-
-function clampHeaderScale(v: unknown): number {
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(HEADER_SCALE_MIN, Math.min(HEADER_SCALE_MAX, v))
-		: 1;
-}
-
-function clampHeaderMarginTop(v: unknown): number | undefined {
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(HEADER_MARGIN_TOP_MIN, Math.min(HEADER_MARGIN_TOP_MAX, Math.round(v)))
-		: undefined;
-}
-
-function clampHeaderSpacingBelow(v: unknown): number | undefined {
-	return typeof v === "number" && !Number.isNaN(v)
-		? Math.max(
-				HEADER_SPACING_BELOW_MIN,
-				Math.min(HEADER_SPACING_BELOW_MAX, Math.round(v)),
-			)
-		: undefined;
-}
-
-/** Whether the active board should show the title/logo block. */
+/** Whether the board should show the title/logo block. */
 export function effectiveShowTitle(s: HomeSettings): boolean {
-	return activeDashboard(s).header?.showTitle ?? s.showTitle;
+	return s.showTitle;
 }
 
-/** Title text for the active board's title/logo block. */
+/** Title text for the title/logo block. */
 export function effectiveTitle(s: HomeSettings): string {
-	return activeDashboard(s).header?.title ?? s.title;
+	return s.title;
 }
 
-/** Logo text for the active board's title/logo block. Empty = Second Brain Dashboard icon. */
+/** Logo text for the title/logo block. Empty = Second Brain Dashboard icon. */
 export function effectiveLogo(s: HomeSettings): string {
-	return activeDashboard(s).header?.logo ?? s.logo;
+	return s.logo;
 }
 
-/** Lucide title icon for the active board. Empty = none, so the logo text (or
- * the Second Brain Dashboard crystal) is drawn instead. A board's own empty string wins over a
- * global icon: that is how a single board opts back out of it. */
+/** Lucide title icon. Empty = none, so the logo text (or the Second Brain Dashboard crystal)
+ * is drawn instead. */
 export function effectiveLogoIcon(s: HomeSettings): string {
-	return activeDashboard(s).header?.logoIcon ?? s.logoIcon;
+	return s.logoIcon;
 }
 
-/** Alignment for the active board's title/logo block; search layout is separate. */
-export function effectiveHeaderAlign(s: HomeSettings): HeaderAlign {
-	const align = activeDashboard(s).header?.align;
-	return align === "left" || align === "right" ? align : "center";
+/** Alignment for the title/logo block; search layout is separate. Fixed at
+ * "center" — there is no setting for it. */
+export function effectiveHeaderAlign(_s: HomeSettings): HeaderAlign {
+	return "center";
 }
 
-/** Title size multiplier for the active board's title/logo block. */
-export function effectiveHeaderTitleScale(s: HomeSettings): number {
-	return clampHeaderScale(activeDashboard(s).header?.titleScale);
+/** Title size multiplier for the title/logo block. Fixed — there is no setting
+ * for it. */
+export function effectiveHeaderTitleScale(_s: HomeSettings): number {
+	return 1;
 }
 
-/** Logo size multiplier for the active board's title/logo block. */
-export function effectiveHeaderLogoScale(s: HomeSettings): number {
-	return clampHeaderScale(activeDashboard(s).header?.logoScale);
+/** Logo size multiplier for the title/logo block. Fixed — there is no setting
+ * for it. */
+export function effectiveHeaderLogoScale(_s: HomeSettings): number {
+	return 1;
 }
 
-/** Optional title block top margin override in pixels. Undefined keeps CSS default. */
-export function effectiveHeaderMarginTop(s: HomeSettings): number | undefined {
-	return clampHeaderMarginTop(activeDashboard(s).header?.marginTop);
+/** Optional title block top margin override in pixels. Always undefined (keeps
+ * the CSS default) — there is no setting for it. */
+export function effectiveHeaderMarginTop(_s: HomeSettings): number | undefined {
+	return undefined;
 }
 
-/** Optional spacing below the whole header block in pixels. Undefined keeps CSS default. */
-export function effectiveHeaderSpacingBelow(s: HomeSettings): number | undefined {
-	return clampHeaderSpacingBelow(activeDashboard(s).header?.spacingBelow);
+/** Optional spacing below the whole header block in pixels. Always undefined
+ * (keeps the CSS default) — there is no setting for it. */
+export function effectiveHeaderSpacingBelow(_s: HomeSettings): number | undefined {
+	return undefined;
 }
 
-/** Effective content max-width for the active board (per-dashboard override or global). */
+/** Effective content max-width for the board. */
 export function effectiveMaxWidth(s: HomeSettings): number {
-	return activeDashboard(s).maxWidth ?? s.maxWidth;
+	return s.maxWidth;
 }
 
 /** Whether low power mode is currently on. Every override below funnels
@@ -2194,76 +2042,37 @@ export function resolveCardBorderWidth(s: HomeSettings, _card: DashboardCard): n
 	return effectiveCardBorderWidth(s);
 }
 
-/** Remove a card from whichever list holds it (a board or the pinned set). */
+/** Remove a card from the board. */
 export function removeCard(s: HomeSettings, card: DashboardCard): void {
-	for (const d of s.dashboards) {
-		const i = d.cards.indexOf(card);
-		if (i >= 0) {
-			d.cards.splice(i, 1);
-			return;
-		}
-	}
-	const p = s.pinnedCards.indexOf(card);
-	if (p >= 0) s.pinnedCards.splice(p, 1);
-}
-
-/** Pin/unpin a card: move it between its board and the shared pinned set. */
-export function setCardPinned(s: HomeSettings, card: DashboardCard, pinned: boolean): void {
-	const alreadyPinned = s.pinnedCards.includes(card);
-	if (pinned === alreadyPinned) {
-		card.pinned = pinned;
-		return;
-	}
-	if (pinned) {
-		for (const d of s.dashboards) {
-			const i = d.cards.indexOf(card);
-			if (i >= 0) {
-				d.cards.splice(i, 1);
-				break;
-			}
-		}
-		card.pinned = true;
-		s.pinnedCards.push(card);
-	} else {
-		const i = s.pinnedCards.indexOf(card);
-		if (i >= 0) s.pinnedCards.splice(i, 1);
-		card.pinned = false;
-		activeDashboard(s).cards.push(card);
-	}
+	const i = s.cards.indexOf(card);
+	if (i >= 0) s.cards.splice(i, 1);
 }
 
 /**
- * Effective background for the active board: what the backdrop is, and how the
- * board wears it, with every fallback applied.
- *
- * The two halves resolve *separately*, which is the whole point of splitting
- * them. A board can override the picture and keep the global layout, override
- * the layout and keep the global picture, or override both — so "the vault's
- * wallpaper, but as a banner on this one board" needs no picture restated.
+ * Effective background: what the backdrop is, and how the board wears it,
+ * with every fallback applied.
  */
 export function effectiveBackground(s: HomeSettings): ResolvedBackground {
-	const dash = activeDashboard(s);
 	// Low power replaces the backdrop — and only the backdrop. The layout is not
 	// a paint cost, and swapping it would move every card on the board the
 	// moment the mode is toggled, which is exactly what the mode promises not to
 	// do. So a bannered board keeps its banner and simply fills it with the flat
-	// colour. The per-dashboard background is overridden along with the global
-	// one: no board may pull in a wallpaper while the mode is on.
+	// colour.
 	const source = lowPowerActive(s)
 		? lowPowerBackground(s)
-		: (dash.background ?? {
+		: {
 				kind: s.backgroundKind,
 				value: s.backgroundValue,
 				opacity: s.backgroundOpacity,
 				blur: s.backgroundBlur,
-			});
+			};
 
 	return {
 		...source,
-		layout: dash.backgroundLayout ?? s.backgroundLayout ?? "full",
-		bannerHeight: clampBannerHeight(dash.bannerHeight ?? s.bannerHeight),
-		bannerFade: (dash.bannerFade ?? s.bannerFade) !== false,
-		bannerFullWidth: (dash.bannerFullWidth ?? s.bannerFullWidth) === true,
+		layout: s.backgroundLayout ?? "full",
+		bannerHeight: clampBannerHeight(s.bannerHeight),
+		bannerFade: s.bannerFade !== false,
+		bannerFullWidth: s.bannerFullWidth === true,
 	};
 }
 
@@ -2307,9 +2116,11 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 }
 
 /**
- * Bring loaded settings up to date: wrap the legacy single-board `cards` array
- * (or the starter set) into the multi-dashboard model and backfill any new
- * fields. Idempotent — safe to run on every load.
+ * Bring loaded settings up to date: seed the starter set on a fresh install,
+ * fold the old multi-dashboard model (Dashboard[] + activeDashboardId +
+ * pinnedCards, removed together with multi-page support) down to a single
+ * `cards` array, and backfill any new fields. Idempotent — safe to run on
+ * every load.
  *
  * Returns `true` when it performed a destructive/one-way migration whose result
  * must be flushed back to storage (currently only the `commandId` → `target`
@@ -2317,14 +2128,25 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * remain in-memory until the next ordinary save, exactly as before.
  */
 export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): boolean {
-	if (!Array.isArray(s.dashboards) || s.dashboards.length === 0) {
-		const legacy = Array.isArray(raw.cards) ? (raw.cards as DashboardCard[]) : null;
-		s.dashboards = [
-			{ id: newDashboardId(), name: "Dashboard 1", cards: legacy ?? starterCards() },
-		];
-	}
-	if (!s.activeDashboardId || !s.dashboards.some((d) => d.id === s.activeDashboardId)) {
-		s.activeDashboardId = s.dashboards[0].id;
+	if (Array.isArray(raw.dashboards) && raw.dashboards.length > 0) {
+		// Fold the old multi-dashboard model down to a single board: keep the
+		// active dashboard's own cards plus every pinned card (which rendered on
+		// every board, so nothing that was visible disappears), discarding every
+		// other dashboard and its per-board overrides.
+		const dashboards = raw.dashboards as Record<string, unknown>[];
+		const active =
+			dashboards.find((d) => d && d.id === raw.activeDashboardId) ?? dashboards[0];
+		const ownCards = Array.isArray(active?.cards)
+			? (active.cards as DashboardCard[])
+			: [];
+		const pinned = Array.isArray(raw.pinnedCards)
+			? (raw.pinnedCards as DashboardCard[])
+			: [];
+		s.cards = [...ownCards, ...pinned];
+	} else if (!Array.isArray(raw.cards)) {
+		// A genuinely fresh install (a pre-multi-dashboard vault's legacy `cards`
+		// array is already carried over by Object.assign in loadSettings).
+		s.cards = starterCards();
 	}
 	if (typeof s.rowHeight !== "number" || s.rowHeight <= 0) s.rowHeight = 92;
 	if (typeof s.cardOpacity !== "number") s.cardOpacity = 0.5;
@@ -2357,7 +2179,6 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	// Only kick in when the field is missing (very old installs); otherwise
 	// respect whatever the user chose.
 	if (typeof raw.backgroundKind !== "string") s.backgroundKind = "default";
-	if (!Array.isArray(s.pinnedCards)) s.pinnedCards = [];
 	// Seed the default buttons only if the field was never persisted, so an
 	// intentionally emptied list (all buttons removed) isn't reset on reload.
 	if (!Array.isArray(raw.mobileActionButtons)) {
@@ -2416,7 +2237,5 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	// The short-lived "split" pill mode was replaced by a plain single button
 	// whose action is chosen here; fall back to the original New-note behaviour.
 	if ((s.newNoteButtonMode as string) === "split") s.newNoteButtonMode = "newNote";
-	// Drop the obsolete single-board field so it can't shadow the dashboards.
-	delete (s as unknown as { cards?: unknown }).cards;
 	return migratedCommandId;
 }

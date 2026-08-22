@@ -75,13 +75,7 @@ describe("tabIconIdFor", () => {
 });
 
 function settings(): HomeSettings {
-	const s: HomeSettings = structuredClone(DEFAULT_SETTINGS);
-	s.dashboards = [
-		{ id: "d1", name: "Dashboard 1", cards: [] },
-		{ id: "d2", name: "Dashboard 2", cards: [] },
-	];
-	s.activeDashboardId = "d1";
-	return s;
+	return structuredClone(DEFAULT_SETTINGS);
 }
 
 describe("effectiveLogoIcon", () => {
@@ -91,29 +85,9 @@ describe("effectiveLogoIcon", () => {
 		expect(effectiveLogo(s)).toBe(DEFAULT_SETTINGS.logo);
 	});
 
-	it("follows the global icon on a board with no override", () => {
+	it("follows the global icon setting", () => {
 		const s = settings();
 		s.logoIcon = "flame";
-		expect(effectiveLogoIcon(s)).toBe("flame");
-	});
-
-	it("lets a board pick its own icon without touching the others", () => {
-		const s = settings();
-		s.logoIcon = "flame";
-		s.dashboards[0].header = { logoIcon: "rocket" };
-		expect(effectiveLogoIcon(s)).toBe("rocket");
-		s.activeDashboardId = "d2";
-		expect(effectiveLogoIcon(s)).toBe("flame");
-	});
-
-	it("treats an empty override as 'no icon on this board'", () => {
-		// Distinct from having no override at all: the board opts out of the
-		// global icon and shows the logo text (or the crystal) instead.
-		const s = settings();
-		s.logoIcon = "flame";
-		s.dashboards[0].header = { logoIcon: "" };
-		expect(effectiveLogoIcon(s)).toBe("");
-		s.activeDashboardId = "d2";
 		expect(effectiveLogoIcon(s)).toBe("flame");
 	});
 });

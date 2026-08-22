@@ -63,9 +63,7 @@ export function configuredPlaces(settings: HomeSettings): WeatherPlace[] {
 	const fromCards = (cards: DashboardCard[] | undefined): void => {
 		for (const card of cards ?? []) consider(card.weather?.place);
 	};
-	// Every board, plus the cards pinned across all of them.
-	for (const dash of settings.dashboards ?? []) fromCards(dash.cards);
-	fromCards(settings.pinnedCards);
+	fromCards(settings.cards);
 	return out;
 }
 

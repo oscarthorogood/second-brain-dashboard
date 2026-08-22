@@ -1602,18 +1602,6 @@ export class HomeSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName(t().settings.dashboard.dashboardSwitcherVisibility)
-			.setDesc(t().settings.dashboard.dashboardSwitcherVisibilityDesc)
-			.addDropdown((d) => {
-				d.addOption("always", labels.always)
-					.addOption("hover", labels.hover)
-					.setValue(s.dashboardSwitcherVisibility === "hover" ? "hover" : "always")
-					.onChange(async (v) => {
-						s.dashboardSwitcherVisibility = v as HomeSettings["dashboardSwitcherVisibility"];
-						await this.save();
-					});
-			});
 	}
 
 	// ---- Layout import / export ----------------------------------------
@@ -1752,20 +1740,16 @@ export class HomeSettingTab extends PluginSettingTab {
 		// heading replaces what used to be a `setHeading()` row of its own.
 		this.section(containerEl, about.heading, about.headingDesc, (body) => {
 			// First in the list: the row a user who skipped the first-run wizard —
-			// or who simply wants another board — comes here looking for.
-			//
-			// Always `forceNewDashboard`: from settings the wizard is a board
-			// *generator*, not a reset. Every dashboard that already exists is
-			// left untouched and the result arrives as a new one in the switcher,
-			// so this row can be pressed to see what it would make without any
-			// risk to work already done.
+			// or who simply wants to rebuild their board — comes here looking for.
+			// Re-running it over a board already made your own asks for
+			// confirmation before replacing it (see SetupWizardModal).
 			const skipped = this.plugin.settings.setupStatus !== "done";
 			new Setting(body)
 				.setName(skipped ? about.setup : about.setupAgain)
 				.setDesc(skipped ? about.setupDesc : about.setupAgainDesc)
 				.addButton((b) =>
 					this.aboutButton(b, "wand-2", about.setupButton, () =>
-						openSetupWizard(this.plugin, { forceNewDashboard: true }),
+						openSetupWizard(this.plugin),
 					),
 				);
 

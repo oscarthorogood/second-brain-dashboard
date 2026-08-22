@@ -301,11 +301,7 @@ function jiraCard(id: string, pat: string): DashboardCard {
 function settingsWithJira(pat: string): HomeSettings {
 	return {
 		...DEFAULT_SETTINGS,
-		dashboards: [
-			{ id: "dashboard", name: "Dashboard", cards: [jiraCard("card", pat)] },
-		],
-		activeDashboardId: "dashboard",
-		pinnedCards: [jiraCard("pinned", pat)],
+		cards: [jiraCard("card", pat)],
 	};
 }
 
@@ -318,8 +314,7 @@ describe("Jira export credential scrubbing", () => {
 		expect(exported).not.toContain(sentinel);
 		expect(exported).toContain("https://jira.example.com");
 		expect(exported).toContain("Team work");
-		expect(settings.dashboards[0].cards[0].jira?.pat).toBe(sentinel);
-		expect(settings.pinnedCards[0].jira?.pat).toBe(sentinel);
+		expect(settings.cards[0].jira?.pat).toBe(sentinel);
 	});
 
 	it("excludes PATs from full settings exports without mutating live settings", () => {
@@ -330,8 +325,7 @@ describe("Jira export credential scrubbing", () => {
 		expect(exported).not.toContain(sentinel);
 		expect(exported).toContain("https://jira.example.com");
 		expect(exported).toContain("Team work");
-		expect(settings.dashboards[0].cards[0].jira?.pat).toBe(sentinel);
-		expect(settings.pinnedCards[0].jira?.pat).toBe(sentinel);
+		expect(settings.cards[0].jira?.pat).toBe(sentinel);
 	});
 });
 
