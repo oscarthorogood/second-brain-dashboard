@@ -67,7 +67,9 @@ body.theme-dark {
 	--background-primary-alt: #000000;
 	--background-secondary: #2c2c2e;
 	--background-secondary-alt: #3a3a3c;
-	--background-modifier-border: rgba(255, 255, 255, 0.12);
+	/* Brighter than a typical theme border: the reference's glass rim reads as a
+	 * crisp, clearly visible line, not a barely-there hairline. */
+	--background-modifier-border: rgba(255, 255, 255, 0.32);
 	--background-modifier-hover: rgba(120, 120, 128, 0.24);
 	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
 	/* All white, differentiated by opacity rather than by shifting toward grey —
@@ -877,9 +879,9 @@ body.theme-dark {
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
-	/* --sbd-card-radius (px) is set per-board by renderDashboard; the 14px
+	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
-	border-radius: var(--sbd-card-radius, 14px);
+	border-radius: var(--sbd-card-radius, 24px);
 	/* A soft glass edge rather than a flat theme line: the border colour is
 	 * blended toward transparent so it reads as a highlight on the frosted
 	 * surface instead of a hard outline, in both light and dark themes. */
@@ -5796,7 +5798,7 @@ body.theme-dark {
 	position: absolute;
 	inset: 0;
 	border: 1px dashed var(--interactive-accent);
-	border-radius: var(--sbd-card-radius, 14px);
+	border-radius: var(--sbd-card-radius, 24px);
 	opacity: 0.5;
 	pointer-events: none;
 }
@@ -5828,8 +5830,8 @@ body.theme-dark {
 	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
 	backdrop-filter: blur(6px);
 	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: var(--sbd-card-radius, 14px)
-		var(--sbd-card-radius, 14px) 0 0;
+	border-radius: var(--sbd-card-radius, 24px)
+		var(--sbd-card-radius, 24px) 0 0;
 }
 
 .sbd-card-title-input {
