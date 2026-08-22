@@ -404,15 +404,6 @@ export class SetupWizardModal extends Modal {
 					});
 				});
 		}
-
-		new Setting(body)
-			.setName(strings.compact)
-			.setDesc(strings.compactDesc)
-			.addToggle((tg) =>
-				tg.setValue(a.compact).onChange((v) => {
-					a.compact = v;
-				}),
-			);
 	}
 
 	private renderPurposeStep(body: HTMLElement): void {

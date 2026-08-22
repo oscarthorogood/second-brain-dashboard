@@ -64,6 +64,19 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   what's behind it rather than skewing toward black, so the whole
   primary/secondary colour tier moved to a true mid-grey family instead.
 
+- **No more per-card colour.** Each card's Style tab used to offer an accent
+  colour (tinting its border, header rule and title) and a background tint —
+  both removed, along with the tab itself, so every card stays the same
+  neutral glass regardless of what it shows. Existing cards simply drop
+  whatever colour they had set.
+
+- **Compact spacing is now the only spacing.** The "Compact spacing" toggle
+  (settings and the setup wizard alike) is gone — every board now uses the
+  tighter card padding and top margin that toggle used to turn on. The
+  board's outer gutter is also now the same on every edge: it used to be
+  narrower on the sides than above and below, and now the width gap applies
+  to the top and bottom too.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually

@@ -159,7 +159,6 @@ export class HomeView extends ItemView {
 		const root = this.contentEl;
 		root.empty();
 		root.addClass("sbd-view");
-		root.toggleClass("sbd-compact", this.plugin.settings.compact);
 		// Low power mode: the flag CSS keys off to drop transitions, animations,
 		// shadows and hover transforms across the whole view. The background and
 		// card-surface side of the mode is handled by the effective* resolvers, so

@@ -175,7 +175,6 @@ export function exportSettings(s: HomeSettings): string {
 		openFromOutside: s.openFromOutside,
 
 		// Appearance
-		compact: s.compact,
 		cardOpacity: s.cardOpacity,
 		cardBlur: s.cardBlur,
 		cardRadius: s.cardRadius,
@@ -320,10 +319,6 @@ function sanitizeCard(raw: unknown, index: number): DashboardCard | null {
 	if (url !== undefined) card.url = url;
 	const text = str(r.text);
 	if (text !== undefined) card.text = text;
-	const accent = str(r.accent);
-	if (accent !== undefined) card.accent = accent;
-	const background = str(r.background);
-	if (background !== undefined) card.background = background;
 	if (typeof r.count === "number") card.count = r.count;
 	if (typeof r.scale === "number") card.scale = r.scale;
 	const cardImageFit = sanitizeImageFit(r.imageFit);
@@ -1199,7 +1194,6 @@ function applySettings(s: HomeSettings, data: Record<string, unknown>): void {
 	applyOpenIn(s, data);
 
 	// Appearance
-	if (typeof data.compact === "boolean") s.compact = data.compact;
 	if (typeof data.cardOpacity === "number") {
 		s.cardOpacity = Math.max(0, Math.min(1, data.cardOpacity));
 	}

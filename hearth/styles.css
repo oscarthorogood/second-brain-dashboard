@@ -143,7 +143,7 @@ body.theme-dark {
 	 * the scroll area into: the height the reader set is the height they get. */
 	flex: 0 0 auto;
 	width: 100%;
-	margin: 0 auto var(--sbd-inner-gap, 28px);
+	margin: 0 auto var(--sbd-inner-gap, 16px);
 	border-radius: 14px;
 	/* Crops the layer inside to the strip — including a blurred layer's soft
 	 * edges, which are deliberately grown past this box (see renderBanner). */
@@ -157,9 +157,9 @@ body.theme-dark {
 .sbd-banner.is-full-width {
 	max-width: none;
 	width: auto;
-	margin-top: calc(-1 * var(--sbd-scroll-pad-top, 4vh));
-	margin-left: calc(-1 * var(--sbd-scroll-pad-x, 24px));
-	margin-right: calc(-1 * var(--sbd-scroll-pad-x, 24px));
+	margin-top: calc(-1 * var(--sbd-scroll-pad-x, 14px));
+	margin-left: calc(-1 * var(--sbd-scroll-pad-x, 14px));
+	margin-right: calc(-1 * var(--sbd-scroll-pad-x, 14px));
 	border-radius: 0;
 }
 
@@ -227,11 +227,12 @@ body.theme-dark {
 	z-index: 1;
 	height: 100%;
 	overflow-y: auto;
-	/* Kept in variables so a full-bleed banner can cancel exactly this padding,
-	 * whichever spacing mode is in force (see .sbd-banner.is-full-width). */
-	--sbd-scroll-pad-x: 24px;
-	--sbd-scroll-pad-top: 4vh;
-	padding: var(--sbd-scroll-pad-top) var(--sbd-scroll-pad-x) 48px;
+	/* Kept in a variable so a full-bleed banner can cancel exactly this padding
+	 * (see .sbd-banner.is-full-width). The same gap is used on every edge —
+	 * top and bottom match the left/right gutter instead of running wider. */
+	--sbd-scroll-pad-x: 14px;
+	--sbd-inner-gap: 16px;
+	padding: var(--sbd-scroll-pad-x);
 }
 
 .sbd-scroll.sbd-fit {
@@ -258,7 +259,7 @@ body.theme-dark {
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: var(--sbd-inner-gap, 28px);
+	gap: var(--sbd-inner-gap, 16px);
 }
 
 .sbd-fit .sbd-inner {
@@ -281,10 +282,10 @@ body.theme-dark {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 18px;
+	gap: 10px;
 	margin-bottom: calc(
-		var(--sbd-header-spacing-below, var(--sbd-inner-gap, 28px)) -
-		var(--sbd-inner-gap, 28px)
+		var(--sbd-header-spacing-below, var(--sbd-inner-gap, 16px)) -
+		var(--sbd-inner-gap, 16px)
 	);
 	/* Sit above the dashboard so the search dropdown overlay isn't covered. */
 	position: relative;
@@ -329,7 +330,7 @@ body.theme-dark {
 	font-weight: 700;
 	letter-spacing: -0.02em;
 	color: var(--text-normal);
-	margin-top: var(--sbd-title-margin-top, 2vh);
+	margin-top: var(--sbd-title-margin-top, 0);
 }
 
 .sbd-header.is-title-align-left .sbd-title {
@@ -994,7 +995,7 @@ body.theme-dark {
 .sbd-card-head {
 	display: flex;
 	align-items: center;
-	padding: 10px 14px;
+	padding: 6px 10px;
 	border-bottom: var(--card-border-width, 1px) solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
@@ -1026,8 +1027,8 @@ body.theme-dark {
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
-	--sbd-card-pad-x: 14px;
-	padding: 12px var(--sbd-card-pad-x);
+	--sbd-card-pad-x: 10px;
+	padding: 8px var(--sbd-card-pad-x);
 }
 
 /* When a card body holds a read-only embed/daily-note host directly, the host
@@ -5630,26 +5631,13 @@ body.theme-dark {
 	border-bottom-right-radius: 0;
 }
 
-.sbd-card.has-accent {
-	border-color: var(--card-accent);
-}
-
-.sbd-card.has-accent .sbd-card-head {
-	border-bottom-color: var(--card-accent);
-}
-
-.sbd-card.has-accent .sbd-card-title {
-	color: var(--card-accent);
-}
-
 /* Collapse the shared border between touching cards so there's no double line
  * — the two surfaces meet flush and look like a single tile. Remove the shared
  * border width rather than making it transparent: at thicker border widths a
  * transparent border still occupies space and reads as a notch/pike where
  * merged edges meet the rounded outer frame. With border-box sizing this does
  * not expand cards outward; it only lets the card background fill the shared
- * edge inside the existing card box. Deliberately placed after the accent rules
- * so a touching edge goes borderless even on accent-coloured cards. */
+ * edge inside the existing card box. */
 .sbd-card.merge-top {
 	border-top-width: 0;
 }
@@ -5673,10 +5661,6 @@ body.theme-dark {
 .sbd-card.merge-left,
 .sbd-card.merge-right {
 	--sbd-card-lift: 0 0 0 0 transparent;
-}
-
-.sbd-card-body.has-bg {
-	background: var(--card-bg);
 }
 
 /* ---- Arrange mode (drag & resize) ----------------------------------- */
@@ -5898,37 +5882,6 @@ body.theme-dark {
 
 .sbd-count-input {
 	width: 64px;
-}
-
-/* ---- Compact spacing ----------------------------------------------- */
-
-.sbd-compact .sbd-scroll {
-	--sbd-scroll-pad-x: 14px;
-	--sbd-scroll-pad-top: 1.5vh;
-	padding: var(--sbd-scroll-pad-top) var(--sbd-scroll-pad-x) 24px;
-	/* Declared on the scroll area rather than on .sbd-inner so the banner —
-	 * inner's sibling, not its child — inherits the compact gap too and keeps
-	 * the same distance from the content as everything else. */
-	--sbd-inner-gap: 16px;
-}
-
-.sbd-compact .sbd-header {
-	gap: 10px;
-}
-
-.sbd-compact .sbd-title {
-	margin-top: var(--sbd-title-margin-top, 0);
-}
-
-.sbd-compact .sbd-card-head {
-	padding: 6px 10px;
-}
-
-/* Sets the gutter through `--sbd-card-pad-x` so embed/jot hosts, which carry
- * the inline padding themselves (see `.is-embed-host` above), follow suit. */
-.sbd-compact .sbd-card-body {
-	--sbd-card-pad-x: 10px;
-	padding: 8px var(--sbd-card-pad-x);
 }
 
 /* ---- Calendar: week numbers & heatmap ------------------------------- */

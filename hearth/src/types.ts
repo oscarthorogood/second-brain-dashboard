@@ -1329,10 +1329,6 @@ export interface DashboardCard {
 	showOpenButton?: boolean;
 
 	// ---- Appearance ----
-	/** Optional accent color (CSS color) for the card header/border. */
-	accent?: string;
-	/** Optional background color/tint (CSS color) for the card body. */
-	background?: string;
 	/** Override the card surface opacity for this card (undefined = dashboard
 	 * / global). 0 = fully transparent, 1 = fully opaque. */
 	cardOpacity?: number;
@@ -1605,8 +1601,6 @@ export interface HomeSettings {
 	lowPowerBackgroundColor: string;
 
 	// ---- Appearance (layout density) ----
-	/** Tighten card and top-of-page spacing to enlarge the usable area. */
-	compact: boolean;
 	/** Visibility for the arrange/edit mode entry button. */
 	arrangeButtonVisibility: ChromeVisibility;
 	/** Card background opacity (0 = fully transparent, 1 = fully opaque). */
@@ -1748,7 +1742,6 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	lowPower: false,
 	lowPowerBackgroundColor: LOW_POWER_BACKGROUND,
 
-	compact: false,
 	arrangeButtonVisibility: "always",
 	cardOpacity: 0.5,
 	// Frosted glass on by default: a translucent card surface with a gentle blur

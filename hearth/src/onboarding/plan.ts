@@ -128,7 +128,6 @@ export interface SetupAnswers {
 
 	// ---- Step: the look ----
 	surface: SetupSurface;
-	compact: boolean;
 	background: SetupBackground;
 	/** CSS colour used when `background` is "color". */
 	backgroundColor: string;
@@ -177,7 +176,6 @@ export function defaultAnswers(
 		themeColorTarget: "none",
 
 		surface: "glass",
-		compact: false,
 		background: "default",
 		backgroundColor: "#1e1b2e",
 		skyValue: "",
@@ -568,7 +566,6 @@ function applyLook(settings: HomeSettings, answers: SetupAnswers): void {
 	settings.cardBlur = surface.cardBlur;
 	settings.cardRadius = surface.cardRadius;
 	settings.cardBorderWidth = surface.cardBorderWidth;
-	settings.compact = answers.compact;
 
 	const tuning = BACKGROUND_TUNING[answers.background];
 	settings.backgroundOpacity = tuning.opacity;

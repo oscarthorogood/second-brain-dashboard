@@ -28,10 +28,10 @@ export interface CardSettingsOptions {
 
 /**
  * The single place to configure a card — opened from the card itself in arrange
- * mode. Covers kind, title, kind-specific content, colors and size so nothing
- * has to be hunted for in the plugin settings tab.
+ * mode. Covers kind, title, kind-specific content and size so nothing has to
+ * be hunted for in the plugin settings tab.
  *
- * Laid out as a tabbed modal (Content / Style / Layout) with a persistent
+ * Laid out as a tabbed modal (Content / Layout) with a persistent
  * Remove/Done footer, so a card with a dense editor (tasks, RSS) stays as
  * navigable as a plain one.
  */
@@ -80,7 +80,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 		const tabs = t().editors.tabs;
 		return [
 			{ id: "content", label: tabs.content, icon: "square-pen" },
-			{ id: "style", label: tabs.style, icon: "palette" },
 			{ id: "layout", label: tabs.layout, icon: "layout-dashboard" },
 		];
 	}
@@ -90,9 +89,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 			case "content":
 				this.identitySection(body);
 				this.contentSection(body);
-				break;
-			case "style":
-				this.colorsSection(body);
 				break;
 			case "layout":
 				this.sizeSection(body);
@@ -166,47 +162,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 	/** Kind-specific content controls — delegated to the card's own module. */
 	private contentSection(containerEl: HTMLElement): void {
 		cardDefinition(this.card).renderEditor?.(containerEl, this.editorContext());
-	}
-
-	private colorsSection(containerEl: HTMLElement): void {
-		const card = this.card;
-		const row = new Setting(containerEl)
-			.setName(t().editors.colors.heading)
-			.setDesc(t().editors.colors.headingDesc);
-
-		row.addColorPicker((c) =>
-			c.setValue(card.accent ?? "#7c5cff").onChange((v) => {
-				card.accent = v;
-				this.opts.save();
-			}),
-		);
-		row.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(t().editors.colors.clearAccent)
-				.onClick(() => {
-					card.accent = undefined;
-					this.opts.save();
-					this.render();
-				}),
-		);
-		row.addColorPicker((c) =>
-			c.setValue(card.background ?? "#000000").onChange((v) => {
-				card.background = v;
-				this.opts.save();
-			}),
-		);
-		row.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(t().editors.colors.clearBackground)
-				.onClick(() => {
-					card.background = undefined;
-					this.opts.save();
-					this.render();
-				}),
-		);
-
 	}
 
 	private sizeSection(containerEl: HTMLElement): void {

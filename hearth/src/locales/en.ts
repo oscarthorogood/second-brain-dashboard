@@ -202,8 +202,6 @@ export const en = {
 				"cards on the theme's own surface below it.",
 			layoutFull: "Behind everything",
 			layoutBanner: "A banner at the top",
-			compact: "Compact spacing",
-			compactDesc: "Tighten the gaps so more fits on screen.",
 		},
 		surfaces: {
 			glass: {
@@ -1016,9 +1014,6 @@ export const en = {
 			fitToPage: "Fit to page",
 			fitToPageDesc:
 				"Keep the dashboard to one screen instead of allowing scroll.",
-			compact: "Compact spacing",
-			compactDesc:
-				"Tighten card padding and top margin to enlarge the usable area.",
 			arrangeButtonVisibility: "Arrange button visibility",
 			arrangeButtonVisibilityDesc:
 				"Choose whether the arrange/edit button is always visible or revealed when hovering its area.",
@@ -1085,7 +1080,6 @@ export const en = {
 		/** Tabs across the top of the card settings modal. */
 		tabs: {
 			content: "Content",
-			style: "Style",
 			layout: "Layout",
 		},
 		type: "Type",
@@ -2220,22 +2214,6 @@ export const en = {
 			showName: "Show name",
 			showMood: "Show mood",
 			showActivity: "Show today's activity",
-		},
-		colors: {
-			heading: "Colors",
-			headingDesc: "Accent and background tint for this card.",
-			clearAccent: "Clear accent",
-			clearBackground: "Clear background",
-			cardOpacity: "Card opacity",
-			cardOpacityDesc:
-				"Transparent card surface (overrides the dashboard default).",
-			cardBlur: "Card blur",
-			cardBlurDesc:
-				"Frosted-glass blur behind this card (overrides the dashboard default). Needs opacity below 100%.",
-			cardBorderWidth: "Card border",
-			cardBorderWidthDesc:
-				"Border thickness for this card (overrides the dashboard default). 0 removes the border and the line under the title.",
-			useDashboardDefault: "Use dashboard default",
 		},
 		size: {
 			heading: "Size",

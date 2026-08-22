@@ -113,11 +113,6 @@ export function renderDashboard(
 
 		const kindClasses = cardClasses(card);
 		if (kindClasses.length) el.addClass(...kindClasses);
-		if (card.accent) {
-			el.style.setProperty("--card-accent", card.accent);
-			el.addClass("has-accent");
-		}
-		if (card.background) el.style.setProperty("--card-bg", card.background);
 		if (card.cardOpacity != null) {
 			el.style.setProperty("--card-opacity", String(card.cardOpacity));
 		}
@@ -150,7 +145,6 @@ export function renderDashboard(
 		}
 
 		const body = el.createDiv("sbd-card-body");
-		if (card.background) body.addClass("has-bg");
 		const redraw = mountCardBody(view, card, body, component, events);
 
 		// Post-render header/floating extras (the embed card's second-view
