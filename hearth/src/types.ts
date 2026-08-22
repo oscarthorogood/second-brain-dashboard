@@ -2167,10 +2167,13 @@ export function resolveCardBlur(s: HomeSettings, _card: DashboardCard): number {
 	return effectiveCardBlur(s);
 }
 
-/** The design baseline card corner radius (px) — also the fixed value now
- * that rounding is no longer configurable (merged-edge sharpening and the
- * frosted-glass mask were only ever tuned for this exact radius). */
-export const CARD_RADIUS_MAX = 14;
+/** The fixed card corner radius (px), now that rounding is no longer
+ * configurable. Both the merge-edge sharpening and the frosted-glass mask
+ * (see grid.ts) read this off the --sbd-card-radius CSS variable rather than
+ * a hardcoded number, so raising it is safe — it was only ever a *setting*
+ * ceiling, not a value baked into the geometry math. Matches the reference
+ * design's noticeably rounder "squircle" corners. */
+export const CARD_RADIUS_MAX = 24;
 export const CARD_BORDER_WIDTH_MAX = 8;
 
 /** Effective card corner radius (px) — fixed at {@link CARD_RADIUS_MAX} for
