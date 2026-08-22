@@ -58,6 +58,12 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   mask geometry). The shared border colour is brighter too, so every card and
   button's edge reads as a crisp line instead of fading to near-invisible.
 
+- **Neutral grey glass, not dark charcoal.** The colour the card's
+  translucent tint mixes from was a near-black `#1c1c1e` — that reads as a
+  dark theme, not glass. Real frosted glass tints neutral grey regardless of
+  what's behind it rather than skewing toward black, so the whole
+  primary/secondary colour tier moved to a true mid-grey family instead.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
