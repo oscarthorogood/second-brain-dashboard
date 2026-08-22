@@ -77,6 +77,16 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   narrower on the sides than above and below, and now the width gap applies
   to the top and bottom too.
 
+- **Back to a single dashboard.** The dashboard switcher, per-dashboard
+  settings modal, pinned cards and multi-board data model are gone — every
+  vault now has one board again. Existing vaults are migrated automatically,
+  keeping the active dashboard's cards plus every pinned card; other boards
+  and their per-board overrides are dropped in favor of the single set of
+  global settings. The setup wizard now always builds onto that one board,
+  asking for confirmation before replacing one you've already customized
+  instead of offering a second board. Layout import still accepts the old
+  multi-dashboard export format for backward compatibility.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
