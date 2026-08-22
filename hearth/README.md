@@ -16,7 +16,6 @@ Think of it as a new-tab dashboard, start page and command launcher in one.
 - 🧩 **25+ card types** — embeds, tasks, calendars, Dataview, Git, Jira, and more
 - 🎛️ **Free-form layout** — drag, resize and snap cards anywhere
 - 🪟 **Frosted glass** — per-card opacity, blur, color and corner radius
-- 🗂️ **Multiple dashboards** — switch with a click or a hotkey
 - 📱 **Mobile mode** — collapses to a search-only launcher
 
 ## Screenshots
@@ -250,13 +249,6 @@ calls**.
   corner, with magnetic snapping to neighbours and the board.
 - **Edge-merging** — snap two cards together and their shared border drops out,
   so the pair reads as one continuous tile.
-- **Multiple dashboards** — a `[1] [2] [+]` switcher in the top-left. Name each
-  board, give it an emoji or a Lucide icon, reorder by dragging, and override
-  the global width, columns, row height, background and title icon per board.
-  Open a board's settings either from **Dashboard settings** in the **Arrange**
-  toolbar or by right-clicking its switcher button.
-- **Pinned cards** — pin a card to appear on every dashboard, sharing one
-  definition and position.
 - **Fit to page** — lock the board to one screen or let it scroll.
 - **Import / export** — back up or share a board's layout as JSON.
 
@@ -273,20 +265,16 @@ calls**.
   the whole view, or as a **banner** across the top of the board — a cover
   image, the way one sits above a note — with the cards below it on your
   theme's own surface. Set the height, fade the lower edge into the page, and
-  choose whether it lines up with the content or runs edge to edge. Each of
-  those is its own per-board override, so one dashboard can show the vault's
-  background as a banner while the next keeps it as a wallpaper — no picture
-  restated either way.
-- **Frosted glass** — card opacity and backdrop blur at three levels (global →
-  per-dashboard → per-card). Merged cards blur as one seamless sheet.
+  choose whether it lines up with the content or runs edge to edge.
+- **Frosted glass** — card opacity and backdrop blur. Merged cards blur as one
+  seamless sheet.
 - **Card corner radius** — from the default 14 px down to sharp 0 px.
 - **Per-card colors** — an accent and a background tint for any card.
 - **Title, logo and compact spacing** for the dashboard header.
 - **Lucide icons** — pick any icon from the Lucide set for Second Brain Dashboard's **tab and
   ribbon** button and for the **title** beside the board's heading, searched
-  from a picker rather than typed from memory. Each dashboard can override the
-  title icon, so one board can show a flame and the next a rocket; leave a field
-  empty and the Second Brain Dashboard crystal (or your emoji logo) stays as it was.
+  from a picker rather than typed from memory; leave a field empty and the
+  Second Brain Dashboard crystal (or your emoji logo) stays as it was.
 
 ## Mobile
 

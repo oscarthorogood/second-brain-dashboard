@@ -1676,8 +1676,8 @@ body.theme-dark {
    row left content sliced behind it. Rows are vertical and nothing here is
    pinned, so neither failure mode exists.
 
-   Note the ribbon *tab* styles below survive: the card- and dashboard-settings
-   modals reuse .sbd-ribbon-tab for their own tab strips. */
+   Note the ribbon *tab* styles below survive: the card-settings modal reuses
+   .sbd-ribbon-tab for its own tab strip. */
 
 .sbd-settings-index-head {
 	padding: 18px 4px 4px;
@@ -1939,10 +1939,10 @@ body.theme-dark {
 	}
 }
 
-/* ---- Tabbed modals: card & dashboard settings -----------------------
-   The card- and dashboard-settings modals reuse the settings pane's ribbon
-   look (.sbd-ribbon-tab): a row of tabs pinned to the top, one group's
-   controls shown at a time, and a persistent action footer below. */
+/* ---- Tabbed modals: card settings ------------------------------------
+   The card-settings modal reuses the settings pane's ribbon look
+   (.sbd-ribbon-tab): a row of tabs pinned to the top, one group's controls
+   shown at a time, and a persistent action footer below. */
 
 .sbd-modal-ribbon {
 	display: flex;
@@ -5373,8 +5373,8 @@ body.theme-dark {
 }
 
 /* Floats directly on the wallpaper (the Arrange/Edit toggle and its siblings
- * in the board toolbar) — glass fill + blur like .sbd-newnote / .sbd-dash-btn,
- * rather than a solid opaque pill sitting on top of the board. */
+ * in the board toolbar) — glass fill + blur like .sbd-newnote, rather than a
+ * solid opaque pill sitting on top of the board. */
 .sbd-tool-btn {
 	display: flex;
 	align-items: center;
@@ -5453,103 +5453,6 @@ body.theme-dark {
 	opacity: 1;
 	pointer-events: auto;
 	transform: translateX(0);
-}
-
-/* ---- Dashboard switcher (top-left) ---------------------------------- */
-
-.sbd-dash-switcher-zone {
-	display: flex;
-	align-items: center;
-}
-
-/* No in-flow padding on the auto-hide zone (see .sbd-arrange-zone above): the
- * hidden switcher keeps its normal box, so hover mode has the same footprint as
- * always-visible mode and enabling hover doesn't push the header/grid down. */
-.sbd-dash-switcher {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-bottom: -16px;
-	transition:
-		opacity 120ms ease,
-		transform 120ms ease;
-}
-
-.sbd-dash-switcher-zone.is-auto-hide .sbd-dash-switcher {
-	opacity: 0;
-	pointer-events: none;
-	transform: translateY(-4px);
-}
-
-.sbd-dash-switcher-zone.is-auto-hide:hover .sbd-dash-switcher,
-.sbd-dash-switcher-zone.is-auto-hide:focus-within .sbd-dash-switcher,
-.sbd-dash-switcher-zone.is-auto-hide .sbd-dash-switcher.is-dragging {
-	opacity: 1;
-	pointer-events: auto;
-	transform: translateY(0);
-}
-
-/* Floats directly on the wallpaper, so it gets its own glass treatment
- * (translucent fill + backdrop blur) the same way .sbd-newnote does, rather
- * than a solid opaque circle sitting on top of the board. */
-.sbd-dash-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	padding: 0;
-	border-radius: 50%;
-	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: color-mix(in srgb, var(--background-primary) 70%, transparent);
-	backdrop-filter: var(--sbd-glass-blur);
-	-webkit-backdrop-filter: var(--sbd-glass-blur);
-	color: var(--text-muted);
-	cursor: pointer;
-	font-size: 0.85rem;
-	line-height: 1;
-	transition: all 120ms ease;
-}
-
-.sbd-dash-btn:hover {
-	color: var(--text-normal);
-	border-color: var(--interactive-accent);
-	box-shadow: var(--sbd-shadow-s);
-}
-
-.sbd-dash-btn:active {
-	transform: scale(0.9);
-}
-
-/* Lucide icon buttons: size the glyph to match the numeric/emoji buttons. */
-.sbd-dash-btn .svg-icon,
-.sbd-dash-btn svg {
-	width: 16px;
-	height: 16px;
-}
-
-.sbd-dash-btn.is-active {
-	color: var(--text-on-accent);
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	box-shadow: var(--sbd-shadow-s);
-}
-
-.sbd-dash-add {
-	opacity: 0.6;
-}
-
-.sbd-dash-add:hover {
-	opacity: 1;
-}
-
-.sbd-dash-add svg {
-	width: 15px;
-	height: 15px;
-}
-
-.sbd-rename-input {
-	width: 100%;
 }
 
 /* ---- Mobile-only mode (search-only launcher) ------------------------ */
@@ -5700,18 +5603,6 @@ body.theme-dark {
  * centre — let it size to its content under the centred search. */
 .sbd-view.sbd-empty-board .sbd-grid-empty {
 	height: auto;
-}
-
-/* Pinned cards (shown on every dashboard): mark them while arranging so it's
- * clear they're shared and will move on all boards at once. */
-.sbd-grid.is-arranging .sbd-card.is-pinned::after {
-	content: "📌";
-	position: absolute;
-	top: 4px;
-	left: 6px;
-	font-size: 0.7rem;
-	opacity: 0.65;
-	pointer-events: none;
 }
 
 /* ---- Per-card colors ------------------------------------------------ */
@@ -7297,16 +7188,6 @@ body.sbd-dv-resizing {
 	text-align: center;
 	padding: 16px;
 	background: var(--background-primary);
-}
-
-/* ---- Dashboard switcher: drag-to-reorder ---------------------------- */
-.sbd-dash-btn.is-dragging {
-	opacity: 0.5;
-}
-
-.sbd-dash-btn.is-drop-target {
-	outline: 2px dashed var(--interactive-accent);
-	outline-offset: 1px;
 }
 
 /* ---- Task priority indicator ---------------------------------------- */

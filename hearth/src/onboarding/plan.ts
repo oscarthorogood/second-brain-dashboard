@@ -20,11 +20,9 @@ import { ensureLayout } from "../grid";
 import {
 	type BackgroundLayout,
 	type DashboardCard,
-	type Dashboard,
 	type HomeSettings,
 	type OpenIn,
 	type TemplaterItem,
-	newDashboardId,
 } from "../types";
 import { templateDisplayName } from "../templater";
 import type { SetupDetection, SetupIntegrationId } from "./detect";
@@ -118,9 +116,6 @@ const BACKGROUND_TUNING: Record<SetupBackground, { opacity: number; blur: number
 	none: { opacity: 0.35, blur: 2 },
 };
 
-/** Where the built board goes. */
-export type SetupTarget = "replace" | "new";
-
 /** Everything the wizard collects, in one object. Seeded by
  * {@link defaultAnswers} and mutated in place as the user moves through the
  * steps, so going back never loses an answer. */
@@ -154,10 +149,6 @@ export interface SetupAnswers {
 	focusSearchOnOpen: boolean;
 	showSearch: boolean;
 	openIn: OpenIn;
-
-	// ---- Step: finish ----
-	target: SetupTarget;
-	dashboardName: string;
 }
 
 /**
@@ -201,9 +192,6 @@ export function defaultAnswers(
 		focusSearchOnOpen: false,
 		showSearch: true,
 		openIn: "tab",
-
-		target: "replace",
-		dashboardName: "Home",
 	};
 }
 
@@ -537,13 +525,8 @@ function defaultCardId(index: number): string {
 
 /** What {@link applySetup} did, so the wizard can report it. */
 export interface SetupOutcome {
-	/** Id of the dashboard the board landed on. */
-	dashboardId: string;
-	/** How many cards it holds. */
+	/** How many cards the board holds. */
 	cardCount: number;
-	/** True when an existing board's cards were replaced rather than a new
-	 * dashboard created. */
-	replaced: boolean;
 }
 
 /**
@@ -565,7 +548,7 @@ export function applySetup(
 	applyIntegrations(settings, answers, detection);
 
 	const cards = planned.map((p) => p.card);
-	const outcome = installBoard(settings, answers, cards);
+	const outcome = installBoard(settings, cards);
 
 	settings.setupStatus = "done";
 	return outcome;
@@ -674,50 +657,17 @@ export function boardRows(cards: DashboardCard[]): number {
 	return cards.reduce((max, card) => Math.max(max, card.y + card.h), 0);
 }
 
-/**
- * Put the cards somewhere: over the active board, or on a new one.
- *
- * "Replace" is offered because the very first run lands on the untouched
- * starter board, where replacing is obviously right; "new dashboard" exists so
- * a later re-run can't destroy a board somebody has spent an evening
- * arranging. The wizard defaults between them on exactly that basis.
- */
+/** Install the planned cards as the board. */
 function installBoard(
 	settings: HomeSettings,
-	answers: SetupAnswers,
 	cards: DashboardCard[],
 ): SetupOutcome {
-	// A tall board scrolls rather than being scaled down to nothing. Stored as a
-	// per-dashboard override rather than by changing the global setting, so it
-	// only affects the board the wizard built.
-	const tall = boardRows(cards) > FIT_TO_PAGE_ROW_LIMIT;
-
-	if (answers.target === "replace") {
-		const active =
-			settings.dashboards.find((d) => d.id === settings.activeDashboardId) ??
-			settings.dashboards[0];
-		if (active) {
-			active.cards = cards;
-			if (answers.dashboardName.trim()) active.name = answers.dashboardName.trim();
-			// Only ever *relax* the fit: a board that comfortably fits keeps
-			// whatever the user (or the global default) already had.
-			if (tall) active.fitToPage = false;
-			settings.activeDashboardId = active.id;
-			return { dashboardId: active.id, cardCount: cards.length, replaced: true };
-		}
-		// No dashboards at all (a hand-emptied data.json); fall through and make
-		// one rather than dropping the board on the floor.
-	}
-
-	const dashboard: Dashboard = {
-		id: newDashboardId(),
-		name: answers.dashboardName.trim() || "Home",
-		cards,
-		...(tall ? { fitToPage: false } : {}),
-	};
-	settings.dashboards.push(dashboard);
-	settings.activeDashboardId = dashboard.id;
-	return { dashboardId: dashboard.id, cardCount: cards.length, replaced: false };
+	settings.cards = cards;
+	// A tall board scrolls rather than being scaled down to nothing. Only ever
+	// *relaxes* the fit: a board that comfortably fits keeps whatever the user
+	// already had.
+	if (boardRows(cards) > FIT_TO_PAGE_ROW_LIMIT) settings.fitToPage = false;
+	return { cardCount: cards.length };
 }
 
 /**
@@ -731,16 +681,12 @@ function installBoard(
 const STARTER_CARD_IDS = ["card-clock", "card-daily", "card-calendar", "card-recent", "card-stats"];
 
 /**
- * Whether the active board is still exactly the starter set — same cards, none
+ * Whether the board is still exactly the starter set — same cards, none
  * added, none removed. Card *positions* are ignored: someone who dragged the
  * starter cards around has still not invested anything the wizard would be
  * destroying, and the wizard is about to lay out a new board anyway.
  */
 export function isUntouchedStarterBoard(settings: HomeSettings): boolean {
-	const active =
-		settings.dashboards.find((d) => d.id === settings.activeDashboardId) ??
-		settings.dashboards[0];
-	if (!active) return true;
-	if (active.cards.length !== STARTER_CARD_IDS.length) return false;
-	return active.cards.every((card) => STARTER_CARD_IDS.includes(card.id));
+	if (settings.cards.length !== STARTER_CARD_IDS.length) return false;
+	return settings.cards.every((card) => STARTER_CARD_IDS.includes(card.id));
 }

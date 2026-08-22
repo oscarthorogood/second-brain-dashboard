@@ -38,7 +38,5 @@ export type {
 	SetupOutcome,
 	SetupPurpose,
 	SetupSurface,
-	SetupTarget,
 } from "./plan";
 export { maybeRunSetup, openSetupWizard, SetupWizardModal } from "./wizard";
-export type { SetupWizardOptions } from "./wizard";

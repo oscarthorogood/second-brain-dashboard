@@ -1,4 +1,4 @@
-import { Notice, Setting, type App } from "obsidian";
+import { Setting, type App } from "obsidian";
 import { CARD_KINDS, cardDefinition } from "./cards";
 import { type CardEditorContext } from "./cards/definition";
 import { t } from "./i18n";
@@ -15,22 +15,14 @@ export interface CardSettingsOptions {
 	settings: HomeSettings;
 	/** The global favorites list (shared by all favorites cards). */
 	favorites: string[];
-	/** Whether this card is currently pinned to all dashboards. */
-	isPinned: boolean;
 	/** Whether the global privacy setting blocks outbound requests. */
 	externalCallsDisabled: boolean;
-	/** Pin/unpin this card across all dashboards. */
-	setPinned: (pinned: boolean) => void;
 	/** Persist the current settings (no view rebuild). */
 	save: () => void;
 	/** Rebuild the dashboard view to reflect content/layout changes. */
 	rerender: () => void;
 	/** Remove this card from the dashboard. */
 	remove: () => void;
-	/** Other dashboards this card can be copied to (id + name). */
-	otherDashboards: { id: string; name: string }[];
-	/** Copy this card onto the end of another dashboard. */
-	copyToDashboard: (targetId: string) => void;
 }
 
 
@@ -104,8 +96,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 				break;
 			case "layout":
 				this.sizeSection(body);
-				this.pinSection(body);
-				this.copySection(body);
 				break;
 		}
 	}
@@ -256,46 +246,6 @@ export class CardSettingsModal extends SbdTabbedModal {
 			card.fw = undefined;
 			card.fh = undefined;
 		});
-	}
-
-	/** Pin/unpin this card so it appears on every dashboard. */
-	private pinSection(containerEl: HTMLElement): void {
-		new Setting(containerEl)
-			.setName(t().editors.pin.heading)
-			.setDesc(t().editors.pin.headingDesc)
-			.addToggle((t) =>
-				t.setValue(this.opts.isPinned).onChange((v) => {
-					this.opts.setPinned(v);
-					this.opts.isPinned = v;
-					this.opts.save();
-				}),
-			);
-	}
-
-	/** Copy this card (with its current content and settings) onto the end of
-	 * another dashboard. The original stays in place. */
-	private copySection(containerEl: HTMLElement): void {
-		const targets = this.opts.otherDashboards;
-		if (targets.length === 0) return;
-		const row = new Setting(containerEl)
-			.setName(t().editors.copy.heading)
-			.setDesc(t().editors.copy.headingDesc);
-		let dropdown: { getValue(): string } | null = null;
-		row.addDropdown((d) => {
-			for (const t of targets) d.addOption(t.id, t.name);
-			dropdown = d;
-		});
-		row.addButton((b) =>
-			b
-				.setButtonText(t().editors.copy.copy)
-				.setTooltip(t().editors.copy.copyTooltip)
-				.onClick(() => {
-					const id = dropdown?.getValue();
-					if (!id) return;
-					this.opts.copyToDashboard(id);
-					new Notice(t().notices.cardCopied);
-				}),
-		);
 	}
 
 	onClose(): void {

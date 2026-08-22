@@ -22,9 +22,6 @@ export const en = {
 		recordVoice: "Start/stop voice recording",
 		openDailyNote: "Open today's daily note",
 		runSetup: "Set up Second Brain Dashboard (first-run wizard)",
-		switchDashboard: (n: number) => `Switch to dashboard ${n}`,
-		nextDashboard: "Next dashboard",
-		previousDashboard: "Previous dashboard",
 	},
 	ribbon: {
 		openHome: "Open Second Brain Dashboard home",
@@ -68,7 +65,6 @@ export const en = {
 		exportedToVault: (file: string) =>
 			`Second Brain Dashboard: saved ${file} to your vault's root folder.`,
 		exportFailed: "Second Brain Dashboard: couldn't save the export file.",
-		cardCopied: "Card copied to the dashboard.",
 	},
 
 	// ---- The home view -------------------------------------------------
@@ -329,18 +325,12 @@ export const en = {
 			empty:
 				"No cards were selected. You can still finish — the board will be empty and " +
 				"you can add cards from the dashboard's Arrange button.",
-			target: "Where this board goes",
-			targetDesc:
-				"Replace the dashboard you're on, or add this as a new one you can switch to.",
-			targetReplace: "Replace my current dashboard",
-			targetNew: "Add it as a new dashboard",
-			targetForcedNew:
-				"This will be added as a new dashboard. Every board you already have is " +
-				"left exactly as it is — nothing is replaced or removed.",
-			name: "Dashboard name",
-			nameDesc: "Shown in the dashboard switcher.",
-			/** Seed for the new dashboard's name; numbered if already taken. */
-			defaultName: "Home",
+			replaceWarning:
+				"Building this will replace every card currently on your dashboard.",
+			replaceConfirmTitle: "Replace your dashboard?",
+			replaceConfirmMessage:
+				"This replaces every card currently on your dashboard with the ones above. This can't be undone.",
+			replaceConfirmButton: "Replace",
 			calloutTitle: "A starting point, not a preset",
 			calloutLead:
 				"This board should be a solid start — enough to show you what Second Brain Dashboard can " +
@@ -348,10 +338,9 @@ export const en = {
 			calloutBody:
 				"But Second Brain Dashboard is built above all to be heavily customizable, and this wizard " +
 				"only touches a fraction of it. Every card can be moved, resized, retitled, " +
-				"recoloured, reconfigured or thrown out, boards can be added and switched " +
-				"between, and there is a great deal more in the settings than was asked " +
-				"about here. Dig around in there and edit everything to your liking — that " +
-				"is what Second Brain Dashboard is for.",
+				"recoloured, reconfigured or thrown out, and there is a great deal more in " +
+				"the settings than was asked about here. Dig around in there and edit " +
+				"everything to your liking — that is what Second Brain Dashboard is for.",
 			calloutHint:
 				"Arrange (top-right of the board) edits the cards; Settings → Second Brain Dashboard has the " +
 				"rest. You can run this wizard again any time from Settings → About.",
@@ -426,8 +415,6 @@ export const en = {
 	dashboard: {
 		addCard: "Add card",
 		addCardAria: "Add a card to the dashboard",
-		dashboardSettings: "Dashboard settings",
-		dashboardSettingsAria: "Open settings for this dashboard",
 		showTitles: "Show titles",
 		hideTitles: "Hide titles",
 		showCardHeaders: "Show card headers",
@@ -443,131 +430,6 @@ export const en = {
 		thisCard: "this card",
 	},
 
-	// ---- Dashboard switcher & per-dashboard settings -------------------
-	dashboards: {
-		newDashboard: "New dashboard",
-		defaultName: (n: number) => `Dashboard ${n}`,
-		copySuffix: (name: string) => `${name} copy`,
-		fallbackName: "Dashboard",
-		menu: {
-			settings: "Dashboard settings…",
-			duplicate: "Duplicate",
-			delete: "Delete",
-		},
-		deleteTitle: "Delete dashboard?",
-		deleteMessage: (name: string, count: number) =>
-			`Delete "${name}" and its ${count} card(s)? This can't be undone.`,
-		deleteConfirm: "Delete",
-		modal: {
-			title: "Dashboard settings",
-			/** Tabs across the top of the dashboard settings modal. */
-			tabs: {
-				general: "General",
-				header: "Header",
-				layout: "Layout",
-				style: "Style",
-				background: "Background",
-			},
-			name: "Name",
-			switcherIcon: "Switcher icon",
-			switcherIconDesc:
-				"An emoji or short text shown on the switcher button. Empty = number.",
-			switcherLucide: "Switcher Lucide icon",
-			switcherLucideDesc:
-				"A Lucide icon (e.g. “home”, “star”, “layout-dashboard”) — browse the set, or type an id. Takes precedence over the emoji above.",
-			linkedWorkspace: "Linked workspace",
-			linkedWorkspaceDesc:
-				"Auto-switch to this dashboard when this workspace loads. Requires the core Workspaces plugin.",
-			linkedWorkspaceNone: "None",
-			mobileDefault: "Default on mobile",
-			mobileDefaultDesc:
-				"Open this dashboard when Second Brain Dashboard loads on a phone or tablet. Only one board can be the mobile default; enabling this clears it on the others.",
-			titleVisibility: "Title visibility",
-			titleVisibilityDesc:
-				"Show or hide only the title/logo block for this dashboard. Overrides the global setting.",
-			titleVisibilityDefault: (state: string) => `Use global default (${state})`,
-			searchVisibility: "Search visibility",
-			searchVisibilityDesc:
-				"Show or hide the search and command bar with its results and filter buttons on this dashboard. Overrides the global setting.",
-			searchVisibilityDefault: (state: string) => `Use global default (${state})`,
-			searchVisibilityShow: "Show search",
-			searchVisibilityHide: "Hide search",
-			visibilityShown: "shown",
-			visibilityHidden: "hidden",
-			visibilityShow: "Show title",
-			visibilityHide: "Hide title",
-			titleText: "Title text",
-			titleTextDesc: "Override the global title text for this dashboard.",
-			logoText: "Logo text",
-			logoTextDesc:
-				"Override the global logo for this dashboard. Empty uses the Second Brain Dashboard crystal icon.",
-			logoIcon: "Title icon",
-			logoIconDesc:
-				"A Lucide icon drawn beside this dashboard's title instead of the logo text. Clear it to show the logo text (or the Second Brain Dashboard crystal) on this board alone.",
-			titleAlign: "Title alignment",
-			titleAlignDesc:
-				"Align only the title/logo block. The search bar keeps its own layout.",
-			alignDefault: "Default (center)",
-			alignLeft: "Left",
-			alignCenter: "Center",
-			alignRight: "Right",
-			titleSize: "Title size",
-			logoSize: "Logo size",
-			titleTopMargin: "Title top margin",
-			headerSpacingBelow: "Spacing below title/header",
-			contentWidth: "Content width",
-			fitToPage: "Fit to page",
-			fitToPageDesc: "Override scrolling for this board.",
-			fitDefault: (state: string) => `Use global default (${state})`,
-			fitStateFit: "fit",
-			fitStateScroll: "scroll",
-			fitOptionFit: "Fit to one page",
-			fitOptionScroll: "Allow scrolling",
-			cardOpacity: "Card opacity",
-			cardBlur: "Card blur",
-			cardRadius: "Card corner radius",
-			cardBorderWidth: "Card border",
-			done: "Done",
-			overriding: "Overriding the global default.",
-			usingGlobal: (value: number | string) =>
-				`Using global default (${value}).`,
-			usingDefault: (value: number | string) =>
-				`Using default (${value}).`,
-			usingDefaultText: (value: string) =>
-				`Using default (${value}).`,
-			background: "Background",
-			backgroundDesc: "Override the global background for this dashboard.",
-			backgroundValue: "Background value",
-			opacity: "Opacity",
-			blur: "Blur",
-			backgroundLayout: "Background layout",
-			bannerHeight: "Banner height",
-			bannerFade: "Fade the lower edge",
-			bannerFullWidth: "Full width",
-			clearOverride: "Follow the global setting",
-		},
-		useGlobal: "Use global default",
-		on: "on",
-		off: "off",
-		backgroundLayoutOptions: {
-			full: "Full background",
-			banner: "Banner",
-		},
-		backgroundOptions: {
-			default: "Use global default",
-			none: "None",
-			hdefault: "Second Brain Dashboard default",
-			color: "Solid color",
-			image: "Vault image",
-			url: "Image URL",
-			weather: "Live weather sky",
-		},
-		backgroundValueDesc: {
-			color: "A CSS color, e.g. #1e1e2e.",
-			image: "A vault image path, e.g. Attachments/bg.png.",
-			url: "A direct image URL.",
-		},
-	},
 
 	// ---- Plugin settings tab -------------------------------------------
 	settings: {
@@ -645,12 +507,11 @@ export const en = {
 			setup: "Set up Second Brain Dashboard",
 			setupDesc:
 				"Answer a few questions about how you work and what's installed, and Second Brain Dashboard " +
-				"builds a dashboard to match. It's added as a new board — nothing you " +
-				"already have is changed.",
-			setupAgain: "Build a dashboard",
+				"builds a dashboard to match.",
+			setupAgain: "Rebuild your dashboard",
 			setupAgainDesc:
-				"Run the setup wizard again to generate another dashboard. It's always " +
-				"added as a new board, so your existing dashboards are never touched.",
+				"Run the setup wizard again to rebuild your dashboard. You'll be asked to " +
+				"confirm before anything currently on it is replaced.",
 			setupButton: "Start setup",
 			whatsNew: "What's new",
 			whatsNewDesc: "Read the release notes for this and every past version.",
@@ -677,8 +538,7 @@ export const en = {
 			showTitleDesc: "Display the big title/logo at the top.",
 			showSearch: "Show search section",
 			showSearchDesc:
-				"Display the search and command bar with its results and filter buttons. " +
-				"Individual dashboards can override this in their settings.",
+				"Display the search and command bar with its results and filter buttons.",
 			title: "Title",
 			titleDesc: "The heading text shown at the top of the home view.",
 			logo: "Logo",
@@ -1162,9 +1022,6 @@ export const en = {
 			arrangeButtonVisibility: "Arrange button visibility",
 			arrangeButtonVisibilityDesc:
 				"Choose whether the arrange/edit button is always visible or revealed when hovering its area.",
-			dashboardSwitcherVisibility: "Dashboard switcher visibility",
-			dashboardSwitcherVisibilityDesc:
-				"Choose whether the top-left dashboard buttons are always visible or revealed when hovering their area.",
 			visibilityOptions: {
 				always: "Always visible",
 				hover: "Show on hover",
@@ -1184,8 +1041,7 @@ export const en = {
 			cards: "Cards",
 			cardsDesc:
 				"Add and configure cards on the dashboard itself: open the home view, " +
-				"hit Arrange, then use Add card, Dashboard settings and each card's " +
-				"settings button.",
+				"hit Arrange, then use Add card and each card's settings button.",
 		},
 		layout: {
 			heading: "Import / export",
@@ -1199,11 +1055,11 @@ export const en = {
 				"On mobile the file is saved to your vault's root folder.",
 			import: "Import layout",
 			importDesc:
-				"Choose a previously exported layout file. This replaces your current dashboards.",
+				"Choose a previously exported layout file. This replaces your current dashboard.",
 			importButton: "Import file",
 			importTitle: "Import layout?",
 			importMessage:
-				"This replaces your current dashboards, pinned cards and layout settings. This can't be undone.",
+				"This replaces your current dashboard and layout settings. This can't be undone.",
 			exportSettings: "Export settings",
 			exportSettingsDesc:
 				"Download every Second Brain Dashboard setting — the full layout plus header, background, " +
@@ -1213,7 +1069,7 @@ export const en = {
 				"Choose a previously exported settings file. This replaces all your Second Brain Dashboard settings.",
 			importSettingsTitle: "Import settings?",
 			importSettingsMessage:
-				"This replaces all your Second Brain Dashboard settings — dashboards, layout, header, " +
+				"This replaces all your Second Brain Dashboard settings — dashboard, layout, header, " +
 				"background, behaviour and appearance. This can't be undone.",
 		},
 	},
@@ -2387,18 +2243,6 @@ export const en = {
 				"Width (% of the board) and height (pixels). Or just drag any edge or corner of the card.",
 			widthAria: "Width in percent of the board",
 			heightAria: "Height in pixels",
-		},
-		pin: {
-			heading: "Pin to all dashboards",
-			headingDesc:
-				"Show this card on every dashboard, sharing one definition and position.",
-		},
-		copy: {
-			heading: "Copy to dashboard",
-			headingDesc:
-				"Add a duplicate of this card to the end of another dashboard.",
-			copy: "Copy",
-			copyTooltip: "Copy this card to the selected dashboard",
 		},
 	},
 

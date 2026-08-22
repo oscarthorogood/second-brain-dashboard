@@ -512,49 +512,16 @@ describe("applySetup", () => {
 		expect(settings.customFileIcons).toBe(true);
 	});
 
-	it("replaces the active board's cards when asked to replace", () => {
+	it("replaces the board's cards", () => {
 		const settings = freshSettings();
-		const before = settings.dashboards[0].id;
 
 		const outcome = applySetup(
 			settings,
-			blankAnswers({ target: "replace", dashboardName: "Home", purposes: ["browsing"] }),
+			blankAnswers({ purposes: ["browsing"] }),
 			emptyDetection(),
 		);
 
-		expect(settings.dashboards).toHaveLength(1);
-		expect(settings.dashboards[0].id).toBe(before);
-		expect(settings.dashboards[0].name).toBe("Home");
-		expect(settings.dashboards[0].cards).toHaveLength(outcome.cardCount);
-		expect(outcome.replaced).toBe(true);
-	});
-
-	it("adds a board beside the existing one when asked for a new dashboard", () => {
-		const settings = freshSettings();
-		const original = settings.dashboards[0];
-		const originalCards = original.cards.length;
-
-		const outcome = applySetup(
-			settings,
-			blankAnswers({ target: "new", dashboardName: "Planning" }),
-			emptyDetection(),
-		);
-
-		expect(settings.dashboards).toHaveLength(2);
-		expect(original.cards).toHaveLength(originalCards);
-		expect(settings.activeDashboardId).toBe(outcome.dashboardId);
-		expect(settings.dashboards[1].name).toBe("Planning");
-	});
-
-	it("still builds a board when settings hold no dashboards at all", () => {
-		const settings = freshSettings();
-		settings.dashboards = [];
-
-		const outcome = applySetup(settings, blankAnswers({ target: "replace" }), emptyDetection());
-
-		expect(settings.dashboards).toHaveLength(1);
-		expect(outcome.replaced).toBe(false);
-		expect(settings.activeDashboardId).toBe(outcome.dashboardId);
+		expect(settings.cards).toHaveLength(outcome.cardCount);
 	});
 
 	it("lets a tall board scroll instead of squeezing it onto one screen", () => {
@@ -562,7 +529,6 @@ describe("applySetup", () => {
 		applySetup(
 			settings,
 			blankAnswers({
-				target: "new",
 				purposes: [
 					"daily",
 					"tasks",
@@ -577,16 +543,14 @@ describe("applySetup", () => {
 			emptyDetection(),
 		);
 
-		expect(settings.dashboards[1].fitToPage).toBe(false);
-		// The global default is untouched — only this board opts out.
-		expect(settings.fitToPage).toBe(true);
+		expect(settings.fitToPage).toBe(false);
 	});
 
 	it("leaves a board that comfortably fits on fit-to-page", () => {
 		const settings = freshSettings();
-		applySetup(settings, blankAnswers({ target: "new", purposes: ["browsing"] }), emptyDetection());
+		applySetup(settings, blankAnswers({ purposes: ["browsing"] }), emptyDetection());
 
-		expect(settings.dashboards[1].fitToPage).toBeUndefined();
+		expect(settings.fitToPage).toBe(true);
 	});
 
 	it("records the run as done", () => {
@@ -606,18 +570,18 @@ describe("isUntouchedStarterBoard", () => {
 
 	it("notices a card added or removed", () => {
 		const added = freshSettings();
-		added.dashboards[0].cards.push({ id: "card-mine", kind: "text", x: 0, y: 0, w: 2, h: 2 });
+		added.cards.push({ id: "card-mine", kind: "text", x: 0, y: 0, w: 2, h: 2 });
 		expect(isUntouchedStarterBoard(added)).toBe(false);
 
 		const removed = freshSettings();
-		removed.dashboards[0].cards.pop();
+		removed.cards.pop();
 		expect(isUntouchedStarterBoard(removed)).toBe(false);
 	});
 
 	it("does not count rearranging as making the board your own", () => {
 		const moved = freshSettings();
-		moved.dashboards[0].cards[0].x = 4;
-		moved.dashboards[0].cards[0].y = 9;
+		moved.cards[0].x = 4;
+		moved.cards[0].y = 9;
 
 		expect(isUntouchedStarterBoard(moved)).toBe(true);
 	});

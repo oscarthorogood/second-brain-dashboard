@@ -15,13 +15,11 @@ import {
 	type VaultEventHub,
 	watchedCardReactsToKind,
 } from "./cardevents";
-import { cardClasses, cardDefinition, cardFromTemplate, cloneCard } from "./cards";
+import { cardClasses, cardDefinition, cardFromTemplate } from "./cards";
 import { openCardPicker } from "./cardpicker";
-import { openDashboardSettings } from "./dashboards";
 import { CardSettingsModal } from "./editors";
 import {
 	activeCards,
-	activeDashboard,
 	type DashboardCard,
 	effectiveCardBorderWidth,
 	effectiveCardOpacity,
@@ -35,7 +33,6 @@ import {
 	renderCards,
 	resolveCardBlur,
 	resolveCardBorderWidth,
-	setCardPinned,
 } from "./types";
 import {
 	applyCardPosition,
@@ -114,7 +111,6 @@ export function renderDashboard(
 		gridLayout.elements.set(card, el);
 		applyCardPosition(el, card);
 
-		if (card.pinned) el.addClass("is-pinned");
 		const kindClasses = cardClasses(card);
 		if (kindClasses.length) el.addClass(...kindClasses);
 		if (card.accent) {
@@ -408,23 +404,12 @@ function openCardSettings(view: HomeView, card: DashboardCard): void {
 	new CardSettingsModal(view.app, card, {
 		settings: s,
 		favorites: s.favorites,
-		isPinned: s.pinnedCards.includes(card),
 		externalCallsDisabled: s.disableExternalCalls,
-		setPinned: (pinned) => setCardPinned(s, card, pinned),
 		save: () => void view.plugin.saveData(s),
 		rerender: () => view.render(),
 		remove: () => {
 			removeCard(s, card);
 			persistAndRender(view);
-		},
-		otherDashboards: s.dashboards
-			.filter((d) => d.id !== s.activeDashboardId)
-			.map((d) => ({ id: d.id, name: d.name })),
-		copyToDashboard: (targetId) => {
-			const target = s.dashboards.find((d) => d.id === targetId);
-			if (!target) return;
-			target.cards.push(cloneCard(card));
-			void view.plugin.saveData(s);
 		},
 	}).open();
 }
@@ -459,19 +444,6 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 					persistAndRender(view);
 				},
 			});
-		});
-
-		// Same editor the dashboard switcher's right-click menu opens, surfaced
-		// here so arrange mode is a self-contained way to configure the board.
-		const dashSettings = bar.createEl("button", { cls: "sbd-tool-btn" });
-		setIcon(dashSettings.createSpan("sbd-tool-icon"), "settings-2");
-		dashSettings.createSpan({
-			cls: "sbd-tool-label",
-			text: t().dashboard.dashboardSettings,
-		});
-		dashSettings.setAttribute("aria-label", t().dashboard.dashboardSettingsAria);
-		dashSettings.addEventListener("click", () => {
-			openDashboardSettings(view, activeDashboard(view.plugin.settings));
 		});
 
 		// Toggle the per-card headers (title input + actions) off so each

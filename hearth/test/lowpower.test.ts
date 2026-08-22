@@ -21,8 +21,8 @@ import {
  * Low power mode is an override layer, not a bulk edit of the settings it
  * covers: turning it on changes what the `effective*` resolvers *report*, and
  * turning it off must give back the previous look byte for byte — including
- * per-dashboard and per-card overrides, which no snapshot-and-restore scheme
- * would have captured.
+ * per-card overrides, which no snapshot-and-restore scheme would have
+ * captured.
  *
  * That round-trip is the whole promise of the feature, so it is what these
  * tests pin: every assertion below is paired, checking both the overridden
@@ -30,9 +30,8 @@ import {
  * same settings object.
  */
 
-/** Settings with one dashboard carrying a distinctive, non-default look, so an
- * accidental write by the mode would be visible rather than blending into the
- * defaults. */
+/** Settings with a distinctive, non-default look, so an accidental write by
+ * the mode would be visible rather than blending into the defaults. */
 function settings(): HomeSettings {
 	const s: HomeSettings = structuredClone(DEFAULT_SETTINGS);
 	s.backgroundKind = "url";
@@ -41,8 +40,6 @@ function settings(): HomeSettings {
 	s.backgroundBlur = 6;
 	s.cardOpacity = 0.5;
 	s.cardBlur = 7;
-	s.dashboards = [{ id: "d1", name: "Dashboard 1", cards: [] }];
-	s.activeDashboardId = "d1";
 	return s;
 }
 
@@ -104,31 +101,6 @@ describe("effectiveBackground under low power", () => {
 		s.lowPowerBackgroundColor = "   ";
 		expect(effectiveBackground(s).value).toBe(LOW_POWER_BACKGROUND);
 	});
-
-	it("overrides a per-dashboard background too, without erasing it", () => {
-		const s = settings();
-		s.dashboards[0].background = {
-			kind: "image",
-			value: "Attachments/board.png",
-			opacity: 0.8,
-			blur: 12,
-		};
-
-		s.lowPower = true;
-		expect(effectiveBackground(s).kind).toBe("color");
-
-		s.lowPower = false;
-		expect(effectiveBackground(s)).toEqual({
-			kind: "image",
-			value: "Attachments/board.png",
-			opacity: 0.8,
-			blur: 12,
-			layout: "full",
-			bannerHeight: BANNER_HEIGHT_DEFAULT,
-			bannerFade: true,
-			bannerFullWidth: false,
-		});
-	});
 });
 
 describe("card surface under low power", () => {
@@ -144,10 +116,8 @@ describe("card surface under low power", () => {
 		expect(effectiveCardBlur(s)).toBe(FIXED_CARD_BLUR);
 	});
 
-	it("ignores stale per-dashboard and per-card overrides — the glass identity is fixed, not configurable", () => {
+	it("ignores a stale per-card override — the glass identity is fixed, not configurable", () => {
 		const s = settings();
-		s.dashboards[0].cardOpacity = 0.2;
-		s.dashboards[0].cardBlur = 20;
 		const c = card({ cardOpacity: 0.15, cardBlur: 30 });
 
 		s.lowPower = true;
@@ -181,14 +151,6 @@ describe("effectiveAutoRefreshMinutes", () => {
 describe("low power mode never writes to the settings it overrides", () => {
 	it("leaves every covered field untouched across a full on/off cycle", () => {
 		const s = settings();
-		s.dashboards[0].background = {
-			kind: "color",
-			value: "#ff0000",
-			opacity: 0.9,
-			blur: 3,
-		};
-		s.dashboards[0].cardOpacity = 0.25;
-		s.dashboards[0].cardBlur = 18;
 		const c = card({ cardOpacity: 0.1, cardBlur: 9 });
 		const before = structuredClone(s);
 
