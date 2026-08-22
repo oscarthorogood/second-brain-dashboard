@@ -2133,8 +2133,8 @@ export function effectiveAutoRefreshMinutes(s: HomeSettings, minutes: number): n
  * like frosted glass; a user (or a card) can no longer dial that down to
  * Solid or Minimal. Low power mode still overrides opacity/blur, since that's
  * a performance switch, not a styling choice. */
-export const FIXED_CARD_OPACITY = 0.5;
-export const FIXED_CARD_BLUR = 7;
+export const FIXED_CARD_OPACITY = 0.4;
+export const FIXED_CARD_BLUR = 22;
 export const FIXED_CARD_BORDER_WIDTH = 1;
 
 /** Effective card surface opacity for the active board. 0 = fully

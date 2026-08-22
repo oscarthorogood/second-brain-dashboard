@@ -6,6 +6,8 @@ import {
 	effectiveBackground,
 	effectiveCardBlur,
 	effectiveCardOpacity,
+	FIXED_CARD_BLUR,
+	FIXED_CARD_OPACITY,
 	LOW_POWER_BACKGROUND,
 	lowPowerActive,
 	migrateSettings,
@@ -138,8 +140,8 @@ describe("card surface under low power", () => {
 		expect(effectiveCardBlur(s)).toBe(0);
 
 		s.lowPower = false;
-		expect(effectiveCardOpacity(s)).toBe(0.5);
-		expect(effectiveCardBlur(s)).toBe(7);
+		expect(effectiveCardOpacity(s)).toBe(FIXED_CARD_OPACITY);
+		expect(effectiveCardBlur(s)).toBe(FIXED_CARD_BLUR);
 	});
 
 	it("ignores stale per-dashboard and per-card overrides — the glass identity is fixed, not configurable", () => {
@@ -155,10 +157,10 @@ describe("card surface under low power", () => {
 		expect(resolveCardBlur(s, c)).toBe(0);
 
 		s.lowPower = false;
-		expect(effectiveCardOpacity(s)).toBe(0.5);
-		expect(effectiveCardBlur(s)).toBe(7);
-		expect(resolveCardOpacity(s, c)).toBe(0.5);
-		expect(resolveCardBlur(s, c)).toBe(7);
+		expect(effectiveCardOpacity(s)).toBe(FIXED_CARD_OPACITY);
+		expect(effectiveCardBlur(s)).toBe(FIXED_CARD_BLUR);
+		expect(resolveCardOpacity(s, c)).toBe(FIXED_CARD_OPACITY);
+		expect(resolveCardBlur(s, c)).toBe(FIXED_CARD_BLUR);
 	});
 });
 
