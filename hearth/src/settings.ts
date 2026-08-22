@@ -1571,16 +1571,6 @@ export class HomeSettingTab extends PluginSettingTab {
 					await this.save();
 				}),
 			);
-
-		new Setting(containerEl)
-			.setName(t().settings.dashboard.compact)
-			.setDesc(t().settings.dashboard.compactDesc)
-			.addToggle((t) =>
-				t.setValue(s.compact).onChange(async (v) => {
-					s.compact = v;
-					await this.save();
-				}),
-			);
 	}
 
 	// ---- Dashboard: UI controls -----------------------------------------
