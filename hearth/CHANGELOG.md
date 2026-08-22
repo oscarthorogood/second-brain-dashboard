@@ -41,6 +41,17 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   KPI tiles (uppercase label, big bold value, corner accent icon) instead of
   small centered icon+number+label stacks.
 
+- **A heavier, more vivid glass material.** The frost behind every card blurs
+  more, saturates more and brightens more, so the colour showing through
+  reads vivid rather than a muddy grey wash, with more of the backdrop
+  showing through the tint. Every card also gets a diagonal specular-sheen
+  highlight (brightest top-left, fading out), a brighter top edge, and a
+  slightly stronger border — the light-catching quality a flat tinted panel
+  didn't have. Card text is white throughout now (muted/faint tiers are white
+  at lower opacity, not shifted toward grey, which read as illegible smudges
+  on some wallpapers), and every card casts a soft text-shadow so type stays
+  legible over any backdrop.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
