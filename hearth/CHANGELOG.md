@@ -52,6 +52,12 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   on some wallpapers), and every card casts a soft text-shadow so type stays
   legible over any backdrop.
 
+- **Rounder corners and a more visible glass rim.** Card corner radius is
+  24px now (was 14px, which was only ever the ceiling a user-facing slider
+  was capped at, not a value baked into the corner-merging or frosted-glass
+  mask geometry). The shared border colour is brighter too, so every card and
+  button's edge reads as a crisp line instead of fading to near-invisible.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
