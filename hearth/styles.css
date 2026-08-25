@@ -2890,8 +2890,10 @@ body.theme-dark {
 }
 
 .sbd-clock-greeting {
-	font-size: 0.85rem;
-	color: var(--text-muted);
+	font-size: clamp(1.1rem, 3.4vw, 1.5rem);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--text-normal);
 }
 
 .sbd-clock-time {
@@ -2902,9 +2904,21 @@ body.theme-dark {
 	line-height: 1.1;
 }
 
+/* A rounded glass pill instead of plain text, like the reference's "SAT 19
+ * JAN" badge under its greeting — tracked-out caps on a soft translucent
+ * capsule rather than a bare muted line. */
 .sbd-clock-date {
-	font-size: 0.85rem;
-	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	margin-top: 2px;
+	padding: 5px 14px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--text-normal) 20%, transparent);
+	color: var(--text-normal);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 }
 
 /* Analogue clock face */
@@ -5304,59 +5318,58 @@ body.theme-dark {
 	padding: 0 8px 4px 14px;
 }
 
-/* Vault statistics card: a grid of KPI tiles — a small uppercase label, a big
- * bold value, and a corner accent icon — the same grammar as the card's own
- * chrome (see .sbd-card-title) applied one level down, since this is the one
- * card kind whose content is already number-shaped. */
+/* Vault statistics card: one column per stat — a round glass icon badge, a big
+ * bold value, and a plain caption underneath — matching the reference's
+ * steps/calories/distance tile group (no per-tile box, just centred columns
+ * sharing the card's own glass surface). */
 .sbd-stats {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
 	gap: 10px;
 	height: 100%;
 	align-content: center;
 }
 
 .sbd-stat {
-	position: relative;
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: center;
-	gap: 2px;
-	text-align: left;
-	padding: 14px 16px;
-	border-radius: var(--sbd-radius-m);
-	border: 1px solid
-		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: var(--sbd-card-surface, var(--background-secondary));
+	gap: 8px;
+	text-align: center;
+	padding: 4px;
 }
 
-/* A small corner accent, like the reference KPI tile's arrow glyph — out of
- * the flex flow so it doesn't disturb the label/value stack's order. */
+/* The round glass badge behind the glyph, like the reference tile's icon
+ * chip: a soft translucent circle rather than a bare corner glyph. */
 .sbd-stat-icon {
-	position: absolute;
-	top: 10px;
-	right: 10px;
 	display: flex;
-	color: var(--interactive-accent);
-	opacity: 0.85;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--text-normal) 18%, transparent);
+	color: var(--text-normal);
 }
 
-.sbd-stat-label {
-	order: 1;
-	font-size: 0.66rem;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--text-muted);
+.sbd-stat-icon .svg-icon {
+	width: 20px;
+	height: 20px;
 }
 
 .sbd-stat-value {
-	order: 2;
 	font-size: 1.7rem;
 	font-weight: 700;
 	line-height: 1.15;
 	color: var(--text-normal);
+}
+
+.sbd-stat-label {
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: var(--text-muted);
 }
 
 /* ---- Toolbar -------------------------------------------------------- */
@@ -7060,9 +7073,17 @@ body.sbd-dv-resizing {
 	overflow: hidden;
 }
 
+/* A grid of soft four-point sparkles rather than flat squares, like the
+ * reference's month-progress dot grid: each cell centres a glyph whose
+ * opacity carries the heat level instead of a tinted background tile. Drawn
+ * with a ::before glyph (not a background) so the fade reads as a dimming
+ * spark, matching the reference's brighter-to-fainter rows. */
 .sbd-heatmap-cell {
-	border-radius: 2px;
-	background: var(--background-modifier-border);
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
 	/* Fill the grid cell without forcing a square aspect ratio: the cell's
 	   size is driven by the grid tracks (width = column / weeks, height =
 	   row / 7), so the grid scales smoothly with the card footprint instead
@@ -7072,17 +7093,19 @@ body.sbd-dv-resizing {
 	height: 100%;
 }
 
-.sbd-heatmap-cell.is-empty {
-	background: transparent;
+.sbd-heatmap-cell::before {
+	content: "\2726";
+	font-size: clamp(7px, 1.6vw, 13px);
+	line-height: 1;
+	color: var(--text-normal);
+	opacity: calc(0.16 + var(--heat, 0) * 0.21);
+}
+
+.sbd-heatmap-cell.is-empty::before {
+	opacity: 0.1;
 }
 
 .sbd-heatmap-cell.has-heat {
-	background-color: hsla(
-		var(--accent-h),
-		var(--accent-s),
-		var(--accent-l),
-		calc(0.15 + var(--heat, 0) * 0.2125)
-	);
 	cursor: pointer;
 }
 
@@ -7099,6 +7122,10 @@ body.sbd-dv-resizing {
 	width: 11px;
 	height: 11px;
 	aspect-ratio: auto;
+}
+
+.sbd-heatmap-legend .sbd-heatmap-cell::before {
+	font-size: 9px;
 }
 
 .sbd-heatmap-legend-label {
