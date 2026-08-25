@@ -1974,7 +1974,13 @@ export function effectiveAutoRefreshMinutes(s: HomeSettings, minutes: number): n
  * like frosted glass; a user (or a card) can no longer dial that down to
  * Solid or Minimal. Low power mode still overrides opacity/blur, since that's
  * a performance switch, not a styling choice. */
-export const FIXED_CARD_OPACITY = 0.4;
+/* 0.07, not the 0.4 this used to be, and the single biggest reason the board
+ * used to read as opaque grey panels. Sampling a reference card against the
+ * wallpaper immediately outside it shows the card lifting the backdrop by only
+ * about 7/255 — it is very nearly clear glass. The old 0.4 was also mixed from
+ * a mid grey rather than white (see --sbd-glass-tint), so it desaturated
+ * whatever was behind it into a dull sheet instead of brightening it. */
+export const FIXED_CARD_OPACITY = 0.07;
 export const FIXED_CARD_BLUR = 22;
 export const FIXED_CARD_BORDER_WIDTH = 1;
 
@@ -2014,7 +2020,7 @@ export function resolveCardBlur(s: HomeSettings, _card: DashboardCard): number {
  * a hardcoded number, so raising it is safe — it was only ever a *setting*
  * ceiling, not a value baked into the geometry math. Matches the reference
  * design's noticeably rounder "squircle" corners. */
-export const CARD_RADIUS_MAX = 24;
+export const CARD_RADIUS_MAX = 32;
 export const CARD_BORDER_WIDTH_MAX = 8;
 
 /** Effective card corner radius (px) — fixed at {@link CARD_RADIUS_MAX} for

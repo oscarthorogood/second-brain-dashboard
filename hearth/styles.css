@@ -70,9 +70,12 @@ body.theme-dark {
 	--background-primary-alt: #89898e;
 	--background-secondary: #b2b2b7;
 	--background-secondary-alt: #c1c1c7;
-	/* Brighter than a typical theme border: the reference's glass rim reads as a
-	 * crisp, clearly visible line, not a barely-there hairline. */
-	--background-modifier-border: rgba(255, 255, 255, 0.32);
+	/* The rim is a crisp 1px white line — by far the strongest cue that a card
+	 * is a pane of glass rather than a tinted rectangle. It is graded on the
+	 * reference (~55% along the top edge, ~34% along the bottom); since one
+	 * border colour paints all four edges, this sits between the two and the
+	 * card's inset highlights (see --sbd-card-lift) restore the grade. */
+	--background-modifier-border: rgba(255, 255, 255, 0.45);
 	--background-modifier-hover: rgba(120, 120, 128, 0.24);
 	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
 	/* All white, differentiated by opacity rather than by shifting toward grey —
@@ -80,9 +83,35 @@ body.theme-dark {
 	 * busy or light wallpaper. White at full/high/medium opacity keeps every
 	 * tier legible over any backdrop while still reading as a hierarchy. */
 	--text-normal: #ffffff;
-	--text-muted: rgba(255, 255, 255, 0.78);
-	--text-faint: rgba(255, 255, 255, 0.56);
+	--text-muted: rgba(255, 255, 255, 0.66);
+	--text-faint: rgba(255, 255, 255, 0.46);
 	--text-on-accent: #1a1a1a;
+
+	/* ---- The glass material, measured off the reference -----------------
+	 *
+	 * Sampling a reference card against the wallpaper immediately outside it
+	 * gives three distinct tiers, and getting them mixed up is what makes a
+	 * board read as flat grey panels instead of glass:
+	 *
+	 *  1. The CARD is very nearly clear — white at ~7%, i.e. it *brightens*
+	 *     what is behind it rather than covering it. (Tinting from a grey
+	 *     base instead is what produced the opaque slab look: 40% of a mid
+	 *     grey over a light wallpaper desaturates it to a dull sheet.)
+	 *  2. ICON BADGES — the round chip behind a glyph — are white at ~31%.
+	 *     Still translucent, still carrying white content.
+	 *  3. DATA CHIPS — an event row, a forecast day tile, the date pill —
+	 *     are near-opaque white (~82%) and flip their text to DARK. They are
+	 *     meant to read as solid cards resting *on* the glass, which is the
+	 *     tier that was missing entirely.
+	 *
+	 * --sbd-glass-tint is what the card fill is mixed from, kept separate
+	 * from --background-primary so low power mode can still fall back to an
+	 * opaque grey (a fully opaque *white* card would swallow white text). */
+	--sbd-glass-tint: #ffffff;
+	--sbd-badge-fill: rgba(255, 255, 255, 0.3);
+	--sbd-chip-fill: rgba(255, 255, 255, 0.82);
+	--sbd-chip-label: #3a3a3c;
+	--sbd-chip-label-muted: #7f8186;
 	/* A fixed white accent, not the user's chosen Obsidian accent — the
 	 * dashboard's identity is meant to read the same for every viewer, rather
 	 * than shifting with whatever accent colour someone happens to have picked
@@ -91,11 +120,21 @@ body.theme-dark {
 	--interactive-accent-hover: #e6e6e6;
 	/* The elevation shadows default to the light-theme values at :root and only
 	 * strengthen under body.theme-dark; since the board is always dark now,
-	 * pin them to that stronger variant here too so a card's drop shadow still
-	 * reads against the board regardless of Obsidian's real appearance setting. */
+	 * pin them to that stronger variant here too so a floating surface (the
+	 * search dropdown, a modal) still reads against the board regardless of
+	 * Obsidian's real appearance setting. */
 	--sbd-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.18), 0 4px 14px rgba(0, 0, 0, 0.16);
 	--sbd-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.22);
 	--sbd-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.34);
+
+	/* Cards get their OWN, far softer shadow rather than the shared scale
+	 * above. Scanning outward from a reference card finds essentially no
+	 * darkening at all — the backdrop is flat right up to the rim, and the
+	 * rim alone is what separates the card. Borrowing --sbd-shadow-s here
+	 * dropped the wallpaper ~23/255 at the edge, which is what made cards sit
+	 * on the board like opaque panels instead of lying flush in it. */
+	--sbd-card-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+	--sbd-card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.09);
 }
 
 .sbd-view {
@@ -221,6 +260,11 @@ body.theme-dark {
  * it; clear the variable as well as the resolved shadow above. */
 .sbd-view.sbd-low-power .sbd-card {
 	--sbd-card-lift: none;
+	/* Low power resolves card opacity to 1 (no blur means no glass to see
+	 * through, so the card goes solid). The glass tint is white, and a fully
+	 * opaque white card would swallow the white text on it — so the opaque
+	 * case tints from the board's own grey instead. */
+	--sbd-glass-tint: var(--background-primary);
 }
 
 .sbd-scroll {
@@ -885,12 +929,12 @@ body.theme-dark {
 	min-height: 0;
 	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
-	border-radius: var(--sbd-card-radius, 24px);
-	/* A soft glass edge rather than a flat theme line: the border colour is
-	 * blended toward transparent so it reads as a highlight on the frosted
-	 * surface instead of a hard outline, in both light and dark themes. */
-	border: var(--card-border-width, 1px) solid
-		color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
+	border-radius: var(--sbd-card-radius, 32px);
+	/* The glass rim, at full token strength (white ~55%). Measured off the
+	 * reference, where the rim is the crispest thing about a card — blending
+	 * it further toward transparent, as this used to, is what let it fade to
+	 * a hairline that read as a borderless panel. */
+	border: var(--card-border-width, 1px) solid var(--background-modifier-border);
 	/* --card-opacity (0..1) tints the card surface without dimming content.
 	 * Published as a variable so content INSIDE the card that has to paint its
 	 * own surface (a Bases table's sticky header, say) can reuse the exact same
@@ -898,19 +942,28 @@ body.theme-dark {
 	 * it stays correct even where a descendant neutralises that variable. */
 	--sbd-card-surface: color-mix(
 		in srgb,
-		var(--background-primary) calc(var(--card-opacity, 1) * 100%),
+		var(--sbd-glass-tint, var(--background-primary))
+			calc(var(--card-opacity, 1) * 100%),
 		transparent
 	);
-	/* The tint plus a diagonal specular sheen — brightest at the top-left
-	 * corner, fading out before the middle — the highlight a real pane of
-	 * glass catches from a light source, rather than a flat tinted panel. */
+	/* The tint plus two highlights. The top one matches the reference
+	 * directly: sampling straight down from the rim shows the surface a good
+	 * ~20/255 brighter immediately under it, falling off to the flat interior
+	 * over about 12px — the light a pane of glass gathers along its lit edge.
+	 * The diagonal is the softer corner sheen over the rest of the face. */
 	background-color: var(--sbd-card-surface);
-	background-image: linear-gradient(
-		135deg,
-		rgba(255, 255, 255, 0.16) 0%,
-		rgba(255, 255, 255, 0.04) 35%,
-		rgba(255, 255, 255, 0) 60%
-	);
+	background-image:
+		linear-gradient(
+			to bottom,
+			rgba(255, 255, 255, 0.2) 0,
+			rgba(255, 255, 255, 0) 12px
+		),
+		linear-gradient(
+			135deg,
+			rgba(255, 255, 255, 0.1) 0%,
+			rgba(255, 255, 255, 0.03) 40%,
+			rgba(255, 255, 255, 0) 65%
+		);
 	/* Every text node in a card inherits this: a soft dark shadow keeps type
 	 * legible over any wallpaper showing through the glass, in place of
 	 * hand-tuning contrast per element. */
@@ -920,7 +973,13 @@ body.theme-dark {
 	 * top highlight rides along on every card (merged edges zero it via
 	 * --sbd-card-lift the same as the drop shadow) for the glass bevel seen
 	 * where the frosted surface catches light along its top edge. */
-	--sbd-card-lift: var(--sbd-shadow-s), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+	/* The rim is graded on a reference card — white at ~55% along the top edge
+	 * but only ~34% along the bottom, the way a pane of glass gathers light
+	 * from above. The border paints the bright top value uniformly; these two
+	 * insets put the grade back, lifting the top edge and settling the bottom. */
+	--sbd-card-lift: var(--sbd-card-shadow),
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+		inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
 	box-shadow: var(--sbd-card-lift);
 	overflow: hidden;
 	transition:
@@ -990,7 +1049,9 @@ body.theme-dark {
 }
 
 .sbd-card:hover {
-	--sbd-card-lift: var(--sbd-shadow-m), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+	--sbd-card-lift: var(--sbd-card-shadow-hover),
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
+		inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
 }
 
 .sbd-card-head {
@@ -1123,7 +1184,7 @@ body.theme-dark {
 	width: 44px;
 	height: 44px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 12%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 	opacity: 0.85;
 }
@@ -1291,7 +1352,15 @@ body.theme-dark {
 	--table-background: transparent;
 	--table-row-background: transparent;
 	--table-row-alt-background: transparent;
-	--table-header-background: var(--sbd-card-surface, var(--background-primary));
+	/* NOT --sbd-card-surface: that is the card's own near-clear glass (white at
+	 * ~7%), and a sticky header painted with it would let the rows scroll
+	 * visibly through the column titles. This needs real coverage, so it keeps
+	 * the board's opaque grey — which white header text still reads on. */
+	--table-header-background: color-mix(
+		in srgb,
+		var(--background-primary) 92%,
+		transparent
+	);
 }
 
 .sbd-leaf-host > .workspace-leaf {
@@ -1523,7 +1592,9 @@ body.theme-dark {
 	padding: 7px 18px;
 	border-radius: 999px;
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: var(--sbd-card-surface, var(--background-secondary));
+	/* Badge tier, not the card's own surface: that is near-clear glass now, so
+	 * a control painted with it would be invisible against the card. */
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.85rem;
@@ -1561,10 +1632,9 @@ body.theme-dark {
 	pointer-events: none;
 }
 
-/* A small glass chip rather than a flat opaque square — it floats over the
- * card's own translucent surface (see .sbd-card-surface), so it reuses that
- * tint instead of painting a solid background that would look like a cut-out
- * hole in the frosted card. */
+/* A small glass chip rather than a flat opaque square. Badge tier (white
+ * ~30%), the same material as every other round icon chip on the board — the
+ * card's own surface is near-clear glass and would leave this invisible. */
 .sbd-open-btn {
 	pointer-events: auto;
 	display: flex;
@@ -1573,7 +1643,7 @@ body.theme-dark {
 	padding: 5px;
 	border-radius: 999px;
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: var(--sbd-card-surface, var(--background-secondary));
+	background: var(--sbd-badge-fill);
 	color: var(--text-muted);
 	cursor: pointer;
 	opacity: 0.85;
@@ -2071,7 +2141,7 @@ body.theme-dark {
 	width: 26px;
 	height: 26px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 14%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 	flex-shrink: 0;
 	transition: color 120ms ease;
@@ -2416,7 +2486,7 @@ body.theme-dark {
 	border-radius: var(--sbd-radius-m);
 	border: 1px solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: color-mix(in srgb, var(--sbd-card-surface, var(--background-secondary)) 60%, var(--background-secondary) 40%);
+	background: color-mix(in srgb, var(--sbd-badge-fill) 50%, transparent);
 	cursor: pointer;
 	text-align: center;
 	transition:
@@ -2448,7 +2518,7 @@ body.theme-dark {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 16%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 }
 
@@ -2688,7 +2758,7 @@ body.theme-dark {
 	border-radius: var(--sbd-radius-m);
 	border: 1px solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: color-mix(in srgb, var(--sbd-card-surface, var(--background-secondary)) 60%, var(--background-secondary) 40%);
+	background: color-mix(in srgb, var(--sbd-badge-fill) 50%, transparent);
 	cursor: pointer;
 	text-align: center;
 	transition:
@@ -2717,7 +2787,7 @@ body.theme-dark {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 16%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 }
 
@@ -2988,17 +3058,19 @@ body.theme-dark {
 	line-height: 1.1;
 }
 
-/* A rounded glass pill instead of plain text, like the reference's "SAT 19
- * JAN" badge under its greeting — tracked-out caps on a soft translucent
- * capsule rather than a bare muted line. */
+/* The reference's "SAT 19 JAN" capsule. Chip tier: sampling it gives a
+ * near-opaque white pill (~82%) carrying grey tracked-out caps — NOT the
+ * translucent white-on-white pill this was, which barely separated from the
+ * card behind it. */
 .sbd-clock-date {
 	display: inline-flex;
 	align-items: center;
 	margin-top: 2px;
-	padding: 5px 14px;
+	padding: 5px 15px;
 	border-radius: 999px;
-	background: color-mix(in srgb, var(--text-normal) 20%, transparent);
-	color: var(--text-normal);
+	background: var(--sbd-chip-fill);
+	color: var(--sbd-chip-label-muted);
+	text-shadow: none;
 	font-size: 0.72rem;
 	font-weight: 700;
 	letter-spacing: 0.08em;
@@ -3501,7 +3573,7 @@ body.theme-dark {
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 14%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 }
 
@@ -3533,7 +3605,7 @@ body.theme-dark {
 /* ---- Hourly strip ---- */
 .sbd-weather-hours {
 	display: flex;
-	gap: 2px;
+	gap: 6px;
 	overflow-x: auto;
 	scrollbar-width: none;
 	flex: 0 0 auto;
@@ -3543,30 +3615,36 @@ body.theme-dark {
 	display: none;
 }
 
+/* Forecast tiles are chip tier, like the reference's row of little white
+ * day/hour cards under its "27°" — a near-opaque white tile carrying dark
+ * text, rather than bare white type floating on the glass. */
 .sbd-weather-hour {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 2px;
+	gap: 3px;
 	flex: 1 0 auto;
 	min-width: 42px;
-	padding: 4px 2px;
-	border-radius: 10px;
+	padding: 7px 4px;
+	border-radius: 12px;
+	background: var(--sbd-chip-fill);
+	color: var(--sbd-chip-label);
+	text-shadow: none;
 }
 
 .sbd-weather-hour:hover {
-	background: var(--background-modifier-hover);
+	background: color-mix(in srgb, #ffffff 92%, transparent);
 }
 
 .sbd-weather-hour-label {
-	color: var(--text-faint);
+	color: var(--sbd-chip-label-muted);
 	font-size: 0.68rem;
 	white-space: nowrap;
 }
 
 .sbd-weather-hour-icon {
 	display: flex;
-	color: var(--text-muted);
+	color: var(--sbd-chip-label);
 }
 
 .sbd-weather-hour-icon .svg-icon {
@@ -4340,9 +4418,13 @@ body.theme-dark {
 /* Today stays clearly visible even under a heatmap tint: the day number keeps
    its solid accent badge (stronger than the heat tint), and the cell itself
    gets a bold accent ring so 'today' is unmistakable regardless of tint. */
+/* Already the reference's shape: a solid white badge carrying a dark number,
+ * the same chip tier as an event row. It only needed the card's white-on-
+ * wallpaper text-shadow cleared, which on dark-on-white just smears it. */
 .sbd-calendar-day.is-today .sbd-calendar-daynum {
 	color: var(--text-on-accent);
 	background: var(--interactive-accent);
+	text-shadow: none;
 	border-radius: 999px;
 	width: 20px;
 	height: 20px;
@@ -4459,10 +4541,13 @@ body.theme-dark {
 
 /* Today is marked on the date badge, not by flooding the row: an accent ring
    around the day number reads at a glance without fighting the row's text. */
+/* Matches the mini calendar's today badge: a solid white chip with a dark
+ * number. The old white-on-white-14% version all but disappeared once the
+ * accent became white. */
 .sbd-agenda-row.is-today .sbd-agenda-daynum {
-	color: var(--interactive-accent);
-	background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+	color: var(--text-on-accent);
+	background: var(--interactive-accent);
+	text-shadow: none;
 	border-radius: 999px;
 	width: 24px;
 	height: 24px;
@@ -4555,52 +4640,67 @@ body.theme-dark {
 .sbd-agenda-events {
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
-	padding: 0 8px 4px 52px;
+	gap: 6px;
+	padding: 2px 8px 6px 52px;
 }
 
+/* An event is a SOLID CHIP, not a text row — the tier the reference reserves
+ * for discrete data items. Sampling one gives white at ~82% over the card,
+ * with near-black rather than white text: it reads as a little card resting on
+ * the glass, which is what makes the reference's schedule widget legible at a
+ * glance. The DOM is [bullet, time, body(title, badges)] laid out as a row, so
+ * the stacked reference arrangement — time small and grey on top, title bold
+ * underneath, colour dot in the top-right corner — is done here rather than by
+ * rebuilding the markup. */
 .sbd-agenda-event {
+	position: relative;
 	display: flex;
-	align-items: baseline;
-	gap: 7px;
-	padding: 2px 6px;
-	margin: 0 -6px;
-	border-radius: 8px;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 1px;
+	padding: 7px 26px 8px 11px;
+	border-radius: 12px;
+	background: var(--sbd-chip-fill);
+	/* Cards set a dark text-shadow for white-on-wallpaper legibility; on a
+	 * light chip with dark text it only muddies the glyphs. */
+	text-shadow: none;
 	cursor: pointer;
 	min-width: 0;
+	transition: background 120ms ease;
 }
 
 .sbd-agenda-event:hover {
-	background: var(--background-modifier-hover);
+	background: color-mix(in srgb, #ffffff 92%, transparent);
 }
 
 .sbd-agenda-evbullet {
-	flex: 0 0 auto;
-	width: 6px;
-	height: 6px;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 7px;
+	height: 7px;
 	border-radius: 50%;
-	align-self: center;
 	background: var(--ev-color, var(--interactive-accent));
 }
 
 .sbd-agenda-evtime {
-	flex: 0 0 auto;
-	font-size: 0.72rem;
+	font-size: 0.66rem;
 	font-variant-numeric: tabular-nums;
-	color: var(--text-muted);
-	min-width: 3.4em;
+	color: var(--sbd-chip-label-muted);
 }
 
 .sbd-agenda-evbody {
 	display: flex;
 	align-items: baseline;
 	gap: 6px;
+	max-width: 100%;
 	min-width: 0;
 }
 
 .sbd-agenda-evtitle {
-	font-size: 0.8rem;
-	color: var(--text-normal);
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--sbd-chip-label);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -4609,18 +4709,20 @@ body.theme-dark {
 .sbd-agenda-evbadge {
 	flex: 0 0 auto;
 	font-size: 0.62rem;
-	color: var(--text-faint);
+	color: var(--sbd-chip-label-muted);
 	padding: 1px 7px;
 	border-radius: 999px;
-	background: var(--background-modifier-hover);
+	background: color-mix(in srgb, var(--sbd-chip-label) 12%, transparent);
 }
 
 /* TaskNotes entries in the agenda: a completion box in place of the bullet,
    markers for a due date / timeblock, and a struck-through, faded row once the
-   task (or, for a recurring task, this occurrence) is complete. */
+   task (or, for a recurring task, this occurrence) is complete. Sits where the
+   bullet does, in the chip's top-right corner. */
 .sbd-agenda-evcheck {
-	flex: 0 0 auto;
-	align-self: center;
+	position: absolute;
+	top: 8px;
+	right: 8px;
 	margin: 0;
 	width: 12px;
 	height: 12px;
@@ -4630,7 +4732,9 @@ body.theme-dark {
 
 .sbd-agenda-event.is-done .sbd-agenda-evtitle {
 	text-decoration: line-through;
-	color: var(--text-faint);
+	/* On the light chip the white --text-faint would be invisible; fade the
+	 * chip's own dark label instead. */
+	color: var(--sbd-chip-label-muted);
 }
 
 .sbd-agenda-event.is-done .sbd-agenda-evtime {
@@ -4638,13 +4742,13 @@ body.theme-dark {
 }
 
 .sbd-agenda-evbadge.is-due {
-	color: var(--text-on-accent);
+	color: #ffffff;
 	background: var(--ev-color, var(--color-red));
 }
 
 .sbd-agenda-evbadge.is-timeblock {
-	color: var(--text-muted);
-	border: 1px solid var(--background-modifier-border);
+	color: var(--sbd-chip-label-muted);
+	border: 1px solid color-mix(in srgb, var(--sbd-chip-label) 25%, transparent);
 	background: transparent;
 }
 
@@ -5440,7 +5544,7 @@ body.theme-dark {
 	width: 44px;
 	height: 44px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 18%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 }
 
@@ -5779,7 +5883,7 @@ body.theme-dark {
 	position: absolute;
 	inset: 0;
 	border: 1px dashed var(--interactive-accent);
-	border-radius: var(--sbd-card-radius, 24px);
+	border-radius: var(--sbd-card-radius, 32px);
 	opacity: 0.5;
 	pointer-events: none;
 }
@@ -5811,8 +5915,8 @@ body.theme-dark {
 	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
 	backdrop-filter: blur(6px);
 	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: var(--sbd-card-radius, 24px)
-		var(--sbd-card-radius, 24px) 0 0;
+	border-radius: var(--sbd-card-radius, 32px)
+		var(--sbd-card-radius, 32px) 0 0;
 }
 
 .sbd-card-title-input {
@@ -6816,7 +6920,15 @@ body.sbd-dv-resizing {
 	 * scrolling under it would collide with the column titles. Give it the card's
 	 * own surface colour: at opacity 1 it's exactly the old opaque header, and
 	 * below 1 it fades with the card like everything else. */
-	--table-header-background: var(--sbd-card-surface, var(--background-primary));
+	/* NOT --sbd-card-surface: that is the card's own near-clear glass (white at
+	 * ~7%), and a sticky header painted with it would let the rows scroll
+	 * visibly through the column titles. This needs real coverage, so it keeps
+	 * the board's opaque grey — which white header text still reads on. */
+	--table-header-background: color-mix(
+		in srgb,
+		var(--background-primary) 92%,
+		transparent
+	);
 }
 
 /* Belt-and-braces, mirroring the leaf-host rule: clear the structural wrappers
@@ -8364,7 +8476,7 @@ body.sbd-dv-resizing {
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text-normal) 14%, transparent);
+	background: var(--sbd-badge-fill);
 	color: var(--text-normal);
 }
 

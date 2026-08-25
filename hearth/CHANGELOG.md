@@ -86,6 +86,26 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   narrower on the sides than above and below, and now the width gap applies
   to the top and bottom too.
 
+- **Cards are actually glass now.** The card surface was mixed from a mid grey
+  at 40% opacity, which over any wallpaper composited to a flat, desaturated
+  panel — the board read as a stack of grey slabs rather than frosted glass.
+  Sampling the reference design against the wallpaper immediately outside a
+  card shows the real material is *white at ~7%*: it brightens what is behind
+  it instead of covering it. The rim, the other half of the effect, is a crisp
+  white line (~55% along the lit top edge, ~34% along the bottom) and is now
+  the main thing separating a card from the board — so the heavy drop shadow
+  went too, since the reference has essentially none. Corner radius is 32px to
+  match. Low power mode still goes fully opaque, tinting from the board grey
+  rather than white so its white text stays readable.
+
+- **Solid chips for discrete data.** The reference uses two materials inside a
+  card, and only one of them was implemented. Items that represent a *thing* —
+  a calendar event, a forecast tile, the date under the greeting, today's date
+  badge — are near-opaque white (~82%) carrying dark text, so they read as
+  small cards resting on the glass. Everything else stays white-on-glass.
+  Calendar and schedule events are now stacked chips (time above title, colour
+  dot in the corner) instead of single text rows.
+
 - **Icon-circle badges and pill tags throughout.** Stats, links, commands,
   search, templater and favorites tiles, bookmark/recent-file/search-result
   rows, weather metric tiles, the Jira issue-type glyph, and every card's

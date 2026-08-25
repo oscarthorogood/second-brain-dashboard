@@ -792,7 +792,7 @@ export function applyEdgeMerging(gridEl: HTMLElement): void {
 
 /** Fallback card corner radius (px), matching the `border-radius` fallback in
  *  styles.css, used when the board hasn't set --sbd-card-radius. */
-const CARD_RADIUS_FALLBACK = 24;
+const CARD_RADIUS_FALLBACK = 32;
 
 /** Resolve the board's live corner radius (px) from the --sbd-card-radius
  *  CSS variable set by renderDashboard, so the frost mask rounds by exactly the
