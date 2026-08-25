@@ -138,10 +138,9 @@ export function renderDashboard(
 
 		const head = el.createDiv("sbd-card-head");
 		if (view.arrangeMode) {
-			renderCardControls(view, card, head, commit);
+			renderCardControls(view, card, head);
 		} else {
-			head.toggleClass("is-untitled", !(card.title ?? "").trim());
-			head.createDiv({ cls: "sbd-card-title", text: card.title ?? "" });
+			head.addClass("is-untitled");
 		}
 
 		const body = el.createDiv("sbd-card-body");
@@ -337,28 +336,14 @@ function persistAndRender(view: HomeView): void {
 	view.render();
 }
 
-/** The editable card header shown in arrange mode: an inline title field plus
- * actions to open the card's settings and to remove the card. */
+/** The editable card header shown in arrange mode: actions to open the
+ * card's settings and to remove the card. */
 function renderCardControls(
 	view: HomeView,
 	card: DashboardCard,
 	head: HTMLElement,
-	commit: () => void,
 ): void {
 	head.addClass("is-editing");
-
-	const title = head.createEl("input", {
-		cls: "sbd-card-title-input",
-		attr: { type: "text", placeholder: "Title", spellcheck: "false" },
-	});
-	title.value = card.title ?? "";
-	// Don't let typing/clicking in the field start a card drag.
-	title.addEventListener("pointerdown", (e) => e.stopPropagation());
-	title.addEventListener("input", () => {
-		card.title = title.value;
-	});
-	title.addEventListener("change", commit);
-	title.addEventListener("blur", commit);
 
 	const actions = head.createDiv("sbd-card-actions");
 

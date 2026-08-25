@@ -59,16 +59,17 @@ body.theme-dark {
  * settings tab or modals, whose outer chrome is painted by Obsidian outside
  * this class and would otherwise mismatch a recoloured inner pane) —
  * deliberately NOT conditioned on body.theme-dark. The dashboard's whole
- * look (a true mid-grey surface, a warm brass accent) is a fixed identity of
- * the board, not a light/dark pair that follows Obsidian's own appearance
- * setting: switching the app's theme must not wash the board toward white or
- * black. Mid-grey rather than either extreme is also what actually reads as
- * "glass" — a pane of frosted glass tints neutral, it doesn't go black. */
+ * look (a light, airy glass surface, a neutral white accent) is a fixed
+ * identity of the board, not a light/dark pair that follows Obsidian's own
+ * appearance setting: switching the app's theme must not wash the board
+ * toward white or black. A light grey rather than either extreme is also
+ * what actually reads as "glass" — a pane of frosted glass tints neutral, it
+ * doesn't go black. */
 .sbd-view {
-	--background-primary: #75757a;
-	--background-primary-alt: #5c5c61;
-	--background-secondary: #85858a;
-	--background-secondary-alt: #94949a;
+	--background-primary: #a2a2a7;
+	--background-primary-alt: #89898e;
+	--background-secondary: #b2b2b7;
+	--background-secondary-alt: #c1c1c7;
 	/* Brighter than a typical theme border: the reference's glass rim reads as a
 	 * crisp, clearly visible line, not a barely-there hairline. */
 	--background-modifier-border: rgba(255, 255, 255, 0.32);
@@ -81,13 +82,13 @@ body.theme-dark {
 	--text-normal: #ffffff;
 	--text-muted: rgba(255, 255, 255, 0.78);
 	--text-faint: rgba(255, 255, 255, 0.56);
-	--text-on-accent: #1c1206;
-	/* A fixed warm brass/gold accent, not the user's chosen Obsidian accent —
-	 * the dashboard's identity is meant to read the same for every viewer, the
-	 * way the reference KPI-tile design does, rather than shifting with
-	 * whatever accent colour someone happens to have picked for note editing. */
-	--interactive-accent: #c9974c;
-	--interactive-accent-hover: #d9ac66;
+	--text-on-accent: #1a1a1a;
+	/* A fixed white accent, not the user's chosen Obsidian accent — the
+	 * dashboard's identity is meant to read the same for every viewer, rather
+	 * than shifting with whatever accent colour someone happens to have picked
+	 * for note editing. */
+	--interactive-accent: #ffffff;
+	--interactive-accent-hover: #e6e6e6;
 	/* The elevation shadows default to the light-theme values at :root and only
 	 * strengthen under body.theme-dark; since the board is always dark now,
 	 * pin them to that stronger variant here too so a card's drop shadow still
@@ -1954,7 +1955,7 @@ body.theme-dark {
 	z-index: 5;
 	padding-bottom: 10px;
 	margin-bottom: 6px;
-	background: var(--background-primary);
+	background: transparent;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
@@ -5733,6 +5734,7 @@ body.theme-dark {
 	align-items: center;
 	gap: 4px;
 	flex-shrink: 0;
+	margin-left: auto;
 }
 
 /* Sits inside the floating editable header bar (.sbd-card-head.is-editing),
