@@ -239,10 +239,10 @@ export function mountEmbedViewSwitcher(
 	const views = embedViews(card);
 	if (views.length < 2) return;
 
-	const titled = !!(card.title ?? "").trim();
-	const host = titled
-		? head.createDiv("sbd-embed-switch is-inline")
-		: cardEl.createDiv("sbd-embed-switch is-floating");
+	// Titles are never displayed on the card head anymore (see
+	// dashboard.ts's renderDashboard), so the switcher always floats over the
+	// card body instead of docking into a title row that's hidden.
+	const host = cardEl.createDiv("sbd-embed-switch is-floating");
 
 	const build = () => {
 		host.empty();
