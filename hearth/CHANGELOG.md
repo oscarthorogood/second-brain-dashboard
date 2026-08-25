@@ -70,6 +70,15 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   neutral glass regardless of what it shows. Existing cards simply drop
   whatever colour they had set.
 
+- **A white accent, and a lighter glass.** The board's fixed accent colour is
+  white now instead of the warm brass/gold used earlier in this series, so
+  active tabs, focus rings and buttons read as neutral rather than orange.
+  The glass palette itself is lighter too — cards read as airy frosted glass
+  rather than a dark mid-grey slab. Card titles no longer show at all, in
+  either the normal or arrange-mode header — the title field and its data are
+  still there under the hood, just not rendered, so nothing is lost if titles
+  come back later.
+
 - **Compact spacing is now the only spacing.** The "Compact spacing" toggle
   (settings and the setup wizard alike) is gone — every board now uses the
   tighter card padding and top margin that toggle used to turn on. The
@@ -91,6 +100,11 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   launchpad tiles. All of these now reuse the surrounding glass tint, and none
   of them had any `:active` press feedback at all — every one now presses in
   on click.
+
+- **A solid white bar behind the card-settings tabs.** The Content/Layout tab
+  ribbon in the per-card settings modal painted an opaque background instead
+  of blending with the modal's own translucent chrome, standing out as a
+  jarring solid bar. It's transparent now.
 
 ### Added
 
