@@ -86,6 +86,16 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   narrower on the sides than above and below, and now the width gap applies
   to the top and bottom too.
 
+- **Icon-circle badges and pill tags throughout.** Stats, links, commands,
+  search, templater and favorites tiles, bookmark/recent-file/search-result
+  rows, weather metric tiles, the Jira issue-type glyph, and every card's
+  empty-state icon now sit inside a round glass badge instead of a bare
+  glyph, matching the icon-circle language already used by the reference
+  design. The clock/greeting card's date is a rounded glass pill with
+  tracked-out caps, the activity heatmap redraws its cells as a fading
+  sparkle-glyph dot grid, and calendar/schedule event badges are now pills —
+  the same shape already used by the git branch chip and Jira status badge.
+
 ### Fixed
 
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
