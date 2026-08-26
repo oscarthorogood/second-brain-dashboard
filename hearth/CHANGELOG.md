@@ -15,6 +15,14 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Lighter text shadow, and today's day is a filled tile, not a ring.** The
+  text shadow every card's type inherits for legibility over the glass was
+  strong enough to read as smudged rather than crisp, especially now that the
+  card itself is much more transparent — cut from 0.45 to 0.22 alpha. The
+  calendar's (and schedule's) "today" cell also traded its white outline ring
+  for the same soft glass-wash fill a hovered list row already uses, so it
+  reads as a highlighted tile instead of an outlined box.
+
 - **Renamed to Second Brain Dashboard.** The plugin id, display name, CSS
   class/custom-property prefix (`hearth-` → `sbd-`) and every other Hearth
   branding mention have been renamed to Second Brain Dashboard. This changes
