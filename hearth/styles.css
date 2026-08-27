@@ -594,7 +594,7 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	font-size: clamp(2.2rem, 5vw, 3.4rem);
+	font-size: clamp(1.6rem, 18cqw, 3.4rem);
 	font-weight: 700;
 	letter-spacing: -0.02em;
 	color: var(--text-normal);
@@ -746,7 +746,7 @@ body.theme-dark {
 /* 64px at the reference's card size, its -2px tracking expressed as an em so
  * it holds as the card is resized. */
 .sbd-daily-daynum {
-	font-size: clamp(2.25rem, 9vw, 4rem);
+	font-size: clamp(1.75rem, 27cqw, 4rem);
 	font-weight: 600;
 	line-height: 1.05;
 	letter-spacing: -0.032em;
@@ -873,6 +873,44 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
 	padding: 16px 18px;
+}
+
+/* The reference's table on the sheet: tracked-out grey column heads over a
+ * hairline rule, blue file links, and mono for the date column. */
+.sbd-view .sbd-dataview table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.sbd-view .sbd-dataview th {
+	padding: 0 12px 8px 0;
+	border-bottom: 1px solid var(--sbd-sheet-rule);
+	color: var(--sbd-sheet-ink-label);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-align: left;
+	text-transform: uppercase;
+}
+
+.sbd-view .sbd-dataview td {
+	padding: 9px 12px 0 0;
+	font-size: 0.875rem;
+	color: var(--sbd-sheet-ink-body);
+}
+
+.sbd-view .sbd-dataview td a {
+	color: var(--sbd-sheet-link);
+	font-weight: 500;
+	text-decoration: none;
+}
+
+/* Both query panes fill whatever height the card has left, rather than
+ * shrinking to their rows and leaving the card half empty. */
+.sbd-view .sbd-dataview,
+.sbd-view .sbd-datacore {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
 .sbd-view .sbd-datacore {
@@ -1632,6 +1670,11 @@ body.theme-dark {
 }
 
 .sbd-card-body {
+	/* Display type inside a card is sized against the CARD, not the window.
+	 * The sizes below used to be vw-based clamps, which meant a 238px card on
+	 * a 2560px monitor drew its day number at 230px — the reference's 64px is
+	 * 27% of that card's width, and cqw is the unit that actually says so. */
+	container-type: inline-size;
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
@@ -3449,7 +3492,7 @@ body.theme-dark {
 }
 
 .sbd-calc-result {
-	font-size: clamp(1.4rem, 4.5vw, 2.375rem);
+	font-size: clamp(1.25rem, 12.7cqw, 2.375rem);
 	font-weight: 600;
 	line-height: 1.15;
 	color: rgba(255, 255, 255, 0.98);
@@ -3877,6 +3920,16 @@ body.theme-dark {
  * out as full-width sheet rows — near-opaque white, glyph leading a bold
  * dark label — rather than the vertical glass tiles LINKS uses. A command
  * is a thing you read and press, not an icon you recognise. */
+/* The reference's rows divide the card's height between them rather than
+ * standing at the launchpad grid's 34px row. */
+.sbd-card.is-commands-card .sbd-links,
+.sbd-card.is-templater-card .sbd-links {
+	height: 100%;
+	grid-template-columns: 1fr;
+	grid-auto-rows: 1fr;
+	gap: 11px;
+}
+
 .sbd-card.is-commands-card .sbd-link-tile,
 .sbd-card.is-templater-card .sbd-link-tile {
 	flex-direction: row;
@@ -3952,7 +4005,7 @@ body.theme-dark {
 /* 58px at the reference's card size, with its -2px tracking expressed as an
  * em so it holds at every card size. */
 .sbd-clock-time {
-	font-size: clamp(2rem, 6.5vw, 3.625rem);
+	font-size: clamp(1.5rem, 24.4cqw, 3.625rem);
 	font-weight: 600;
 	letter-spacing: -0.035em;
 	color: rgba(255, 255, 255, 0.98);
@@ -3966,7 +4019,7 @@ body.theme-dark {
  * bold smears the strokes. */
 .sbd-clock-greeting {
 	font-family: var(--sbd-font-script);
-	font-size: clamp(1.4rem, 4.2vw, 2.125rem);
+	font-size: clamp(1.1rem, 14.3cqw, 2.125rem);
 	font-weight: 400;
 	letter-spacing: 0;
 	line-height: 1;
@@ -4725,6 +4778,8 @@ body.theme-dark {
 	flex: none;
 	font-size: 0.875rem;
 	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: var(--sbd-label-tracking-tight);
 	color: var(--sbd-sheet-ink-body);
 }
 
@@ -7370,6 +7425,7 @@ body.theme-dark {
  * It was mixing --background-secondary, an opaque grey. */
 .sbd-kanban-col {
 	flex: 1 0 140px;
+	align-self: stretch;
 	min-width: 130px;
 	display: flex;
 	flex-direction: column;
@@ -7408,10 +7464,10 @@ body.theme-dark {
 .sbd-kanban-col-body {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	padding: 6px;
+	gap: 9px;
+	padding: 0;
 	overflow-y: auto;
-	flex: 1;
+	flex: 1 1 auto;
 	min-height: 32px;
 }
 
@@ -10183,23 +10239,34 @@ body.sbd-dv-resizing {
 }
 
 .sbd-git-file {
-	gap: 8px;
-	padding: 4px 6px;
+	gap: 10px;
+	padding: 0;
 }
 
-/* The single-letter status badge. Monospaced and boxed so a column of them
-   lines up and reads as a gutter rather than as part of the file name. */
+/* Paths are set in mono, as the reference does — they are file paths, and
+ * the mono column keeps them scanning down the card. */
+.sbd-git-file-path {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+/* The single-letter status marker. Monospaced and given a fixed gutter so a
+ * column of them lines up — but bare, and carrying the status colour itself:
+ * the reference has no badge behind it, and a grey box swallowed the one
+ * piece of colour in the card. */
 .sbd-git-letter {
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	flex: 0 0 auto;
-	width: 17px;
-	height: 17px;
-	border-radius: 6px;
-	background: var(--background-modifier-border);
-	color: var(--text-muted);
-	font-family: var(--font-monospace);
+	width: 18px;
+	height: auto;
+	border-radius: 0;
+	background: none;
+	color: rgba(255, 255, 255, 0.7);
+	font-weight: 700;
+	font-family: var(--sbd-font-mono);
 	font-size: 0.66rem;
 	line-height: 1;
 }
