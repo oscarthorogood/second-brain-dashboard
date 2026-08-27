@@ -715,9 +715,50 @@ body.theme-dark {
 	padding: 18px 20px;
 }
 
+/* Type on the sheet, at the reference's sizes: 14px body under an 18px
+ * heading. Obsidian's own scale is absolute (an h2 is 1.6rem however small the
+ * box holding it), which on a 500x280 card drew a heading half again as big as
+ * the reference's and a body a size over it. The ladder is kept — a note's
+ * structure should still read — just rebased on the card. Live-preview and
+ * image hosts are excluded: the first is a real editor and takes the app's
+ * own type, the second has no text. */
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) {
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0 0 10px;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h1 {
+	font-size: 1.375rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h2 {
+	font-size: 1.125rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h3 {
+	font-size: 1rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) :is(h4, h5, h6) {
+	font-size: 0.9375rem;
+}
+
 /* The jot pad (→ TEXT): a 24px sheet filling the card's padding box, dark
  * text on it, and the caret in the reference's blue. */
 .sbd-view .sbd-jot {
+	/* Inset from the card's rim, as the reference draws it. The body zeroes its
+	 * own inline padding so the scrolling pad inside can carry the gutter (see
+	 * the checkbox-hang note further down), which left the sheet running edge
+	 * to edge and clipped by the card. A margin puts the inset back without
+	 * moving the clip box. */
+	margin-inline: var(--sbd-card-pad-x);
+	padding-block: 20px;
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
 	color: var(--sbd-sheet-ink-body);
@@ -897,6 +938,37 @@ body.theme-dark {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* The reload glyph and the interval beside it — bare on the glass, not a
+ * button-shaped control: the address chip is the only filled thing on the row
+ * and a second one would compete with it. */
+.sbd-web-reload {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	padding: 0;
+	border: none;
+	background: none;
+	box-shadow: none;
+	color: rgba(255, 255, 255, 0.9);
+	cursor: pointer;
+}
+
+.sbd-web-reload:hover {
+	color: #ffffff;
+}
+
+.sbd-web-reload .svg-icon {
+	width: 19px;
+	height: 19px;
+}
+
+.sbd-web-every {
+	flex: none;
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.72);
 }
 
 /* The hosted plugin view (→ LEAF): a 24px sheet under the mono view-type
@@ -1893,9 +1965,20 @@ body.theme-dark {
  * view avoids this because its `--file-margins` gutter is interior. The rules
  * below zero the body's inline padding and re-apply it on the scroll/clip
  * elements themselves, so text lands in exactly the same place. */
+/* A column: the path row (when there is one) over the note, which takes what
+ * is left. `.sbd-embed` asks for height:100%, which alone would push the sheet
+ * past the bottom of the card by the height of the row above it. */
 .sbd-card-body.is-embed-host,
 .sbd-card-body.is-jot-host {
+	display: flex;
+	flex-direction: column;
 	overflow: hidden;
+}
+
+.sbd-card-body.is-embed-host > .sbd-embed {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
 }
 
 /* Scoped through `.sbd-card` purely for specificity: compact mode sets the
@@ -1926,11 +2009,58 @@ body.theme-dark {
 .sbd-card-body.is-embed-host
 	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image):not(.sbd-daily-note),
 .sbd-card-body.is-jot-host .sbd-jot-preview {
+	/* --sbd-embed-gutter is the interior gutter. It is the card's own padding
+	 * for a host that runs edge to edge, and the reference's 20px for the note
+	 * sheet below, which carries the card's inset as a margin instead. */
+	--sbd-embed-gutter: var(--sbd-card-pad-x);
 	padding-inline-start: max(
-		var(--sbd-card-pad-x),
-		calc(var(--checkbox-size, 1em) * 1.5 - 3ch + var(--sbd-card-pad-x))
+		var(--sbd-embed-gutter),
+		calc(var(--checkbox-size, 1em) * 1.5 - 3ch + var(--sbd-embed-gutter))
 	);
-	padding-inline-end: var(--sbd-card-pad-x);
+	padding-inline-end: var(--sbd-embed-gutter);
+}
+
+/* The path row over an embedded note: the file's glyph and its vault path in
+ * white on the card's glass. The body zeroes its inline padding for the sheet
+ * below, so the row carries the card's own gutter itself. */
+.sbd-embed-path {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: none;
+	min-width: 0;
+	padding-inline: var(--sbd-card-pad-x);
+	margin-bottom: 16px;
+}
+
+.sbd-embed-path-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.88);
+}
+
+.sbd-embed-path-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.sbd-embed-path-text {
+	font-size: 1rem;
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.95);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The note sheet is inset from the card's rim, as the reference draws it: the
+ * body zeroes its own inline padding so this element can be the clip box (see
+ * the checkbox note above), so the inset arrives as a margin. */
+.sbd-card-body.is-embed-host
+	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image):not(.sbd-daily-note) {
+	--sbd-embed-gutter: 20px;
+	margin-inline: var(--sbd-card-pad-x);
 }
 
 /* The raw editor is a *sibling* of the preview inside `.sbd-jot`, not a
@@ -2122,6 +2252,7 @@ body.theme-dark {
  * The host and the leaf's own container both fill the card body so the hosted
  * view lays out to the card size instead of its natural sidebar width/height. */
 .sbd-leaf-host {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -3596,15 +3727,34 @@ body.theme-dark {
  * double-click (so links in the preview stay clickable). The wrapper fills
  * the card body; exactly one of preview/textarea is shown at a time, and that
  * one is the single scroll container (one vertical scrollbar). */
+/* The sheet is a column: the JOT caption, then the pad under it taking what
+ * is left. Both were 100% tall, so the caption pushed the pad past the bottom
+ * of the card and got clipped by the sheet's own rounded corner. */
 .sbd-jot {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 	height: 100%;
 	overflow: hidden;
 }
 
 .sbd-jot-preview {
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
 	overflow: auto;
 	cursor: text;
+	/* 15px at the reference, with its lines 9px apart — the card's own body
+	 * size drew the pad a size larger than the note it stands in for. */
+	font-size: 0.9375rem;
+	line-height: 1.3;
+}
+
+.sbd-jot-preview > p {
+	margin: 0 0 9px;
+}
+
+.sbd-jot-preview > :last-child {
+	margin-bottom: 0;
 }
 
 .sbd-jot-preview.is-empty {

@@ -2524,6 +2524,11 @@ export const en = {
 		web: {
 			openInBrowser: "Open in browser",
 			mayRefuse: "This site may refuse to be embedded.",
+			reloadNow: "Reload the page",
+			/** The auto-refresh interval, shown beside the reload glyph. */
+			everySeconds: (n: number) => `${n} sec`,
+			everyMinutes: (n: number) => `${n} min`,
+			everyHours: (n: number) => `${n} hr`,
 		},
 		bookmarks: {
 			untitled: "Untitled",
