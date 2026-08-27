@@ -1606,12 +1606,6 @@ body.theme-dark {
 .sbd-card {
 	position: absolute;
 	box-sizing: border-box;
-	/* Display type inside a card is sized against the CARD, not the window.
-	 * The cqw clamps further down used to be vw-based, which meant a 238px card
-	 * on a 2560px monitor drew its day number at 230px where the reference
-	 * draws 64px. The container is the card rather than its padded body so one
-	 * coefficient holds whatever padding a kind sets. */
-	container-type: inline-size;
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
@@ -1948,6 +1942,22 @@ body.theme-dark {
 .sbd-card.is-slideshow-card {
 	--sbd-card-pad-x: 0px;
 	--sbd-card-pad-y: 0px;
+}
+
+/* Display type inside a card is sized against the CARD, not the window: the
+ * cqw clamps in the three kinds below used to be vw-based, which meant a 238px
+ * card on a 2560px monitor drew its day number at 230px where the reference
+ * draws 64px.
+ *
+ * Only these three become query containers, and deliberately so —
+ * `container-type` brings `contain: layout` with it, which makes the element a
+ * containing block for `position: fixed` descendants. Every card carrying that
+ * would silently re-anchor any popover that escapes to the viewport (the Jira
+ * card's filter menu on a narrow pane, for one). */
+.sbd-card.is-daily-card,
+.sbd-card.is-clock-card,
+.sbd-card.is-calculator-card {
+	container-type: inline-size;
 }
 
 /* The search bar is `padding: 0 26px` in the reference: the bar row IS the
