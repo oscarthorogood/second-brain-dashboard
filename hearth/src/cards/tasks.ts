@@ -1908,7 +1908,9 @@ async function loadAndRenderTasks(
 	// Falls back to empty (no status = open) when the card has none to offer.
 	const openStatus = hits.find((h) => !h.done && h.status)?.status ?? "";
 
-	const listEl = container.createDiv("sbd-list sbd-tasks");
+	// Widget Set → TASKS draws every task in the list layout as a near-opaque
+	// sheet row with dark text, the same tier its Kanban cards use.
+	const listEl = container.createDiv("sbd-list is-sheet sbd-tasks");
 	for (const hit of list) renderTaskRow(view, cfg, listEl, hit, today, refresh, openStatus);
 }
 

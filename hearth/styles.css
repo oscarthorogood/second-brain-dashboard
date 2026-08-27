@@ -173,6 +173,18 @@
 	--sbd-sheet-fill: rgba(255, 255, 255, 0.9);
 	--sbd-sheet-fill-hover: #ffffff;
 	--sbd-sheet-fill-active: #e4e7ea;
+	/* Ink ON a sheet. The board's own --text-normal/muted/faint are white,
+	 * for glass; a sheet inverts that, so it needs its own ladder. Sampled
+	 * from the reference's sheet-hosted widgets (embed body, jot, leaf,
+	 * dataview, datacore, query results, RSS items, task cards). */
+	--sbd-sheet-ink: #23272b;
+	--sbd-sheet-ink-body: #3b4147;
+	--sbd-sheet-ink-muted: #7b8188;
+	--sbd-sheet-ink-faint: #a5abb1;
+	--sbd-sheet-ink-label: #8c9299;
+	--sbd-sheet-rule: #e4e8ec;
+	--sbd-sheet-link: #2f8ff0;
+	--sbd-radius-sheet: 22px;
 
 	--sbd-track-fill: rgba(255, 255, 255, 0.28);
 	--sbd-track-pill-fill: rgba(255, 255, 255, 0.9);
@@ -636,6 +648,130 @@ body.theme-dark {
 
 .sbd-title.is-title-themed .sbd-title-text {
 	color: var(--icon-color);
+}
+
+/* ===================================================================== */
+/*  The sheet — the reference's second inner tier                         */
+/* ===================================================================== */
+
+/* design-ref/README.md calls out "two inner tiers that sit on [the card]: a
+ * translucent glass panel and a near-opaque white sheet that flips its text
+ * to dark". The panel tier is --sbd-panel-tier-fill. This is the other one,
+ * and it is what every content-rendering widget in the Widget Set reference
+ * puts its content on — the embed's note body, the jot pad, the web page,
+ * the hosted plugin view, a Dataview table, Datacore cards, query results,
+ * RSS items, task cards. All of them were painting white text straight onto
+ * the card's glass instead, which is both wrong against the reference and
+ * the least legible thing the board can do over a wallpaper.
+ *
+ * The text-shadow reset matters: .sbd-card sets one on every descendant so
+ * white type survives whatever shows through the glass. On dark-on-white it
+ * only smears the letterforms. */
+.sbd-sheet {
+	background: var(--sbd-sheet-fill);
+	border-radius: var(--sbd-radius-sheet);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	/* Sheets are content panes: they take the height the card has left. */
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+}
+
+/* Obsidian paints rendered markdown, embedded views and plugin panes with
+ * its own --text-* variables. Inside a sheet those have to be the sheet's
+ * ladder, or a dark-mode vault renders white text on white. Set on the
+ * sheet itself so anything it hosts inherits them. */
+.sbd-view .sbd-sheet {
+	--text-normal: var(--sbd-sheet-ink);
+	--text-muted: var(--sbd-sheet-ink-muted);
+	--text-faint: var(--sbd-sheet-ink-faint);
+	--text-accent: var(--sbd-sheet-link);
+	--text-on-accent: #ffffff;
+	--background-modifier-border: var(--sbd-sheet-rule);
+	--background-modifier-hover: rgba(0, 0, 0, 0.05);
+	--background-primary: #ffffff;
+	--background-secondary: #f4f6f8;
+	--link-color: var(--sbd-sheet-link);
+}
+
+/* A row/card ON a sheet-tier surface — a query result, an RSS item, a task
+ * card. Same fill, its own smaller corner, and it does NOT stretch. */
+.sbd-sheet-item {
+	flex: none;
+	background: var(--sbd-sheet-fill);
+	border-radius: var(--sbd-radius-l);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+/* ---- Sheet-hosted widgets ------------------------------------------- */
+
+/* The embed's rendered note (Widget Set → EMBED: a 0.9 sheet at 20px inside
+ * the card, carrying dark text under the path row). */
+.sbd-view .sbd-embed {
+	background: var(--sbd-sheet-fill);
+	border-radius: 20px;
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	padding: 18px 20px;
+}
+
+/* The jot pad (→ TEXT): a 24px sheet filling the card's padding box, dark
+ * text on it, and the caret in the reference's blue. */
+.sbd-view .sbd-jot {
+	background: var(--sbd-sheet-fill);
+	border-radius: 24px;
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	caret-color: var(--sbd-sheet-link);
+}
+
+/* The hosted plugin view (→ LEAF): a 24px sheet under the mono view-type
+ * row. */
+.sbd-view .sbd-leaf-host {
+	background: var(--sbd-sheet-fill);
+	border-radius: 24px;
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+/* Dataview's table and Datacore's result area (→ DATAVIEW / DATACORE): 22px
+ * and 18px sheets respectively. */
+.sbd-view .sbd-dataview {
+	background: var(--sbd-sheet-fill);
+	border-radius: 22px;
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	padding: 16px 18px;
+}
+
+.sbd-view .sbd-datacore {
+	background: var(--sbd-sheet-fill);
+	border-radius: 18px;
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	padding: 14px 16px;
+}
+
+/* Every one of the above hosts foreign markup (rendered markdown, a plugin's
+ * own pane, a Dataview table), so the same variable remapping the .sbd-sheet
+ * class does has to reach them too. */
+.sbd-view .sbd-embed,
+.sbd-view .sbd-jot,
+.sbd-view .sbd-leaf-host,
+.sbd-view .sbd-dataview,
+.sbd-view .sbd-datacore {
+	--text-normal: var(--sbd-sheet-ink);
+	--text-muted: var(--sbd-sheet-ink-muted);
+	--text-faint: var(--sbd-sheet-ink-faint);
+	--text-accent: var(--sbd-sheet-link);
+	--text-on-accent: #ffffff;
+	--background-modifier-border: var(--sbd-sheet-rule);
+	--background-modifier-hover: rgba(0, 0, 0, 0.05);
+	--background-primary: #ffffff;
+	--background-secondary: #f4f6f8;
+	--link-color: var(--sbd-sheet-link);
 }
 
 /* ---- Search --------------------------------------------------------- */
@@ -2501,6 +2637,58 @@ body.theme-dark {
 	transition: color 120ms ease;
 }
 
+/* Widget Set → SEARCH/QUERY: each result is a sheet card, dark text on
+ * near-opaque white, with the name over its excerpt. */
+.sbd-list.is-sheet {
+	gap: 9px;
+}
+
+.sbd-list.is-sheet .sbd-list-item {
+	align-items: flex-start;
+	padding: 10px 14px;
+	border-radius: var(--sbd-radius-m);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+.sbd-list.is-sheet .sbd-list-item:hover {
+	background: var(--sbd-sheet-fill-hover);
+}
+
+.sbd-list.is-sheet .sbd-list-item:active {
+	background: var(--sbd-sheet-fill-active);
+}
+
+/* The badge behind a result's glyph is an ink tint on a light sheet, not the
+ * white one it wears on the glass. */
+.sbd-list.is-sheet .sbd-list-icon {
+	width: 22px;
+	height: 22px;
+	background: rgba(0, 0, 0, 0.06);
+	color: var(--sbd-sheet-ink-muted);
+}
+
+.sbd-list.is-sheet .sbd-list-item:hover .sbd-list-icon {
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-list.is-sheet .sbd-list-label {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-list.is-sheet .sbd-list-excerpt {
+	font-size: 0.75rem;
+	color: var(--sbd-sheet-ink-muted);
+}
+
+.sbd-list.is-sheet .sbd-task-status {
+	background: rgba(0, 0, 0, 0.06);
+	color: var(--sbd-sheet-ink-muted);
+}
+
 /* The trailing "2m" / "3h" / "Tue" column. flex:none so a long filename
  * ellipsises instead of squeezing the age out of the row. */
 .sbd-list-age {
@@ -3485,6 +3673,62 @@ body.theme-dark {
 	max-width: 100%;
 }
 
+/* ---- Commands and templates ----------------------------------------
+ *
+ * Widget Set → COMMANDS and TEMPLATER share the launchpad's tile machinery
+ * (a resizable, positionable grid) but not its look: the reference lays both
+ * out as full-width sheet rows — near-opaque white, glyph leading a bold
+ * dark label — rather than the vertical glass tiles LINKS uses. A command
+ * is a thing you read and press, not an icon you recognise. */
+.sbd-card.is-commands-card .sbd-link-tile,
+.sbd-card.is-templater-card .sbd-link-tile {
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 12px;
+	padding: 0 16px;
+	border-radius: var(--sbd-radius-l);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink);
+	text-align: left;
+	text-shadow: none;
+}
+
+.sbd-card.is-commands-card .sbd-link-tile:hover,
+.sbd-card.is-templater-card .sbd-link-tile:hover {
+	background: var(--sbd-sheet-fill-hover);
+	transform: none;
+}
+
+.sbd-card.is-commands-card .sbd-link-tile:active,
+.sbd-card.is-templater-card .sbd-link-tile:active {
+	background: var(--sbd-sheet-fill-active);
+	transform: var(--sbd-press-tile);
+}
+
+.sbd-card.is-commands-card .sbd-link-icon,
+.sbd-card.is-templater-card .sbd-link-icon {
+	width: 18px;
+	height: 18px;
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-card.is-commands-card .sbd-link-icon .svg-icon,
+.sbd-card.is-templater-card .sbd-link-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.sbd-card.is-commands-card .sbd-link-label,
+.sbd-card.is-templater-card .sbd-link-label {
+	flex: 1;
+	min-width: 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+	text-align: left;
+}
+
 /* Clock / greeting — Widget Set → CLOCK.
  *
  * Three tiers, largest first: the face or the time, then the greeting in the
@@ -3622,15 +3866,19 @@ body.theme-dark {
 	display: none;
 }
 
+/* The reference's feed tabs: an 11px-round chip on the panel tier, flipping
+ * to the sheet with dark wording when selected — the same two-tier switch
+ * the search filter chips use. */
 .sbd-rss-tab {
 	flex: 0 0 auto;
 	max-width: 140px;
-	padding: 2px 10px;
+	padding: 7px 14px;
 	border: none;
-	border-radius: 999px;
-	background: var(--background-modifier-hover);
-	color: var(--text-muted);
-	font-size: 0.78rem;
+	border-radius: 11px;
+	background: var(--sbd-panel-tier-fill);
+	color: rgba(255, 255, 255, 0.85);
+	font-weight: 600;
+	font-size: 0.8125rem;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -3644,8 +3892,12 @@ body.theme-dark {
 }
 
 .sbd-rss-tab.is-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-rss-tab.is-active:hover {
+	background: var(--sbd-sheet-fill-hover);
 }
 
 .sbd-rss-refresh {
@@ -3688,21 +3940,24 @@ body.theme-dark {
 }
 
 /* An item is a clickable row; layout tweaks per view live below. */
+/* Widget Set → RSS: each headline is its own near-opaque sheet card with
+ * dark text, not a row separated by a rule. The rule was doing the work the
+ * card's own edge does in the reference. */
 .sbd-rss-item {
 	display: flex;
 	gap: 10px;
-	padding: 6px 4px;
-	border-radius: 10px;
+	padding: 13px 16px;
+	border-radius: 18px;
 	cursor: pointer;
-	border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.sbd-rss-item:last-child {
 	border-bottom: none;
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+	transition: background 120ms ease;
 }
 
 .sbd-rss-item:hover {
-	background: var(--background-modifier-hover);
+	background: var(--sbd-sheet-fill-hover);
 }
 
 .sbd-rss-main {
@@ -3713,18 +3968,19 @@ body.theme-dark {
 	flex: 1 1 auto;
 }
 
+/* On the sheet, so the ink ladder is the sheet's, not the board's white. */
 .sbd-rss-title {
-	color: var(--text-normal);
-	font-size: 0.88rem;
+	color: var(--sbd-sheet-ink);
+	font-size: 0.9375rem;
 	font-weight: 600;
 	line-height: 1.25;
 	overflow-wrap: anywhere;
 }
 
 .sbd-rss-excerpt {
-	color: var(--text-muted);
-	font-size: 0.78rem;
-	line-height: 1.3;
+	color: var(--sbd-sheet-ink-muted);
+	font-size: 0.75rem;
+	line-height: 1.35;
 	/* Clamp to two lines so cards stay tidy. */
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
@@ -3733,8 +3989,9 @@ body.theme-dark {
 }
 
 .sbd-rss-meta {
-	color: var(--text-faint);
-	font-size: 0.72rem;
+	color: var(--sbd-sheet-ink-faint);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.6875rem;
 }
 
 .sbd-rss-thumb {
@@ -3823,7 +4080,8 @@ body.theme-dark {
 }
 
 .sbd-weather-temp {
-	font-weight: 300;
+	color: rgba(255, 255, 255, 0.97);
+	font-weight: 600;
 	/* Slightly over 1: at these sizes a line-height of exactly 1 clips the
 	 * bottom of the digits against any ancestor that hides its overflow. */
 	line-height: 1.08;
@@ -3831,16 +4089,18 @@ body.theme-dark {
 	font-variant-numeric: tabular-nums;
 }
 
+/* Reference: the condition is the biggest thing in the header block after
+ * the temperature — 25px at 600, over the place name, not under it. */
 .sbd-weather-condition {
-	color: var(--text-normal);
-	font-size: 0.9rem;
-	font-weight: 500;
+	color: rgba(255, 255, 255, 0.96);
+	font-size: 1.5625rem;
+	font-weight: 600;
 	line-height: 1.2;
 }
 
 .sbd-weather-place {
-	color: var(--text-muted);
-	font-size: 0.8rem;
+	color: rgba(255, 255, 255, 0.8);
+	font-size: 1.0625rem;
 	line-height: 1.25;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -3848,8 +4108,8 @@ body.theme-dark {
 }
 
 .sbd-weather-meta {
-	color: var(--text-muted);
-	font-size: 0.76rem;
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 0.875rem;
 	line-height: 1.3;
 }
 
@@ -4231,6 +4491,63 @@ body.theme-dark {
 .sbd-weather.is-forecast .sbd-weather-row,
 .sbd-weather.is-forecast .sbd-weather-metrics {
 	flex: 0 0 auto;
+}
+
+/* Widget Set → WEATHER lays the days out ACROSS the card as a row of
+ * near-white tiles — day over glyph over temperature, centred — rather than
+ * down it as a list of rows. Scoped to the forecast style, which is the one
+ * the reference draws; the other four styles keep their list, where a
+ * horizontal strip would have nowhere to go. */
+.sbd-weather.is-forecast .sbd-weather-days {
+	flex: 0 0 auto;
+	flex-direction: row;
+	gap: 12px;
+	overflow: visible;
+}
+
+.sbd-weather.is-forecast .sbd-weather-day {
+	flex: 1;
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	height: 96px;
+	padding: 8px 4px;
+	border-radius: var(--sbd-radius-l);
+	background: rgba(255, 255, 255, 0.8);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+.sbd-weather.is-forecast .sbd-weather-day:hover {
+	background: var(--sbd-sheet-fill-hover);
+}
+
+.sbd-weather.is-forecast .sbd-weather-day-label {
+	flex: none;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink-body);
+}
+
+.sbd-weather.is-forecast .sbd-weather-day-icon {
+	color: var(--sbd-sheet-ink-body);
+}
+
+.sbd-weather.is-forecast .sbd-weather-day-low,
+.sbd-weather.is-forecast .sbd-weather-day-high,
+.sbd-weather.is-forecast .sbd-weather-day-precip {
+	flex: none;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: #6a7078;
+}
+
+/* The min/max track is a list-row device: across a tile it has no width to
+ * span and reads as a stray rule. */
+.sbd-weather.is-forecast .sbd-weather-day-track {
+	display: none;
 }
 
 .sbd-weather-chart {
@@ -6845,34 +7162,45 @@ body.theme-dark {
  * card look like a slab next to an otherwise see-through board. The lane tint
  * is therefore both weakened and scaled by the board's --card-opacity, so it
  * fades in step with the card surface it sits on. */
+/* Widget Set → TASKS: a Kanban column is a glass panel on the card — white
+ * at 14%, one step quieter than the panel tier, because three of them sit
+ * side by side and the tier's usual 20% made the card read as three cards.
+ * It was mixing --background-secondary, an opaque grey. */
 .sbd-kanban-col {
 	flex: 1 0 140px;
 	min-width: 130px;
 	display: flex;
 	flex-direction: column;
-	background: color-mix(
-		in srgb,
-		var(--background-secondary) calc(var(--card-opacity, 1) * 40%),
-		transparent
-	);
-	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.14);
+	border-radius: var(--sbd-radius-tile);
+	padding: 12px 10px;
+	gap: 9px;
 	max-height: 100%;
 }
 
+/* The reference heads a column with a tracked-out mono name and its count —
+ * no rule under it, the column's own fill already separates the head from
+ * the cards. */
 .sbd-kanban-col-head {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 6px 9px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	color: var(--text-muted);
-	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 0 4px;
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: var(--sbd-label-tracking-tight);
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.82);
+	border-bottom: none;
 }
 
 .sbd-kanban-col-count {
-	color: var(--text-faint);
-	font-weight: 500;
+	font-family: var(--sbd-font-family);
+	letter-spacing: 0;
+	text-transform: none;
+	color: rgba(255, 255, 255, 0.6);
+	font-weight: 400;
 }
 
 .sbd-kanban-col-body {
@@ -6893,20 +7221,41 @@ body.theme-dark {
 /* Cards on the lane: a translucent fill (scaled by --card-opacity for the same
  * reason as the column) with the hairline border doing the work of defining the
  * card, rather than an opaque --background-primary tile. */
+/* A card in a column is the sheet tier: near-opaque white carrying dark
+ * text, which is what makes it read as a card lying ON the column rather
+ * than a slightly different shade of the same glass. */
 .sbd-kanban-card {
-	background: color-mix(
-		in srgb,
-		var(--background-primary) calc(var(--card-opacity, 1) * 55%),
-		transparent
-	);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	padding: 6px 8px;
-	font-size: 0.85rem;
+	background: rgba(255, 255, 255, 0.92);
+	border: none;
+	border-radius: 13px;
+	padding: 10px 11px;
+	font-size: 0.8125rem;
+	color: var(--sbd-sheet-ink);
+	text-shadow: none;
 	cursor: grab;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 7px;
+}
+
+/* The card's own ink ladder, so chips and metadata on it don't inherit the
+ * board's white. */
+.sbd-view .sbd-kanban-card {
+	--text-normal: var(--sbd-sheet-ink);
+	--text-muted: var(--sbd-sheet-ink-muted);
+	--text-faint: var(--sbd-sheet-ink-faint);
+	--background-modifier-hover: rgba(0, 0, 0, 0.05);
+}
+
+.sbd-kanban-card-text {
+	font-weight: 600;
+	line-height: 1.25;
+}
+
+.sbd-kanban-card-meta {
+	font-size: 0.6875rem;
+	font-weight: 500;
+	color: var(--sbd-sheet-ink-muted);
 }
 
 .sbd-kanban-card.is-dragging {
@@ -7928,11 +8277,10 @@ body.sbd-dv-resizing {
 	overflow: hidden;
 }
 
-/* A grid of soft four-point sparkles rather than flat squares, like the
- * reference's month-progress dot grid: each cell centres a glyph whose
- * opacity carries the heat level instead of a tinted background tile. Drawn
- * with a ::before glyph (not a background) so the fade reads as a dimming
- * spark, matching the reference's brighter-to-fainter rows. */
+/* Widget Set → HEATMAP: a plain white square per day, barely rounded, its
+ * OPACITY carrying the heat — not a glyph. This drew a four-point sparkle
+ * (\2726) per cell, which at 5px reads as noise rather than as a year of
+ * activity, and made a dense week look busier than a bright one. */
 .sbd-heatmap-cell {
 	position: relative;
 	display: flex;
@@ -7949,15 +8297,18 @@ body.sbd-dv-resizing {
 }
 
 .sbd-heatmap-cell::before {
-	content: "\2726";
-	font-size: clamp(7px, 1.6vw, 13px);
-	line-height: 1;
-	color: var(--text-normal);
-	opacity: calc(0.16 + var(--heat, 0) * 0.21);
+	content: "";
+	width: 100%;
+	height: 100%;
+	border-radius: 1.5px;
+	background: #ffffff;
+	/* --heat is a 1–4 level (heatLevel in cardbodies.ts). The reference's
+	 * lightest active day sits around 0.22 and its heaviest at ~0.9. */
+	opacity: calc(0.05 + var(--heat, 0) * 0.21);
 }
 
 .sbd-heatmap-cell.is-empty::before {
-	opacity: 0.1;
+	opacity: 0.05;
 }
 
 .sbd-heatmap-cell.has-heat {
@@ -7969,18 +8320,14 @@ body.sbd-dv-resizing {
 	align-items: center;
 	gap: 3px;
 	justify-content: flex-end;
-	font-size: 0.7rem;
-	color: var(--text-faint);
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.55);
 }
 
 .sbd-heatmap-legend .sbd-heatmap-cell {
-	width: 11px;
-	height: 11px;
+	width: 9px;
+	height: 9px;
 	aspect-ratio: auto;
-}
-
-.sbd-heatmap-legend .sbd-heatmap-cell::before {
-	font-size: 9px;
 }
 
 .sbd-heatmap-legend-label {
@@ -9681,7 +10028,9 @@ body.sbd-dv-resizing {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
+	/* The reference pushes the caption to the top and the sprite to the
+	 * bottom, so the pet has the card's whole height to live in. */
+	justify-content: space-between;
 	gap: 2px;
 	height: 100%;
 	min-height: 0;
@@ -9729,23 +10078,41 @@ body.sbd-dv-resizing {
 	transform-origin: 50% 100%;
 }
 
-.sbd-pet-name {
-	margin-top: 4px;
-	font-weight: 600;
-	font-size: 0.9rem;
-	color: var(--text-normal);
+/* The reference's caption is one tracked-out mono line ("MOOD · CHIPPER").
+ * The name and the mood are its two halves, laid out on one row with the
+ * reference's own separator between them. */
+.sbd-pet-caption {
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 0 6px;
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	letter-spacing: var(--sbd-label-tracking);
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
 	line-height: 1.2;
+}
+
+.sbd-pet-name {
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-pet-name:not(:empty) + .sbd-pet-mood::before {
+	content: "· ";
 }
 
 .sbd-pet-mood {
-	font-size: 0.78rem;
-	color: var(--text-muted);
-	line-height: 1.2;
+	color: rgba(255, 255, 255, 0.6);
 }
 
 .sbd-pet-activity {
-	font-size: 0.7rem;
-	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.6875rem;
+	letter-spacing: var(--sbd-label-tracking-tight);
+	color: rgba(255, 255, 255, 0.45);
 	line-height: 1.2;
 }
 

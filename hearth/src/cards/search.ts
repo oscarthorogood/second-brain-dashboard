@@ -69,7 +69,9 @@ export function renderSavedSearch(view: HomeView, card: DashboardCard, body: HTM
 
 
 function renderQueryList(view: HomeView, body: HTMLElement, list: QueryHit[]): void {
-	const el = body.createDiv("sbd-list");
+	// Widget Set → SEARCH/QUERY makes every result its own near-opaque sheet
+	// card with dark text, rather than a bare row on the card's glass.
+	const el = body.createDiv("sbd-list is-sheet");
 	const icons = fileIconOptions(view.plugin.settings);
 	for (const hit of list) {
 		const row = el.createDiv("sbd-list-item");

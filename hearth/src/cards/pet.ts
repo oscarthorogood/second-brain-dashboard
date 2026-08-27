@@ -757,9 +757,14 @@ export function renderPet(
 	wrap.style.setProperty("--sbd-pet-light", palette.light);
 	wrap.style.setProperty("--sbd-pet-accent", palette.accent);
 
+	// Widget Set → PET heads the card with a tracked-out mono caption naming
+	// the mood ("MOOD · CHIPPER") and gives the sprite the rest of the room.
+	// The name and the activity read as that same caption's neighbours, so
+	// the three sit together above the stage rather than stacked under it.
+	const caption = wrap.createDiv("sbd-pet-caption");
+	const name = caption.createDiv("sbd-pet-name");
+	const moodEl = caption.createDiv("sbd-pet-mood");
 	const stage = wrap.createDiv("sbd-pet-stage");
-	const name = wrap.createDiv("sbd-pet-name");
-	const moodEl = wrap.createDiv("sbd-pet-mood");
 	const activity = wrap.createDiv("sbd-pet-activity");
 
 	/** Re-derive everything from the vault and repaint. Cheap enough to run on
