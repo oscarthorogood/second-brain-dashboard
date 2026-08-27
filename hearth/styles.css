@@ -160,6 +160,13 @@
 	 * the accent is white on this board, and a white star on a white-tinted
 	 * row would vanish. */
 	--sbd-star: #f4c53c;
+	/* The near-opaque white sheet: the reference's top tier, used where a
+	 * surface has to carry DARK text on the glass — a primary action, a
+	 * rendered note body, a calculator's operator keys. Distinct from
+	 * --sbd-chip-fill (0.82), which is a small badge rather than a sheet. */
+	--sbd-sheet-fill: rgba(255, 255, 255, 0.9);
+	--sbd-sheet-fill-hover: #ffffff;
+	--sbd-sheet-fill-active: #e4e7ea;
 
 	--sbd-track-fill: rgba(255, 255, 255, 0.28);
 	--sbd-track-pill-fill: rgba(255, 255, 255, 0.9);
@@ -269,8 +276,14 @@ body.theme-dark {
 	 * on every card); the card's inset highlights (see --sbd-card-lift) layer
 	 * the extra top/bottom grade on top of this flat rim colour. */
 	--background-modifier-border: var(--sbd-glass-card-border);
-	--background-modifier-hover: rgba(120, 120, 128, 0.24);
-	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
+	/* Every tint in the reference is WHITE at some alpha — that is what makes
+	 * a surface read as lit glass rather than as a smudge on it. A grey wash
+	 * (rgba(120,120,128,…), which these were) darkens the card instead of
+	 * lifting it, and it is the fill behind most hovers, chips and small
+	 * panels on the board — so these two carry a large share of how the
+	 * widgets read. */
+	--background-modifier-hover: rgba(255, 255, 255, 0.2);
+	--background-modifier-active-hover: rgba(255, 255, 255, 0.3);
 	/* All white, differentiated by opacity rather than by shifting toward grey —
 	 * a grey-toned muted/faint read as unreadable low-contrast smudges over a
 	 * busy or light wallpaper. White at full/high/medium opacity keeps every
@@ -922,29 +935,36 @@ body.theme-dark {
 	width: 100%;
 }
 
+/* Widget Set → SEARCHBAR draws its chips rimless and 11px round: the glass
+ * panel tier at rest, the near-solid sheet with dark wording when the filter
+ * is on. The opaque grey square with a rim read as a disabled button. */
 .sbd-filter {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	width: 38px;
 	height: 38px;
-	border-radius: 12px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
-	color: var(--text-muted);
+	border-radius: 11px;
+	border: none;
+	background: var(--sbd-panel-tier-fill);
+	color: rgba(255, 255, 255, 0.85);
+	font-weight: 600;
 	cursor: pointer;
-	transition: all 120ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-filter:hover {
-	color: var(--text-normal);
-	border-color: var(--interactive-accent);
+	color: #ffffff;
+	background: var(--sbd-panel-tier-fill-hover);
 }
 
 .sbd-filter.is-active {
-	color: var(--text-on-accent);
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
+	color: var(--sbd-ink);
+	background: var(--sbd-sheet-fill);
+}
+
+.sbd-filter.is-active:hover {
+	background: var(--sbd-sheet-fill-hover);
 }
 
 .sbd-filter-icon {
@@ -2997,28 +3017,35 @@ body.theme-dark {
 	overflow: hidden;
 }
 
+/* Widget Set → CALCULATOR draws the expression as plain right-aligned mono
+ * text over the result, not as a boxed field: a framed input inside a glass
+ * card reads as a cut-out. The element is still an <input> — it just stops
+ * painting itself. */
 .sbd-calc-input {
 	width: 100%;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-family: var(--font-monospace);
-	font-size: 1rem;
-	padding: 8px 10px;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	color: rgba(255, 255, 255, 0.66);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.9375rem;
+	text-align: right;
+	padding: 0;
 	outline: none;
 }
 
-.sbd-calc-input:focus {
-	border-color: var(--interactive-accent);
+.sbd-view .sbd-calc-input:focus {
+	box-shadow: none;
+	border: none;
 }
 
 .sbd-calc-result {
-	font-size: clamp(1.4rem, 4.5vw, 2rem);
-	font-weight: 700;
+	font-size: clamp(1.4rem, 4.5vw, 2.375rem);
+	font-weight: 600;
 	line-height: 1.15;
-	color: var(--text-normal);
-	letter-spacing: -0.01em;
+	color: rgba(255, 255, 255, 0.98);
+	letter-spacing: -0.026em;
+	text-align: right;
 	word-break: break-word;
 	min-height: 1.2em;
 }
@@ -3042,7 +3069,7 @@ body.theme-dark {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-auto-rows: minmax(32px, 1fr);
-	gap: 4px;
+	gap: 9px;
 }
 
 .sbd-calc-keys.is-hidden {
@@ -3060,39 +3087,59 @@ body.theme-dark {
 	align-items: center;
 	justify-content: center;
 	padding: 4px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-family: var(--font-monospace);
-	font-size: 0.95rem;
+	/* Three tiers, exactly as the reference weights the pad: a digit at white
+	 * 24%, a function key one step back at 14%, and an operator on the
+	 * near-opaque sheet with dark text. Rimless — the fill alone separates
+	 * them, and a rim on twenty keys reads as graph paper. */
+	border: none;
+	border-radius: 15px;
+	background: rgba(255, 255, 255, 0.24);
+	color: rgba(255, 255, 255, 0.95);
+	font-family: var(--sbd-font-family);
+	font-size: 1.125rem;
+	font-weight: 600;
 	cursor: pointer;
-	transition: background 0.1s ease;
+	transition:
+		background 100ms ease,
+		transform 100ms ease;
 }
 
 .sbd-calc-key:hover {
-	background: var(--background-modifier-hover);
+	background: rgba(255, 255, 255, 0.34);
+}
+
+.sbd-calc-key:active {
+	transform: var(--sbd-press);
 }
 
 .sbd-calc-key.is-op {
-	color: var(--interactive-accent);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-ink);
 	font-weight: 600;
 }
 
+.sbd-calc-key.is-op:hover {
+	background: var(--sbd-sheet-fill-hover);
+}
+
 .sbd-calc-key.is-fn {
-	font-size: 0.82rem;
-	color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.14);
+	font-size: 0.9375rem;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.sbd-calc-key.is-fn:hover {
+	background: rgba(255, 255, 255, 0.24);
 }
 
 .sbd-calc-key.is-eq {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-ink);
 	font-weight: 700;
 }
 
 .sbd-calc-key.is-eq:hover {
-	background: var(--interactive-accent-hover);
+	background: var(--sbd-sheet-fill-hover);
 }
 
 /* Links / launchpad */
@@ -5880,8 +5927,12 @@ body.theme-dark {
 	padding: 1px 4px;
 	border-radius: 7px;
 	border-left: 3px solid var(--ev-color, var(--interactive-accent));
-	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 22%, var(--background-primary));
-	color: var(--text-normal);
+	/* The reference paints an event block in its own colour at full strength
+	 * with white text on it. Mixing into --background-primary — the board's
+	 * opaque #a2a2a7 — desaturated every event to the same grey, which is
+	 * exactly what the colour is there to prevent. */
+	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 82%, transparent);
+	color: #ffffff;
 	font-size: 0.7rem;
 	line-height: 1.3;
 	overflow: hidden;
@@ -5910,7 +5961,7 @@ body.theme-dark {
 }
 
 .sbd-sched-block:hover {
-	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 36%, var(--background-primary));
+	background: color-mix(in srgb, var(--ev-color, var(--interactive-accent)) 95%, transparent);
 	z-index: 2;
 }
 
@@ -6031,54 +6082,74 @@ body.theme-dark {
  * bold value, and a plain caption underneath — matching the reference's
  * steps/calories/distance tile group (no per-tile box, just centred columns
  * sharing the card's own glass surface). */
+/* Widget Set → STATS: each figure gets its own glass panel, and the panels
+ * fill the card rather than floating in the middle of it. */
 .sbd-stats {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 14px;
 	height: 100%;
-	align-content: center;
 }
 
+/* Left-aligned, value over label, vertically centred in its tile — the
+ * reference stacks them against the tile's leading edge rather than
+ * centring the block, so a row of tiles shares one reading edge. */
 .sbd-stat {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: center;
-	gap: 8px;
-	text-align: center;
-	padding: 4px;
+	gap: 5px;
+	text-align: left;
+	padding: 16px;
+	border-radius: var(--sbd-radius-tile);
+	background: var(--sbd-panel-tier-fill);
 }
 
-/* The round glass badge behind the glyph, like the reference tile's icon
- * chip: a soft translucent circle rather than a bare corner glyph. */
+/* The reference's stat tile carries no glyph at all — the figure is the
+ * subject, and a 44px badge above it competed with the number for the
+ * tile's whole height. Kept in the DOM, drawn small and quiet beside the
+ * label rather than removed, so a stat still names its kind. */
 .sbd-stat-icon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: var(--sbd-badge-fill);
-	color: var(--text-normal);
+	width: 15px;
+	height: 15px;
+	background: none;
+	color: rgba(255, 255, 255, 0.7);
 }
 
 .sbd-stat-icon .svg-icon {
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 }
 
 .sbd-stat-value {
-	font-size: 1.7rem;
+	font-size: 1.75rem;
 	font-weight: 700;
 	line-height: 1.15;
-	color: var(--text-normal);
+	letter-spacing: -0.02em;
+	color: rgba(255, 255, 255, 0.98);
 }
 
 .sbd-stat-label {
-	font-size: 0.78rem;
-	font-weight: 500;
-	color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	max-width: 100%;
+	font-size: 0.8125rem;
+	font-weight: 400;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.sbd-stat-label-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* ---- Toolbar -------------------------------------------------------- */
@@ -6243,6 +6314,8 @@ body.theme-dark {
 	padding: 12px 24px calc(env(safe-area-inset-bottom, 0px) + 12px);
 }
 
+/* The mobile action bar floats directly on the wallpaper, so it takes the
+ * toolbar's glass-pill vocabulary rather than the board's opaque grey. */
 .sbd-mobile-action {
 	display: flex;
 	align-items: center;
@@ -6250,8 +6323,10 @@ body.theme-dark {
 	height: 48px;
 	padding: 0 16px;
 	border-radius: 14px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
+	border: 1px solid var(--sbd-btn-glass-border);
+	background: var(--sbd-btn-glass-fill);
+	backdrop-filter: var(--sbd-btn-glass-blur);
+	-webkit-backdrop-filter: var(--sbd-btn-glass-blur);
 	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.92rem;
@@ -6462,13 +6537,16 @@ body.theme-dark {
 		var(--sbd-card-radius, 42px) 0 0;
 }
 
+/* Sits inside the arrange-mode header, which is already a glass panel — a
+ * solid grey field inside it read as a hole. The quiet control tier is the
+ * reference's own answer for a field resting on a panel. */
 .sbd-card-title-input {
 	flex: 1;
 	min-width: 0;
 	padding: 4px 8px;
 	border-radius: 9px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
+	border: 1px solid var(--sbd-control-border-quiet);
+	background: var(--sbd-control-fill-quiet);
 	color: var(--text-normal);
 	font-weight: 600;
 	font-size: 0.9rem;
@@ -6876,12 +6954,15 @@ body.theme-dark {
 	gap: 6px;
 }
 
+/* Inside a task column, which is itself a glass panel on the card — so the
+ * field is the quiet control tier, not another opaque slab. */
 .sbd-kanban-add-input {
 	width: 100%;
 	resize: none;
 	border-radius: 8px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
+	border: 1px solid var(--sbd-control-border-quiet);
+	background: var(--sbd-control-fill-quiet);
+	color: var(--text-normal);
 	padding: 6px 8px;
 	font-size: 0.85rem;
 	font-family: inherit;
@@ -7546,9 +7627,12 @@ body.sbd-dv-resizing {
 	color: var(--text-normal);
 }
 
+/* The selected segment of a switcher is the reference's track pill: a
+ * near-white inset carrying dark wording, the same shape the card-settings
+ * tab switcher uses. */
 .sbd-embed-switch-btn.is-active {
-	background: var(--background-primary);
-	color: var(--text-normal);
+	background: var(--sbd-track-pill-fill);
+	color: var(--sbd-ink);
 	box-shadow: var(--sbd-shadow-s);
 }
 
@@ -7896,7 +7980,9 @@ body.sbd-dv-resizing {
 	height: 26px;
 	padding: 0;
 	border-radius: 8px;
-	background: var(--background-secondary);
+	/* Floats over the embedded page, so it takes the round icon-chip material
+	 * every other floating control on the board uses. */
+	background: var(--sbd-icon-btn-fill);
 	opacity: 0;
 	transition: opacity 0.15s ease;
 	cursor: pointer;
@@ -7916,7 +8002,9 @@ body.sbd-dv-resizing {
 	gap: 10px;
 	text-align: center;
 	padding: 16px;
-	background: var(--background-primary);
+	/* Fills the whole card when a page won't load. The card's own glass
+	 * surface shows through rather than an opaque grey panel replacing it. */
+	background: var(--sbd-panel-tier-fill);
 }
 
 /* ---- Task priority indicator ---------------------------------------- */
@@ -8872,13 +8960,15 @@ body.sbd-dv-resizing {
 	position: relative;
 }
 
+/* A chip on the card's glass, so it takes the panel tier rather than the
+ * board's opaque grey — the same treatment as the search filter chips. */
 .sbd-jira-filter > summary {
 	list-style: none;
 	padding: 4px 9px;
-	border: 1px solid var(--background-modifier-border);
+	border: none;
 	border-radius: 999px;
-	color: var(--text-muted);
-	background: var(--background-primary-alt);
+	color: rgba(255, 255, 255, 0.85);
+	background: var(--sbd-panel-tier-fill);
 	font-size: 0.75rem;
 	cursor: pointer;
 	user-select: none;
@@ -8911,28 +9001,37 @@ body.sbd-dv-resizing {
 	max-height: 240px;
 	overflow-y: auto;
 	padding: 6px;
-	border: 1px solid var(--background-modifier-border);
+	border: 1px solid var(--sbd-panel-border);
 	border-radius: 12px;
-	background: var(--background-primary);
+	/* Floats above the card, so it is a panel — the same material the picker
+	 * and card-settings sheets use — not the board's opaque grey. */
+	background: var(--sbd-panel-fill);
+	backdrop-filter: var(--sbd-panel-blur);
+	-webkit-backdrop-filter: var(--sbd-panel-blur);
+	box-shadow: var(--sbd-panel-shadow);
+	color: var(--sbd-ink);
 	box-shadow: var(--shadow-s);
 }
 
+/* Sticky inside the menu, so it has to occlude the rows scrolling under it.
+ * That means an opaque fill is correct here — but the menu is a light panel,
+ * so it is white rather than the board's grey. */
 .sbd-jira-filter-search {
 	position: sticky;
 	z-index: 1;
 	top: -6px;
 	padding: 6px 0;
-	background: var(--background-primary);
+	background: #ffffff;
 }
 
 .sbd-jira-filter-search input {
 	width: 100%;
 	height: 30px;
 	padding: 4px 8px;
-	border: 1px solid var(--background-modifier-border);
+	border: 1px solid var(--sbd-control-border);
 	border-radius: 8px;
-	background: var(--background-primary-alt);
-	color: var(--text-normal);
+	background: var(--sbd-control-fill);
+	color: var(--sbd-ink);
 	font-size: 0.8rem;
 }
 
@@ -9173,22 +9272,27 @@ body.sbd-dv-resizing {
 	flex: 0 0 auto;
 }
 
+/* Widget Set → GIT heads the card with a bare glyph, the branch name and its
+ * ahead/behind counts — no pill. On near-clear glass a bordered grey capsule
+ * was the loudest thing in the card. */
 .sbd-git-branch {
 	display: inline-flex;
 	align-items: center;
-	gap: 5px;
+	gap: 10px;
 	max-width: 100%;
-	padding: 3px 9px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 999px;
-	background: var(--background-primary-alt);
-	color: var(--text-normal);
-	font-size: 0.8rem;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+	background: none;
+	color: rgba(255, 255, 255, 0.96);
+	font-size: 1rem;
+	font-weight: 600;
 	cursor: pointer;
+	transition: color 120ms ease;
 }
 
 .sbd-git-branch:hover {
-	border-color: var(--interactive-accent);
+	color: #ffffff;
 }
 
 .sbd-git-branch:focus-visible,
@@ -9201,16 +9305,24 @@ body.sbd-dv-resizing {
 
 .sbd-git-branch-icon {
 	display: flex;
-	color: var(--text-muted);
+	color: rgba(255, 255, 255, 0.9);
 	flex-shrink: 0;
 }
 
+.sbd-git-branch-icon .svg-icon {
+	width: 17px;
+	height: 17px;
+}
+
+/* The reference sets the branch name in the body face, not mono — mono is
+ * reserved there for the file paths below it and for micro-labels. */
 .sbd-git-branch-name {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-family: var(--font-monospace);
-	font-size: 0.75rem;
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 600;
 }
 
 .sbd-git-chips {
@@ -9316,26 +9428,35 @@ body.sbd-dv-resizing {
 	flex: 0 0 auto;
 }
 
+/* The reference's git actions are the sheet tier: a near-solid white button
+ * with dark bold wording, which is what makes "Commit & push" read as the
+ * card's action rather than as another row of metadata. */
 .sbd-git-action {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	height: 30px;
-	min-width: 30px;
-	padding: 0 8px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 9px;
-	background: var(--background-primary-alt);
-	color: var(--text-normal);
-	font-size: 0.78rem;
+	height: 44px;
+	min-width: 44px;
+	padding: 0 14px;
+	border: none;
+	border-radius: var(--sbd-radius-field);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-ink);
+	font-size: 0.875rem;
+	font-weight: 700;
 	cursor: pointer;
 	box-shadow: none;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-git-action:hover:not(:disabled) {
-	background: var(--background-modifier-hover);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-sheet-fill-hover);
+}
+
+.sbd-git-action:active:not(:disabled) {
+	background: var(--sbd-sheet-fill-active);
+	transform: var(--sbd-press);
 }
 
 .sbd-git-action:disabled {

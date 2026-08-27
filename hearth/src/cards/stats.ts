@@ -103,9 +103,14 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 
 function addStat(grid: HTMLElement, icon: string, value: number, label: string): void {
 	const cell = grid.createDiv("sbd-stat");
-	setIcon(cell.createDiv("sbd-stat-icon"), icon);
+	// Widget Set → STATS puts the figure first and the wording under it. The
+	// glyph moves inside that label row rather than sitting above the value:
+	// as its own line it took a third of the tile's height and competed with
+	// the number the tile exists to show.
 	cell.createDiv({ cls: "sbd-stat-value", text: String(value) });
-	cell.createDiv({ cls: "sbd-stat-label", text: label });
+	const row = cell.createDiv("sbd-stat-label");
+	setIcon(row.createDiv("sbd-stat-icon"), icon);
+	row.createSpan({ cls: "sbd-stat-label-text", text: label });
 }
 
 
