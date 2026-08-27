@@ -803,6 +803,18 @@ function resolveGridRadius(gridEl: HTMLElement): number {
 	return Number.isFinite(n) && n >= 0 ? n : CARD_RADIUS_FALLBACK;
 }
 
+/** Resolve the backdrop dimming factor from --sbd-glass-dim, so the shared
+ *  frost layer and every other glass surface (which read the token through
+ *  --sbd-glass-blur) darken by the same amount. Falls back to 1 — the
+ *  reference's literal, undimmed material — if the token is missing or
+ *  unparseable, which is the safe direction: too little dimming looks like
+ *  the artboard, too much looks like a slab. */
+function resolveGlassDim(gridEl: HTMLElement): number {
+	const raw = getComputedStyle(gridEl).getPropertyValue("--sbd-glass-dim");
+	const n = parseFloat(raw);
+	return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
 /** SVG path for one card's border-box silhouette, rounding each corner to
  *  `radius` unless that corner is merged flat. A zero-radius elliptical arc
  *  renders as a straight line to its endpoint, so all four arcs are always
@@ -863,6 +875,7 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 	const w = gridEl.clientWidth;
 	const h = gridEl.clientHeight;
 	const radius = resolveGridRadius(gridEl);
+	const dim = resolveGlassDim(gridEl);
 	const seen = new Set<string>();
 	for (const [blur, group] of byBlur) {
 		seen.add(blur);
@@ -876,8 +889,11 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 		// saturate(120%) rides along with the blur, matching the reference's
 		// backdrop-filter exactly (blur(18px) saturate(120%)); the layer used to
 		// blur without it, leaving card interiors a shade flatter than the
-		// artboard's.
-		const filter = `blur(${blur}px) saturate(120%)`;
+		// artboard's. brightness() carries --sbd-glass-dim (see styles.css):
+		// it pulls a bright wallpaper down far enough for white text to hold,
+		// and being a multiplier it keeps the backdrop's own colour rather
+		// than covering it.
+		const filter = `blur(${blur}px) saturate(120%) brightness(${dim})`;
 		layer.style.setProperty("backdrop-filter", filter);
 		layer.style.setProperty("-webkit-backdrop-filter", filter);
 		const paths = group
