@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./image-slot.js"></script>
+<style>
+  body { margin:0; }
+  * { box-sizing:border-box; }
+  a { color:#2f8ff0; text-decoration:none; }
+  a:hover { color:#1c6fcc; }
+</style>
+</helmet>
+<div style="position:relative; min-height:100vh; width:100%; background:#c9ccb0; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif; padding:80px 80px 120px; display:flex; flex-direction:column; gap:64px;">
+
+  <div style="display:flex; flex-direction:column; gap:10px; max-width:900px;">
+    <div style="font-size:34px; font-weight:600; color:#23272b; letter-spacing:-0.4px;">Canvas board controls</div>
+    <div style="font-size:17px; color:#565d64; line-height:1.5;">Toolbar, card actions and the add-card picker, rebuilt in the same glass-and-monospace-label vocabulary as the dashboard widgets.</div>
+  </div>
+
+  <!-- ===================== TOOLBAR ===================== -->
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:#7c8389;">TOOLBAR</span>
+    <div style="position:relative; width:720px; height:190px; border-radius:28px; overflow:hidden;">
+      <image-slot id="toolbar-bg" shape="rect" placeholder="canvas board background" style="position:absolute; inset:0;"></image-slot>
+      <div style="position:absolute; top:20px; right:20px; display:flex; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:11px 18px 11px 16px; border-radius:20px; background:rgba(255,255,255,0.30); backdrop-filter:blur(10px) saturate(140%); -webkit-backdrop-filter:blur(10px) saturate(140%); border:1px solid rgba(255,255,255,0.5); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.44);" style-active="background:rgba(255,255,255,0.22); transform:scale(0.96);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          <span style="font-size:15px; font-weight:600; color:#ffffff;">Add card</span>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:8px; padding:11px 18px; border-radius:20px; background:rgba(255,255,255,0.94); box-shadow:0 2px 8px rgba(0,0,0,0.12); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.16);" style-active="background:#eceef0; transform:scale(0.96);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#3b4148" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>
+          <span style="font-size:15px; font-weight:600; color:#2a2e33;">Done arranging</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:56px; flex-wrap:wrap; align-items:flex-start;">
+
+    <!-- ===================== DRAG HANDLE ===================== -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:#7c8389;">MOVE HANDLE</span>
+      <div style="position:relative; width:220px; height:220px; border-radius:24px; overflow:hidden;">
+        <image-slot id="handle-bg" shape="rect" placeholder="card surface" style="position:absolute; inset:0;"></image-slot>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:10px;">
+          <div style="width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.34); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,0.15); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.5);" style-active="background:rgba(255,255,255,0.24); transform:scale(0.92);">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18M3 12h18"></path>
+              <path d="M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l3 3"></path>
+            </svg>
+          </div>
+          <div style="width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.34); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,0.15); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.5);" style-active="background:rgba(255,255,255,0.24); transform:scale(0.92);">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 13a7.5 7.5 0 000-2l2-1.5-2-3.4-2.3.9a7.5 7.5 0 00-1.7-1l-.3-2.4h-4l-.3 2.4a7.5 7.5 0 00-1.7 1l-2.3-.9-2 3.4L6.6 11a7.5 7.5 0 000 2l-2 1.5 2 3.4 2.3-.9a7.5 7.5 0 001.7 1l.3 2.4h4l.3-2.4a7.5 7.5 0 001.7-1l2.3.9 2-3.4z"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== CARD HEADER ACTIONS ===================== -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:#7c8389;">CARD HEADER · HOVER</span>
+      <div style="position:relative; width:420px; height:220px; border-radius:24px; overflow:hidden; background:rgba(255,255,255,0.9); box-shadow:0 8px 24px rgba(0,0,0,0.1); padding:20px 22px; display:flex; flex-direction:column; gap:10px;">
+        <span style="font-size:17px; font-weight:700; color:#23272b;">Atlas — map of content</span>
+        <span style="font-size:13px; color:#8b9198; line-height:1.4;">Projects/Atlas MOC.md</span>
+        <div style="position:absolute; top:14px; right:14px; display:flex; gap:8px;">
+          <div style="width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(0,0,0,0.12);" style-active="background:rgba(0,0,0,0.18); transform:scale(0.9);">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5d646b" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="M6 8v8M12 4v6M12 14v6M18 4v12"></path></svg>
+          </div>
+          <div style="width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(0,0,0,0.12);" style-active="background:rgba(0,0,0,0.18); transform:scale(0.9);">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5d646b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>
+          </div>
+        </div>
+        <div style="position:absolute; top:54px; right:14px; max-width:220px; padding:11px 16px; border-radius:14px; background:#ffffff; box-shadow:0 6px 18px rgba(0,0,0,0.22);">
+          <div style="position:absolute; top:-6px; right:34px; width:12px; height:12px; background:#ffffff; transform:rotate(45deg); box-shadow:-2px -2px 4px rgba(0,0,0,0.04);"></div>
+          <span style="font-size:14px; font-weight:600; color:#23272b; white-space:nowrap;">Hide card headers</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== ADD A CARD MODAL ===================== -->
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:#7c8389;">ADD A CARD</span>
+    <div style="width:920px; max-width:100%; border-radius:36px; background:rgba(255,255,255,0.60); backdrop-filter:blur(24px) saturate(150%); -webkit-backdrop-filter:blur(24px) saturate(150%); border:1px solid rgba(255,255,255,0.7); box-shadow:0 20px 60px rgba(0,0,0,0.22); overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:26px 30px 18px;">
+        <span style="font-size:26px; font-weight:700; color:#20242a;">Add a card</span>
+        <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.55); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.85);" style-active="background:rgba(255,255,255,0.4); transform:scale(0.9);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5d646b" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+        </div>
+      </div>
+      <div style="padding:0 30px 22px;">
+        <div style="display:flex; align-items:center; gap:12px; height:46px; border-radius:14px; background:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.6); padding:0 16px;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#8b9198" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5L21 21"></path></svg>
+          <span style="font-size:15px; color:#9199a0;">Search cards…</span>
+        </div>
+      </div>
+      <div style="display:flex; border-top:1px solid rgba(255,255,255,0.5);">
+        <div style="width:220px; padding:18px 12px; display:flex; flex-direction:column; gap:2px; border-right:1px solid rgba(255,255,255,0.5);">
+          <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7">
+            <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; background:{{ n.bg }}; cursor:pointer; transition:background 0.15s;" style-hover="background:#eef1f4;" style-active="background:#e4e7ea;">
+              <span style="font-size:15px; opacity:0.75;">{{ n.glyph }}</span>
+              <span style="font-size:14px; font-weight:{{ n.weight }}; color:{{ n.fg }};">{{ n.label }}</span>
+            </div>
+          </sc-for>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.5); display:flex; align-items:center; gap:11px; padding-left:12px; border-radius:10px; padding-block:8px; cursor:pointer; transition:background 0.15s;" style-hover="background:#eef1f4;" style-active="background:#e4e7ea;">
+            <span style="font-size:15px; opacity:0.7;">✏️</span>
+            <span style="font-size:14px; color:#565d64;">Request a card</span>
+          </div>
+        </div>
+        <div style="flex:1; padding:22px 26px; display:flex; flex-direction:column; gap:22px; max-height:480px; overflow:hidden;">
+          <sc-for list="{{ cardSections }}" as="sec" hint-placeholder-count="3">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <span style="font-size:12px; letter-spacing:1.2px; font-weight:700; color:#9199a0;">{{ sec.title }}</span>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <sc-for list="{{ sec.items }}" as="c" hint-placeholder-count="4">
+                  <div style="border-radius:18px; border:1px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.30); padding:14px 16px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.55); border-color:rgba(255,255,255,0.8);" style-active="background:rgba(255,255,255,0.7); transform:scale(0.98);">
+                    <span style="font-size:17px;">{{ c.glyph }}</span>
+                    <span style="font-size:15px; font-weight:700; color:#20242a;">{{ c.label }}</span>
+                    <span style="font-size:13px; color:#8b9198; line-height:1.35;">{{ c.desc }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CARD SETTINGS MODAL ===================== -->
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:#7c8389;">CARD SETTINGS</span>
+    <div style="width:640px; max-width:100%; border-radius:36px; background:rgba(255,255,255,0.60); backdrop-filter:blur(24px) saturate(150%); -webkit-backdrop-filter:blur(24px) saturate(150%); border:1px solid rgba(255,255,255,0.7); box-shadow:0 20px 60px rgba(0,0,0,0.22); overflow:hidden; display:flex; flex-direction:column; padding:26px 30px 30px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:26px; font-weight:700; color:#20242a;">Card settings</span>
+        <div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.55); cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:rgba(255,255,255,0.85);" style-active="background:rgba(255,255,255,0.4); transform:scale(0.9);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5d646b" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:18px; background:rgba(255,255,255,0.28); border-radius:16px; padding:4px; width:fit-content;">
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:12px; background:rgba(255,255,255,0.9); cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#3b4148" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"></path></svg>
+          <span style="font-size:14px; font-weight:600; color:#23272b;">Content</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:12px; cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.5);" style-active="background:rgba(255,255,255,0.7);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#565d64" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+          <span style="font-size:14px; font-weight:600; color:#565d64;">Layout</span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; margin-top:6px;">
+        <sc-for list="{{ settingsRows }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:20px 0; border-bottom:1px solid rgba(255,255,255,0.5);">
+            <div style="display:flex; flex-direction:column; gap:3px; max-width:380px;">
+              <span style="font-size:15px; font-weight:700; color:#23272b;">{{ r.label }}</span>
+              <span style="font-size:13px; color:#8b9198; line-height:1.4;">{{ r.desc }}</span>
+            </div>
+            <sc-if value="{{ r.isSelect }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:none; display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:12px; background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.6); margin-top:2px; cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.8);" style-active="background:rgba(255,255,255,0.45);">
+                <span style="font-size:14px; color:#23272b;">{{ r.value }}</span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8b9198" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.isText }}" hint-placeholder-val="{{ false }}">
+              <div style="flex:none; width:170px; padding:9px 14px; border-radius:12px; background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); margin-top:2px;">
+                <span style="font-size:14px; color:#8b9198;">{{ r.value }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.isToggle }}" hint-placeholder-val="{{ false }}">
+              <div style="flex:none; width:44px; height:26px; border-radius:14px; background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); display:flex; align-items:center; padding:3px; margin-top:4px; cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.55);" style-active="background:rgba(255,255,255,0.25);">
+                <div style="width:20px; height:20px; border-radius:50%; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+        <sc-for list="{{ settingsSections }}" as="s" hint-placeholder-count="2">
+          <div style="display:flex; flex-direction:column; gap:10px; padding-top:14px; border-bottom:1px solid rgba(255,255,255,0.5); padding-bottom:16px;">
+            <span style="font-size:16px; font-weight:700; color:#20242a;">{{ s.title }}</span>
+            <span style="font-size:13px; color:#8b9198; line-height:1.45;">{{ s.body }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const navItems = [
+      { glyph: '▦', label: 'All cards', bg: '#eef1f4', weight: 700, fg: '#20242a' },
+      { glyph: '📄', label: 'Notes & files', bg: 'transparent', weight: 500, fg: '#3b4148' },
+      { glyph: '📅', label: 'Planning', bg: 'transparent', weight: 500, fg: '#3b4148' },
+      { glyph: '📊', label: 'Vault insight', bg: 'transparent', weight: 500, fg: '#3b4148' },
+      { glyph: '🔧', label: 'Tools', bg: 'transparent', weight: 500, fg: '#3b4148' },
+      { glyph: '🔌', label: 'Integrations', bg: 'transparent', weight: 500, fg: '#3b4148' },
+      { glyph: '✨', label: 'Fun', bg: 'transparent', weight: 500, fg: '#3b4148' },
+    ];
+
+    const cardSections = [
+      {
+        title: 'NOTES & FILES',
+        items: [
+          { glyph: '📄', label: 'Embedded note', desc: 'Any note, rendered live on the board' },
+          { glyph: '📅', label: 'Daily note (today)', desc: "Always today's note, created on first click" },
+          { glyph: '🖼', label: 'Embedded image', desc: 'A picture from the vault, edge to edge' },
+          { glyph: '🎞', label: 'Slideshow', desc: 'Pictures from a list or folder, rotated on a timer' },
+        ],
+      },
+      {
+        title: 'PLANNING',
+        items: [
+          { glyph: '☑️', label: 'Tasks', desc: 'Checkboxes from your vault, as a list or a board' },
+          { glyph: '📆', label: 'Calendar', desc: 'Month, week, day and list, with your events on them' },
+          { glyph: '🗓', label: 'Mini calendar', desc: 'A month at a glance, with your notes on it' },
+          { glyph: '🕒', label: 'Clock & greeting', desc: 'The time, the date and a greeting' },
+        ],
+      },
+    ];
+
+    const settingsRows = [
+      { label: 'Type', desc: 'What this card shows.', isSelect: true, value: 'Mini calendar' },
+      { label: 'Title', desc: "Shown in the card's header. Leave empty for a headerless card.", isText: true, value: 'Title' },
+      { label: 'Layout', desc: 'Month shows a grid; agenda lists upcoming days.', isSelect: true, value: 'Month grid' },
+      { label: 'Week numbers', desc: 'Show an ISO week-number column down the left edge.', isToggle: true },
+      { label: 'Heatmap', desc: 'Tint each day by note activity that day.', isToggle: true },
+    ];
+    const settingsSections = [
+      { title: 'TaskNotes', body: "TaskNotes isn't enabled in this vault. Install and enable it to use it as a calendar source." },
+      { title: 'External calendars', body: 'Subscribe to ICS/iCal feeds (Google, iCloud, Fastmail, Nextcloud…). Events appear as coloured dots on the grid and are listed in the agenda view.' },
+    ];
+
+    return { navItems, cardSections, settingsRows, settingsSections };
+  }
+}
+
+</script>
+</body>
+</html>

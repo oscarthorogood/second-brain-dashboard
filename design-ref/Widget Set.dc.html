@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yellowtail&display=swap"></link>
+<script src="./image-slot.js"></script>
+<style>
+  body { margin:0; }
+  * { box-sizing:border-box; }
+  a { color:#f2f6f9; text-decoration:none; }
+  a:hover { color:#ffffff; }
+</style>
+</helmet>
+<div style="position:relative; min-height:100vh; width:100%; overflow:hidden; background:#a9b8c4; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <div style="position:absolute; inset:-20%; background:linear-gradient(103deg, rgba(255,255,255,0) 8%, rgba(255,255,255,0.20) 20%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.16) 52%, rgba(255,255,255,0.02) 63%, rgba(255,255,255,0) 72%, rgba(255,255,255,0.12) 86%, rgba(255,255,255,0) 97%); filter:blur(26px); pointer-events:none;"></div>
+  <div style="position:absolute; inset:0; background:radial-gradient(120% 90% at 70% 0%, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 60%); pointer-events:none;"></div>
+
+  <div style="position:relative; display:flex; flex-direction:column; gap:74px; padding:80px 80px 120px;">
+
+    <div style="display:flex; flex-direction:column; gap:10px; max-width:900px;">
+      <div style="font-family:'Yellowtail',cursive; font-size:76px; color:rgba(255,255,255,0.66); line-height:1;">widgets</div>
+      <div style="font-size:19px; color:rgba(255,255,255,0.82); line-height:1.5;">Thirty cards for the Second Brain Dashboard, drawn in one glass vocabulary. Every tile shows its default state with real-looking vault content.</div>
+    </div>
+
+    <!-- ===================== NOTES & CONTENT ===================== -->
+    <div style="display:flex; flex-direction:column; gap:34px;">
+      <div style="display:flex; align-items:baseline; gap:16px;">
+        <div style="font-size:34px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-0.4px;">Notes &amp; content</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.62);">what the vault already holds</div>
+      </div>
+      <div style="display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- embed -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">EMBED</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Embed (note / image / base)</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px 28px; display:flex; flex-direction:column; gap:16px; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.7"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"></path><path d="M14 3v5h5"></path></svg>
+                <span style="font-size:16px; font-weight:500; color:rgba(255,255,255,0.95);">Projects/Atlas MOC.md</span>
+              </div>
+              <span style="background:rgba(255,255,255,0.42); border-radius:9px; padding:4px 10px; font-size:12px; font-weight:600; color:#4d565e; letter-spacing:0.4px;">LIVE</span>
+            </div>
+            <div style="flex:1; background:rgba(255,255,255,0.9); border-radius:20px; padding:18px 20px; display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:18px; font-weight:700; color:#23272b;">Atlas — map of content</div>
+              <sc-for list="{{ embedLines }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex; gap:9px; align-items:center;">
+                  <span style="width:5px; height:5px; border-radius:50%; background:#9aa1a8; flex:none;"></span>
+                  <span style="font-size:14px; color:#4b5157;">{{ l.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- slideshow -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">SLIDESHOW</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Slideshow</span>
+          </div>
+          <div style="position:relative; width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; overflow:hidden;">
+            <image-slot id="slideshow-photo" shape="rect" placeholder="Drop a vault photo here" style="position:absolute; inset:0;"></image-slot>
+            <div style="position:absolute; left:0; right:0; bottom:0; padding:22px 26px; display:flex; align-items:flex-end; justify-content:space-between; background:linear-gradient(to top, rgba(30,36,42,0.62), rgba(30,36,42,0));">
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span style="font-size:12px; letter-spacing:1.4px; color:rgba(255,255,255,0.72); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">ATTACHMENTS/TRIPS</span>
+                <span style="font-size:19px; font-weight:600; color:#ffffff;">Hokkaido, second morning</span>
+              </div>
+              <div style="display:flex; gap:7px; padding-bottom:6px;">
+                <sc-for list="{{ slideDots }}" as="d" hint-placeholder-count="5">
+                  <span style="width:7px; height:7px; border-radius:50%; background:#ffffff; opacity:{{ d.o }};"></span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- daily -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">DAILY</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Daily note (today)</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px 24px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="font-size:15px; color:rgba(255,255,255,0.72);">Wednesday</div>
+              <div style="font-size:64px; font-weight:600; color:rgba(255,255,255,0.98); line-height:1.05; letter-spacing:-2px;">26</div>
+              <div style="font-size:15px; color:rgba(255,255,255,0.72);">August 2026</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.20); border-radius:18px; padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
+              <span style="font-size:12px; color:rgba(255,255,255,0.7);">## Log</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.95); line-height:1.3;">Shipped the widget grid.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- text -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">TEXT</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Text / jot-down</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:22px; display:flex;">
+            <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:24px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+              <span style="font-size:12px; letter-spacing:1.4px; color:#9aa1a8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">JOT</span>
+              <div style="display:flex; flex-direction:column; gap:9px;">
+                <sc-for list="{{ jotLines }}" as="j" hint-placeholder-count="4">
+                  <span style="font-size:15px; color:#3b4147; line-height:1.3;">{{ j.text }}</span>
+                </sc-for>
+              </div>
+              <span style="width:1.5px; height:19px; background:#2f8ff0; margin-top:-2px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- web -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">WEB</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Web page (iframe)</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">sandboxed by default</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:20px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; gap:12px; padding:0 8px;">
+              <div style="flex:1; height:34px; border-radius:11px; background:rgba(255,255,255,0.42); display:flex; align-items:center; gap:9px; padding:0 14px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#586067" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2.5"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+                <span style="font-size:14px; color:#4d565e; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">status.obsidian.md</span>
+              </div>
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round"><path d="M20 11A8 8 0 105.6 6.6"></path><path d="M20 4v4h-4"></path></svg>
+              <span style="font-size:13px; color:rgba(255,255,255,0.72);">5 min</span>
+            </div>
+            <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:24px; padding:20px 22px; display:flex; flex-direction:column; gap:12px;">
+              <span style="font-size:17px; font-weight:700; color:#23272b;">All systems operational</span>
+              <sc-for list="{{ webRows }}" as="w" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="font-size:14px; color:#4b5157;">{{ w.name }}</span>
+                  <span style="display:flex; align-items:center; gap:7px;"><span style="width:7px; height:7px; border-radius:50%; background:#41bd3f;"></span><span style="font-size:13px; color:#7b8188;">{{ w.state }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== TIME & PLANNING ===================== -->
+    <div style="display:flex; flex-direction:column; gap:34px;">
+      <div style="display:flex; align-items:baseline; gap:16px;">
+        <div style="font-size:34px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-0.4px;">Time &amp; planning</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.62);">the day, the week, the work</div>
+      </div>
+      <div style="display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- clock -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">CLOCK</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Clock &amp; greeting</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;">
+            <sc-if value="{{ clockAnalog }}" hint-placeholder-val="{{ true }}">
+              <svg viewBox="0 0 120 120" width="124" height="124">
+                <circle cx="60" cy="60" r="55" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"></circle>
+                <sc-for list="{{ clockTicks }}" as="t" hint-placeholder-count="12">
+                  <rect x="59" y="10" width="2" height="8" rx="1" fill="rgba(255,255,255,0.7)" transform="{{ t.rot }}"></rect>
+                </sc-for>
+                <path d="M60 60 L60 32" stroke="#ffffff" stroke-width="4" stroke-linecap="round" transform="rotate(58 60 60)"></path>
+                <path d="M60 60 L60 22" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" transform="rotate(246 60 60)"></path>
+                <circle cx="60" cy="60" r="4" fill="#ffffff"></circle>
+              </svg>
+            </sc-if>
+            <sc-if value="{{ clockDigital }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:58px; font-weight:600; color:rgba(255,255,255,0.98); letter-spacing:-2px;">9:41</div>
+            </sc-if>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <span style="font-family:'Yellowtail',cursive; font-size:34px; color:rgba(255,255,255,0.72); line-height:1;">good evening</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.72); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:1px;">WED 26 AUG</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- calendar (mini) -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:340px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">CALENDAR</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Mini calendar</span>
+          </div>
+          <div style="width:340px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px 26px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:24px; font-weight:600; color:rgba(255,255,255,0.96);">August</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.66); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">2026</span>
+            </div>
+            <div style="display:grid; grid-template-columns:24px repeat(7,1fr); gap:5px; text-align:center; align-items:center;">
+              <div style="font-size:11px; color:rgba(255,255,255,0.45); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">W</div>
+              <sc-for list="{{ weekLabels }}" as="w" hint-placeholder-count="7">
+                <div style="font-size:13px; color:rgba(255,255,255,0.66);">{{ w.label }}</div>
+              </sc-for>
+              <sc-for list="{{ miniRows }}" as="row" hint-placeholder-count="5">
+                <div style="font-size:11px; color:rgba(255,255,255,0.42); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ row.wk }}</div>
+                <sc-for list="{{ row.days }}" as="c" hint-placeholder-count="7">
+                  <div style="height:29px; display:flex; align-items:center; justify-content:center;">
+                    <span style="width:29px; height:29px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; color:rgba(255,255,255,0.94); background:rgba(255,255,255,{{ c.heat }});">{{ c.day }}</span>
+                  </div>
+                </sc-for>
+              </sc-for>
+            </div>
+            <div style="border-top:1px dashed rgba(255,255,255,0.35); padding-top:14px; display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ miniAgenda }}" as="a" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="width:7px; height:7px; border-radius:50%; background:{{ a.color }}; flex:none;"></span>
+                  <span style="font-size:14px; color:rgba(255,255,255,0.94); flex:1;">{{ a.title }}</span>
+                  <span style="font-size:13px; color:rgba(255,255,255,0.62);">{{ a.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- schedule -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:780px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">SCHEDULE</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Calendar</span>
+            <span style="font-size:14px; color:rgba(255,255,255,0.6);">month · week · day · list</span>
+          </div>
+          <div style="width:780px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px 28px; display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:23px; font-weight:600; color:rgba(255,255,255,0.96);">24 – 30 August</span>
+              <div style="display:flex; gap:6px; background:rgba(255,255,255,0.18); border-radius:12px; padding:4px;">
+                <sc-for list="{{ scheduleViews }}" as="v" hint-placeholder-count="4">
+                  <span style="font-size:13px; font-weight:600; padding:6px 14px; border-radius:9px; color:{{ v.fg }}; background:{{ v.bg }}; cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.4);" style-active="background:rgba(255,255,255,0.2);">{{ v.label }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:1; min-height:0; display:flex; gap:8px;">
+              <div style="width:44px; display:flex; flex-direction:column; padding-top:34px; justify-content:space-between;">
+                <sc-for list="{{ hourLabels }}" as="h" hint-placeholder-count="5">
+                  <span style="font-size:12px; color:rgba(255,255,255,0.5); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ h.label }}</span>
+                </sc-for>
+              </div>
+              <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+                <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:2px; height:34px;">
+                    <span style="font-size:11px; letter-spacing:1px; color:rgba(255,255,255,0.6); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ d.dow }}</span>
+                    <span style="font-size:15px; font-weight:600; color:{{ d.numFg }};">{{ d.num }}</span>
+                  </div>
+                  <div style="flex:1; border-radius:16px; background:{{ d.colBg }}; padding:8px 6px; display:flex; flex-direction:column; gap:6px;">
+                    <sc-for list="{{ d.events }}" as="e" hint-placeholder-count="2">
+                      <div style="border-radius:11px; background:{{ e.bg }}; padding:7px 9px; display:flex; flex-direction:column; gap:2px; margin-top:{{ e.offset }};">
+                        <span style="font-size:11px; color:rgba(255,255,255,0.8); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ e.time }}</span>
+                        <span style="font-size:13px; font-weight:600; color:#ffffff; line-height:1.2;">{{ e.title }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- tasks -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">TASKS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Tasks</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">TaskNotes optional</span>
+          </div>
+          <div style="width:500px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px 24px; display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:22px; font-weight:600; color:rgba(255,255,255,0.96);">Open tasks</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.64);">#now · due ≤ 7d</span>
+            </div>
+            <sc-if value="{{ tasksKanban }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; display:flex; gap:11px;">
+                <sc-for list="{{ taskColumns }}" as="col" hint-placeholder-count="3">
+                  <div style="flex:1; min-width:0; min-height:0; overflow:hidden; background:rgba(255,255,255,0.14); border-radius:20px; padding:12px 10px; display:flex; flex-direction:column; gap:9px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:0 4px;">
+                      <span style="font-size:12px; letter-spacing:0.8px; font-weight:700; color:rgba(255,255,255,0.82); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ col.name }}</span>
+                      <span style="font-size:12px; color:rgba(255,255,255,0.6);">{{ col.count }}</span>
+                    </div>
+                    <sc-for list="{{ col.cards }}" as="t" hint-placeholder-count="3">
+                      <div style="background:rgba(255,255,255,0.92); border-radius:13px; padding:10px 11px; display:flex; flex-direction:column; gap:7px;">
+                        <span style="font-size:13px; font-weight:600; color:#23272b; line-height:1.25;">{{ t.title }}</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                          <span style="width:6px; height:6px; border-radius:50%; background:{{ t.color }}; flex:none;"></span>
+                          <span style="font-size:11px; color:#7b8188; font-weight:500;">{{ t.meta }}</span>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ tasksList }}" hint-placeholder-val="{{ false }}">
+              <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px;">
+                <sc-for list="{{ taskList }}" as="t" hint-placeholder-count="6">
+                  <div style="display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.9); border-radius:14px; padding:12px 16px;">
+                    <span style="width:18px; height:18px; border-radius:6px; border:1.6px solid #b3b9bf; flex:none;"></span>
+                    <span style="font-size:15px; font-weight:500; color:#23272b; flex:1;">{{ t.title }}</span>
+                    <span style="font-size:12px; font-weight:600; color:{{ t.color }};">{{ t.meta }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== NAVIGATION & ACTIONS ===================== -->
+    <div style="display:flex; flex-direction:column; gap:34px;">
+      <div style="display:flex; align-items:baseline; gap:16px;">
+        <div style="font-size:34px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-0.4px;">Navigation &amp; actions</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.62);">one tap to somewhere useful</div>
+      </div>
+
+      <!-- searchbar (full width) -->
+      <div style="display:flex; flex-direction:column; gap:11px; width:780px;">
+        <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">SEARCHBAR</span>
+          <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Search bar</span>
+          <span style="font-size:14px; color:rgba(255,255,255,0.6);">framed or seamless</span>
+        </div>
+        <div style="width:780px; height:108px; border-radius:34px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:0 26px; display:flex; align-items:center; gap:18px;">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5L21 21"></path></svg>
+          <span style="flex:1; font-size:22px; color:rgba(255,255,255,0.6);">Search the vault…</span>
+          <div style="display:flex; gap:8px;">
+            <sc-for list="{{ searchChips }}" as="c" hint-placeholder-count="4">
+              <span style="border-radius:11px; padding:8px 15px; font-size:14px; font-weight:600; color:{{ c.fg }}; background:{{ c.bg }};">{{ c.label }}</span>
+            </sc-for>
+          </div>
+          <span style="width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s, transform 0.1s;" style-hover="background:#ffffff; transform:scale(1.05);" style-active="background:#e4e7ea; transform:scale(0.94);">
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#33383d" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- links -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">LINKS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Links / launchpad</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:1fr; gap:14px;">
+            <sc-for list="{{ linkTiles }}" as="t" hint-placeholder-count="8">
+              <div style="border-radius:20px; background:rgba(255,255,255,{{ t.a }}); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding:8px; cursor:pointer; transition:transform 0.1s, background 0.15s;" style-hover="transform:scale(1.04);" style-active="transform:scale(0.95);">
+                <span style="font-size:24px;">{{ t.glyph }}</span>
+                <span style="font-size:12px; font-weight:600; color:{{ t.fg }}; text-align:center; line-height:1.15;">{{ t.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- commands -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">COMMANDS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Commands</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:22px; display:flex; flex-direction:column; gap:11px;">
+            <sc-for list="{{ commandItems }}" as="c" hint-placeholder-count="4">
+              <div style="flex:1; min-height:0; border-radius:18px; background:rgba(255,255,255,0.9); display:flex; align-items:center; gap:12px; padding:0 16px; cursor:pointer; transition:background 0.15s;" style-hover="background:#ffffff;" style-active="background:#e4e7ea;">
+                <span style="font-size:18px;">{{ c.glyph }}</span>
+                <span style="font-size:14px; font-weight:600; color:#23272b;">{{ c.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- templater -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">TEMPLATER</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">New note from template</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">Templater</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:12px;">
+            <sc-for list="{{ templateItems }}" as="t" hint-placeholder-count="3">
+              <div style="flex:1; min-height:0; border-radius:20px; background:rgba(255,255,255,0.9); display:flex; align-items:center; gap:15px; padding:0 20px; cursor:pointer; transition:background 0.15s;" style-hover="background:#ffffff;" style-active="background:#e4e7ea;">
+                <span style="width:40px; height:40px; border-radius:13px; background:{{ t.tint }}; display:flex; align-items:center; justify-content:center; font-size:19px; flex:none;">{{ t.glyph }}</span>
+                <div style="display:flex; flex-direction:column; gap:3px; flex:1;">
+                  <span style="font-size:16px; font-weight:600; color:#23272b;">{{ t.label }}</span>
+                  <span style="font-size:12px; color:#7b8188; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ t.path }}</span>
+                </div>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#a5abb1" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- bookmarks -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">BOOKMARKS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Bookmarks</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px 22px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; gap:9px;">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"><path d="M6 3h12v18l-6-4.5L6 21z"></path></svg>
+              <span style="font-size:17px; font-weight:600; color:rgba(255,255,255,0.96);">Bookmarks</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ bookmarkItems }}" as="b" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:14px;">{{ b.glyph }}</span>
+                  <span style="font-size:14px; color:rgba(255,255,255,0.94); min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ b.name }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- favorites -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">FAVORITES</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Favorites</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:22px; display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ favoriteItems }}" as="f" hint-placeholder-count="4">
+              <div style="flex:1; min-height:0; border-radius:18px; background:rgba(255,255,255,0.20); padding:0 16px; display:flex; align-items:center; gap:11px;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="#f4c53c" style="flex:none;"><path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z"></path></svg>
+                <span style="font-size:14px; font-weight:500; color:rgba(255,255,255,0.95); min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ f.name }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- recent -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">RECENT</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Recent files</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px 22px; display:flex; flex-direction:column; gap:13px;">
+            <span style="font-size:12px; letter-spacing:1.4px; color:rgba(255,255,255,0.6); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">RECENT</span>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ recentFiles }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px;">
+                  <span style="font-size:14px; color:rgba(255,255,255,0.94); min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
+                  <span style="font-size:12px; color:rgba(255,255,255,0.55); flex:none;">{{ r.when }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- leaf -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:340px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">LEAF</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Plugin view</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">beta</span>
+          </div>
+          <div style="width:340px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:20px; display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; gap:9px; padding:0 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M14 4v16"></path></svg>
+              <span style="font-size:13px; color:rgba(255,255,255,0.8); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">outgoing-link</span>
+            </div>
+            <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:24px; padding:16px 18px; display:flex; flex-direction:column; gap:11px;">
+              <span style="font-size:12px; letter-spacing:1px; color:#9aa1a8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">6 LINKS</span>
+              <sc-for list="{{ leafLinks }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <span style="width:16px; height:16px; border-radius:5px; background:#e6eaee; display:flex; align-items:center; justify-content:center; font-size:9px; color:#6d747a; flex:none;">{{ l.n }}</span>
+                  <span style="font-size:14px; color:#3f454b;">{{ l.name }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== DATA & QUERIES ===================== -->
+    <div style="display:flex; flex-direction:column; gap:34px;">
+      <div style="display:flex; align-items:baseline; gap:16px;">
+        <div style="font-size:34px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-0.4px;">Data &amp; queries</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.62);">the vault, counted and asked</div>
+      </div>
+      <div style="display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- stats -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">STATS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Vault statistics</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+            <sc-for list="{{ statTiles }}" as="s" hint-placeholder-count="6">
+              <div style="border-radius:20px; background:rgba(255,255,255,0.18); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:16px;">
+                <span style="font-size:28px; font-weight:700; color:rgba(255,255,255,0.98); letter-spacing:-0.6px;">{{ s.value }}</span>
+                <span style="font-size:13px; color:rgba(255,255,255,0.7);">{{ s.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- heatmap -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">HEATMAP</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Activity heatmap</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:28px 26px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between;">
+              <span style="font-size:21px; font-weight:600; color:rgba(255,255,255,0.96);">Files modified</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.66);">52 weeks</span>
+            </div>
+            <div style="display:flex; gap:3px;">
+              <sc-for list="{{ heatWeeks }}" as="w" hint-placeholder-count="52">
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                  <sc-for list="{{ w.days }}" as="d" hint-placeholder-count="7">
+                    <span style="width:5px; height:5px; border-radius:1.5px; flex:none; background:#ffffff; opacity:{{ d.o }};"></span>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:13px; color:rgba(255,255,255,0.6);">Sep 2025</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:12px; color:rgba(255,255,255,0.55);">less</span>
+                <sc-for list="{{ heatLegend }}" as="l" hint-placeholder-count="5">
+                  <span style="width:9px; height:9px; border-radius:2.5px; background:#ffffff; opacity:{{ l.o }};"></span>
+                </sc-for>
+                <span style="font-size:12px; color:rgba(255,255,255,0.55);">more</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- search / query -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:340px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">SEARCH</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Query</span>
+          </div>
+          <div style="width:340px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px 22px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:14px; color:rgba(255,255,255,0.92); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">tag:#idea -path:Archive</span>
+              <span style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.96);">14</span>
+            </div>
+            <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:9px;">
+              <sc-for list="{{ searchResults }}" as="s" hint-placeholder-count="4">
+                <div style="background:rgba(255,255,255,0.9); border-radius:14px; padding:10px 14px; display:flex; flex-direction:column; gap:3px;">
+                  <span style="font-size:14px; font-weight:600; color:#23272b;">{{ s.name }}</span>
+                  <span style="font-size:12px; color:#7b8188;">{{ s.snippet }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- dataview -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">DATAVIEW</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Dataview query</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">Dataview</span>
+          </div>
+          <div style="width:500px; height:340px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:14px;">
+            <div style="background:rgba(255,255,255,0.18); border-radius:14px; padding:11px 14px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:rgba(255,255,255,0.9); line-height:1.5;">TABLE status, due FROM #project<br>SORT due ASC</div>
+            <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:22px; padding:16px 18px; display:flex; flex-direction:column; gap:11px;">
+              <div style="display:flex; gap:12px; padding-bottom:8px; border-bottom:1px solid #e4e8ec;">
+                <span style="flex:1.6; font-size:12px; font-weight:700; letter-spacing:0.6px; color:#8c9299;">FILE</span>
+                <span style="flex:1; font-size:12px; font-weight:700; letter-spacing:0.6px; color:#8c9299;">STATUS</span>
+                <span style="flex:0.8; font-size:12px; font-weight:700; letter-spacing:0.6px; color:#8c9299;">DUE</span>
+              </div>
+              <sc-for list="{{ dvRows }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex; gap:12px; align-items:center;">
+                  <span style="flex:1.6; font-size:14px; color:#2f8ff0; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.file }}</span>
+                  <span style="flex:1; font-size:13px; color:#4b5157;">{{ r.status }}</span>
+                  <span style="flex:0.8; font-size:13px; color:#7b8188; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ r.due }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- datacore -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">DATACORE</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Datacore query</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">Datacore</span>
+          </div>
+          <div style="width:500px; height:340px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:rgba(255,255,255,0.9);">@page and #reading</span>
+              <div style="display:flex; gap:6px; background:rgba(255,255,255,0.18); border-radius:10px; padding:3px;">
+                <span style="font-size:12px; font-weight:600; padding:5px 11px; border-radius:8px; background:rgba(255,255,255,0.9); color:#33383d;">jsx</span>
+                <span style="font-size:12px; font-weight:600; padding:5px 11px; color:rgba(255,255,255,0.72);">query</span>
+              </div>
+            </div>
+            <div style="flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <sc-for list="{{ dcCards }}" as="c" hint-placeholder-count="4">
+                <div style="background:rgba(255,255,255,0.9); border-radius:18px; padding:14px 16px; display:flex; flex-direction:column; justify-content:space-between;">
+                  <span style="font-size:15px; font-weight:600; color:#23272b; line-height:1.25;">{{ c.title }}</span>
+                  <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:12px; color:#7b8188;">{{ c.author }}</span>
+                    <span style="font-size:12px; font-weight:600; color:{{ c.color }};">{{ c.pct }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:0 6px;">
+              <span style="font-size:12px; color:rgba(255,255,255,0.6);">page 1 of 6</span>
+              <span style="font-size:12px; color:rgba(255,255,255,0.6);">24 results</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- rss -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">RSS</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">RSS feed</span>
+          </div>
+          <div style="width:500px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; gap:8px;">
+              <sc-for list="{{ rssTabs }}" as="t" hint-placeholder-count="3">
+                <span style="font-size:13px; font-weight:600; padding:7px 14px; border-radius:11px; color:{{ t.fg }}; background:{{ t.bg }}; cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.4);" style-active="background:rgba(255,255,255,0.2);">{{ t.label }}</span>
+              </sc-for>
+            </div>
+            <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ rssItems }}" as="r" hint-placeholder-count="4">
+                <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:18px; padding:13px 16px; display:flex; flex-direction:column; gap:5px; justify-content:center;">
+                  <span style="font-size:15px; font-weight:600; color:#23272b; line-height:1.25;">{{ r.title }}</span>
+                  <span style="font-size:12px; color:#7b8188; line-height:1.35;">{{ r.excerpt }}</span>
+                  <span style="font-size:11px; color:#a5abb1; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ r.when }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- jira -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">JIRA</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Jira filter</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">host + PAT</span>
+          </div>
+          <div style="width:500px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:20px; font-weight:600; color:rgba(255,255,255,0.96);">My open issues</span>
+              <span style="font-size:13px; color:rgba(255,255,255,0.64);">Sprint 42</span>
+            </div>
+            <div style="display:flex; gap:7px; flex-wrap:wrap;">
+              <sc-for list="{{ jiraFilters }}" as="f" hint-placeholder-count="4">
+                <span style="font-size:12px; font-weight:600; padding:6px 12px; border-radius:10px; background:rgba(255,255,255,0.20); color:rgba(255,255,255,0.9); cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.34);" style-active="background:rgba(255,255,255,0.16);">{{ f.label }}</span>
+              </sc-for>
+            </div>
+            <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:9px;">
+              <sc-for list="{{ jiraRows }}" as="j" hint-placeholder-count="5">
+                <div style="flex:1; min-height:0; background:rgba(255,255,255,0.9); border-radius:16px; padding:0 16px; display:flex; align-items:center; gap:13px;">
+                  <span style="width:22px; height:22px; border-radius:6px; background:{{ j.tint }}; flex:none;"></span>
+                  <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:2px; overflow:hidden;">
+                    <span style="font-size:14px; font-weight:600; color:#23272b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ j.title }}</span>
+                    <span style="font-size:11px; color:#8c9299; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ j.key }}</span>
+                  </div>
+                  <span style="font-size:11px; font-weight:700; letter-spacing:0.5px; padding:4px 9px; border-radius:7px; background:#eef1f4; color:#5d666f; flex:none;">{{ j.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- calculator -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:300px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">CALCULATOR</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Calculator</span>
+          </div>
+          <div style="width:300px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+              <span style="font-size:15px; color:rgba(255,255,255,0.66); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">120 usd in eur</span>
+              <span style="font-size:38px; font-weight:600; color:rgba(255,255,255,0.98); letter-spacing:-1px;">103.44</span>
+            </div>
+            <div style="flex:1; min-height:0; display:grid; grid-template-columns:repeat(4,1fr); gap:9px;">
+              <sc-for list="{{ calcKeys }}" as="k" hint-placeholder-count="16">
+                <div style="border-radius:15px; background:rgba(255,255,255,{{ k.a }}); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; color:{{ k.fg }}; cursor:pointer; transition:filter 0.1s, transform 0.1s;" style-hover="filter:brightness(1.15);" style-active="filter:brightness(0.9); transform:scale(0.94);">{{ k.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- git -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:340px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">GIT</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Git</span>
+          </div>
+          <div style="width:340px; height:420px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px 24px; display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"><circle cx="7" cy="6" r="2.6"></circle><circle cx="7" cy="18" r="2.6"></circle><circle cx="17" cy="10" r="2.6"></circle><path d="M7 8.6v6.8M9.6 6.8h4.2a2 2 0 012 2v.6"></path></svg>
+              <span style="font-size:16px; font-weight:600; color:rgba(255,255,255,0.96);">main</span>
+              <span style="font-size:13px; color:rgba(255,255,255,0.66);">↑2 ↓0</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ gitChanges }}" as="g" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="width:18px; font-size:12px; font-weight:700; color:{{ g.color }}; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">{{ g.mark }}</span>
+                  <span style="font-size:13px; color:rgba(255,255,255,0.92); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ g.path }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:rgba(255,255,255,0.20); border-radius:16px; padding:12px 14px; display:flex; flex-direction:column; gap:5px;">
+              <span style="font-size:11px; letter-spacing:1px; color:rgba(255,255,255,0.6); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">MESSAGE</span>
+              <span style="font-size:14px; color:rgba(255,255,255,0.94);">vault backup: 2026-08-26 21:41</span>
+            </div>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:9px;">
+              <div style="height:44px; border-radius:14px; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#23272b; cursor:pointer; transition:background 0.15s;" style-hover="background:#ffffff;" style-active="background:#e4e7ea;">Commit &amp; push</div>
+              <div style="display:flex; gap:9px;">
+                <div style="flex:1; height:40px; border-radius:13px; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:rgba(255,255,255,0.94); cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.34);" style-active="background:rgba(255,255,255,0.16);">Pull</div>
+                <div style="flex:1; height:40px; border-radius:13px; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:rgba(255,255,255,0.94); cursor:pointer; transition:background 0.15s;" style-hover="background:rgba(255,255,255,0.34);" style-active="background:rgba(255,255,255,0.16);">Fetch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== AMBIENT ===================== -->
+    <div style="display:flex; flex-direction:column; gap:34px;">
+      <div style="display:flex; align-items:baseline; gap:16px;">
+        <div style="font-size:34px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-0.4px;">Ambient</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.62);">weather outside, company inside</div>
+      </div>
+      <div style="display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- weather -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:500px;">
+          <div style="display:flex; align-items:center; gap:12px; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">WEATHER</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Weather</span>
+            <span style="background:rgba(255,255,255,0.20); border-radius:8px; padding:3px 9px; font-size:12px; color:rgba(255,255,255,0.85);">Open-Meteo</span>
+          </div>
+          <div style="width:500px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:26px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="display:flex; flex-direction:column; gap:3px;">
+                <span style="font-size:17px; color:rgba(255,255,255,0.8);">Copenhagen</span>
+                <span style="font-size:25px; font-weight:600; color:rgba(255,255,255,0.96);">Partly cloudy</span>
+                <span style="font-size:14px; color:rgba(255,255,255,0.7);">feels 19° · wind 4 m/s · UV 3</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <svg viewBox="0 0 24 24" width="38" height="38">
+                  <circle cx="10" cy="9" r="5" fill="#f2a02c"></circle>
+                  <circle cx="15" cy="15.5" r="5" fill="#ffffff"></circle>
+                  <circle cx="9" cy="16.4" r="4" fill="#ffffff"></circle>
+                  <rect x="6" y="15.4" width="13" height="5" rx="2.5" fill="#ffffff"></rect>
+                </svg>
+                <span style="font-size:46px; font-weight:600; color:rgba(255,255,255,0.97); letter-spacing:-1px;">21°</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+              <sc-for list="{{ forecastDays }}" as="f" hint-placeholder-count="5">
+                <div style="flex:1; height:96px; border-radius:18px; background:rgba(255,255,255,0.80); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;">
+                  <span style="font-size:14px; font-weight:600; color:#3b4148;">{{ f.d }}</span>
+                  <svg viewBox="0 0 24 24" width="22" height="22">
+                    <sc-if value="{{ f.isSun }}" hint-placeholder-val="{{ true }}">
+                      <circle cx="12" cy="12" r="5.6" fill="#f2a02c"></circle>
+                    </sc-if>
+                    <sc-if value="{{ f.isCloud }}" hint-placeholder-val="{{ false }}">
+                      <circle cx="9" cy="12" r="4.4" fill="#c3ccd4"></circle>
+                      <circle cx="14.4" cy="12.6" r="5" fill="#dde3e8"></circle>
+                      <rect x="5" y="12" width="14" height="5.6" rx="2.8" fill="#dde3e8"></rect>
+                    </sc-if>
+                    <sc-if value="{{ f.isRain }}" hint-placeholder-val="{{ false }}">
+                      <rect x="5" y="8" width="14" height="6" rx="3" fill="#c3ccd4"></rect>
+                      <path d="M8 16.4v2.6M12 16.4v3.4M16 16.4v2.6" stroke="#5aa0e6" stroke-width="1.8" stroke-linecap="round"></path>
+                    </sc-if>
+                  </svg>
+                  <span style="font-size:13px; color:#6a7078; font-weight:500;">{{ f.t }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- pet -->
+        <div style="display:flex; flex-direction:column; gap:11px; width:238px;">
+          <div style="display:flex; flex-direction:column; padding-left:6px;">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.6px; color:rgba(255,255,255,0.58);">PET</span>
+            <span style="font-size:15px; font-weight:500; color:rgba(255,255,255,0.93);">Pet</span>
+          </div>
+          <div style="width:238px; height:280px; border-radius:42px; background:rgba(255,255,255,0.10); backdrop-filter:blur(18px) saturate(120%); -webkit-backdrop-filter:blur(18px) saturate(120%); border:1px solid rgba(255,255,255,0.42); overflow:hidden; padding:24px; display:flex; flex-direction:column; align-items:center; justify-content:space-between;">
+            <span style="font-size:13px; letter-spacing:1.4px; color:rgba(255,255,255,0.6); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">MOOD · CHIPPER</span>
+            <svg viewBox="0 0 120 120" width="132" height="132">
+              <ellipse cx="60" cy="104" rx="34" ry="6" fill="rgba(255,255,255,0.16)"></ellipse>
+              <path d="M34 46 L30 24 L50 36 Z" fill="#e8d3b8"></path>
+              <path d="M86 46 L90 24 L70 36 Z" fill="#e8d3b8"></path>
+              <ellipse cx="60" cy="74" rx="30" ry="28" fill="#f2e0c8"></ellipse>
+              <ellipse cx="60" cy="52" rx="27" ry="24" fill="#f7e9d5"></ellipse>
+              <circle cx="50" cy="50" r="3.6" fill="#3b3229"></circle>
+              <circle cx="70" cy="50" r="3.6" fill="#3b3229"></circle>
+              <path d="M56 59 q4 4 8 0" stroke="#3b3229" stroke-width="2" fill="none" stroke-linecap="round"></path>
+              <path d="M86 84 q16 4 12 -16" stroke="#e8d3b8" stroke-width="7" fill="none" stroke-linecap="round"></path>
+            </svg>
+            <span style="font-size:19px; font-weight:600; color:rgba(255,255,255,0.96);">Miso</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tasksLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;kanban&quot;,&quot;list&quot;],&quot;default&quot;:&quot;kanban&quot;,&quot;tsType&quot;:&quot;'kanban' | 'list'&quot;,&quot;section&quot;:&quot;Widget modes&quot;},&quot;clockStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;analog&quot;,&quot;digital&quot;],&quot;default&quot;:&quot;analog&quot;,&quot;tsType&quot;:&quot;'analog' | 'digital'&quot;,&quot;section&quot;:&quot;Widget modes&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const layout = this.props.tasksLayout ?? 'kanban';
+    const clock = this.props.clockStyle ?? 'analog';
+
+    const embedLines = [
+      'Atlas/Second Brain Dashboard',
+      'Atlas/Widget system — 30 kinds',
+      'Notes/Glass surfaces, one radius',
+      'Archive/Old dashboard v1',
+    ].map(text => ({ text }));
+
+    const slideDots = [0.95, 0.4, 0.4, 0.4, 0.4].map(o => ({ o }));
+    const jotLines = ['ring the plumber', 'ask about the .base view', 'buy filter coffee'].map(text => ({ text }));
+    const webRows = [
+      { name: 'Sync', state: 'operational' },
+      { name: 'Publish', state: 'operational' },
+      { name: 'Licenses', state: 'operational' },
+    ];
+
+    const clockTicks = Array.from({ length: 12 }, (_, i) => ({ rot: `rotate(${i * 30} 60 60)` }));
+
+    const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(label => ({ label }));
+    const monthFlat = [null, null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, null, null, null, null, null];
+    const heatFor = { 4: 0.14, 5: 0.1, 7: 0.18, 10: 0.12, 11: 0.22, 12: 0.1, 17: 0.16, 18: 0.24, 19: 0.12, 21: 0.1, 24: 0.2, 25: 0.14, 26: 0.42 };
+    const wkNums = [31, 32, 33, 34, 35, 36];
+    const miniRows = [];
+    for (let r = 0; r < 6; r++) {
+      const days = monthFlat.slice(r * 7, r * 7 + 7).map(day => ({
+        day: day || '',
+        heat: day ? (heatFor[day] ?? 0.05) : 0,
+      }));
+      miniRows.push({ wk: wkNums[r], days });
+    }
+    const miniAgenda = [
+      { title: 'Design review', time: '11:30', color: '#f2902a' },
+      { title: 'Weekly note', time: '17:00', color: '#41bd3f' },
+    ];
+
+    const scheduleViews = ['Month', 'Week', 'Day', 'List'].map((label, i) => ({
+      label,
+      bg: i === 1 ? 'rgba(255,255,255,0.9)' : 'transparent',
+      fg: i === 1 ? '#33383d' : 'rgba(255,255,255,0.78)',
+    }));
+    const hourLabels = ['09', '11', '13', '15', '17'].map(label => ({ label }));
+    const evt = (time, title, bg, offset) => ({ time, title, bg, offset: offset || '0px' });
+    const weekDays = [
+      { dow: 'MON', num: 24, events: [evt('09:00', 'Deep work', 'rgba(65,189,63,0.72)')] },
+      { dow: 'TUE', num: 25, events: [evt('11:30', 'Review', 'rgba(242,144,42,0.75)', '38px')] },
+      { dow: 'WED', num: 26, events: [evt('09:30', 'Standup', 'rgba(47,143,240,0.75)'), evt('14:00', 'Widgets', 'rgba(141,128,230,0.75)', '30px')] },
+      { dow: 'THU', num: 27, events: [evt('13:00', 'Client sync', 'rgba(224,90,192,0.72)', '58px')] },
+      { dow: 'FRI', num: 28, events: [evt('10:00', 'Writing', 'rgba(65,189,63,0.66)', '14px')] },
+      { dow: 'SAT', num: 29, events: [] },
+      { dow: 'SUN', num: 30, events: [evt('16:00', 'Weekly', 'rgba(255,255,255,0.34)', '80px')] },
+    ].map(d => ({
+      ...d,
+      numFg: d.num === 26 ? '#ffffff' : 'rgba(255,255,255,0.8)',
+      colBg: d.num === 26 ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.10)',
+    }));
+
+    const taskColumns = [
+      { name: 'TODO', count: 6, cards: [
+        { title: 'Draft the widget catalogue', color: '#f2902a', meta: 'due Fri' },
+        { title: 'Rename base views', color: '#2f8ff0', meta: 'vault' },
+        { title: 'Backup script', color: '#8d80e6', meta: 'someday' },
+      ] },
+      { name: 'DOING', count: 2, cards: [
+        { title: 'Glass card spec', color: '#41bd3f', meta: 'today' },
+        { title: 'Heatmap metric', color: '#f2902a', meta: 'today' },
+      ] },
+      { name: 'DONE', count: 9, cards: [
+        { title: 'Clock greeting copy', color: '#a5abb1', meta: 'yesterday' },
+        { title: 'Pet sleep schedule', color: '#a5abb1', meta: 'Mon' },
+      ] },
+    ];
+    const taskList = [
+      { title: 'Draft the widget catalogue', meta: 'due Fri', color: '#f2902a' },
+      { title: 'Glass card spec', meta: 'today', color: '#41bd3f' },
+      { title: 'Rename base views', meta: 'vault', color: '#2f8ff0' },
+      { title: 'Heatmap metric', meta: 'today', color: '#41bd3f' },
+      { title: 'Backup script', meta: 'someday', color: '#8d80e6' },
+      { title: 'Pet sleep schedule', meta: 'done', color: '#a5abb1' },
+    ];
+
+    const searchChips = ['Notes', 'Tags', 'Tasks', 'Files'].map((label, i) => ({
+      label,
+      bg: i === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.20)',
+      fg: i === 0 ? '#33383d' : 'rgba(255,255,255,0.9)',
+    }));
+
+    const linkTiles = [
+      { glyph: '📥', label: 'Inbox', big: true },
+      { glyph: '🗂', label: 'Projects' },
+      { glyph: '📚', label: 'Sources' },
+      { glyph: '🧭', label: 'Atlas' },
+      { glyph: '✍️', label: 'Journal' },
+      { glyph: '🌐', label: 'Docs' },
+      { glyph: '🎧', label: 'Queue' },
+      { glyph: '🗄', label: 'Archive' },
+    ].map((t, i) => ({
+      ...t,
+      a: i % 3 === 0 ? 0.9 : 0.2,
+      fg: i % 3 === 0 ? '#23272b' : 'rgba(255,255,255,0.94)',
+    }));
+
+    const commandItems = [
+      { glyph: '⌘', label: 'Command palette' },
+      { glyph: '🔀', label: 'Open random note' },
+      { glyph: '🎨', label: 'Toggle theme' },
+      { glyph: '💾', label: 'Sync now' },
+    ];
+
+    const templateItems = [
+      { glyph: '📝', label: 'Meeting note', path: 'Templates/Meeting.md → Meetings/', tint: '#e7f0fb' },
+      { glyph: '📖', label: 'Book note', path: 'Templates/Book.md → Sources/Books/', tint: '#f3edfd' },
+      { glyph: '🧪', label: 'Experiment', path: 'Templates/Exp.md → Lab/2026/', tint: '#e9f7ec' },
+    ];
+
+    const bookmarkItems = [
+      { glyph: '📌', name: 'Second Brain Dashboard' },
+      { glyph: '📁', name: 'Projects/2026' },
+      { glyph: '🔍', name: 'tag:#waiting' },
+      { glyph: '📄', name: 'Reading list.md' },
+      { glyph: '🖼', name: 'Moodboard.canvas' },
+    ];
+
+    const favoriteItems = [
+      { name: 'Widget system' },
+      { name: 'Home automation' },
+      { name: 'Reading list' },
+      { name: 'Vault conventions' },
+    ];
+
+    const recentFiles = [
+      { name: 'Widget system.md', when: '2m' },
+      { name: 'Meeting — Ola.md', when: '40m' },
+      { name: 'Tasks.base', when: '3h' },
+      { name: 'Moodboard.canvas', when: 'Tue' },
+      { name: '2026-08-25.md', when: 'Tue' },
+    ];
+
+    const leafLinks = [
+      { n: 1, name: 'Second Brain Dashboard' },
+      { n: 2, name: 'Glass surfaces' },
+      { n: 3, name: 'TaskNotes' },
+      { n: 4, name: 'Vault conventions' },
+    ];
+
+    const statTiles = [
+      { value: '2,481', label: 'notes' },
+      { value: '412k', label: 'words' },
+      { value: '5,930', label: 'files' },
+      { value: '318', label: 'attachments' },
+      { value: '164', label: 'tags' },
+      { value: '41', label: 'orphans' },
+    ];
+
+    const heatWeeks = Array.from({ length: 52 }, (_, w) => ({
+      days: Array.from({ length: 7 }, (_, d) => {
+        const n = (Math.sin(w * 1.7 + d * 0.9) + Math.cos(w * 0.4 + d * 2.1)) / 2;
+        const v = (n + 1) / 2;
+        return { o: (0.12 + Math.round(v * 4) * 0.2).toFixed(2) };
+      }),
+    }));
+    const heatLegend = [0.12, 0.32, 0.52, 0.72, 0.92].map(o => ({ o }));
+
+    const searchResults = [
+      { name: 'Widget system.md', snippet: '…thirty kinds, one glass card…' },
+      { name: 'Glass surfaces.md', snippet: '…42px radius, 18px blur…' },
+      { name: 'Dashboard notes.md', snippet: '…jot-down lives on the board…' },
+    ];
+
+    const dvRows = [
+      { file: 'Second Brain Dashboard', status: 'active', due: '08-28' },
+      { file: 'Widget system', status: 'active', due: '08-30' },
+      { file: 'Home automation', status: 'paused', due: '09-04' },
+      { file: 'Vault cleanup', status: 'planned', due: '09-12' },
+      { file: 'Reading pipeline', status: 'planned', due: '09-20' },
+    ];
+
+    const dcCards = [
+      { title: 'The Craft of Research', author: 'Booth', pct: '62%', color: '#41bd3f' },
+      { title: 'Thinking in Systems', author: 'Meadows', pct: '28%', color: '#f2902a' },
+      { title: 'How to Take Smart Notes', author: 'Ahrens', pct: '100%', color: '#a5abb1' },
+      { title: 'Seeing Like a State', author: 'Scott', pct: '9%', color: '#2f8ff0' },
+    ];
+
+    const rssTabs = ['Obsidian', 'Design', 'Dev'].map((label, i) => ({
+      label,
+      bg: i === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.20)',
+      fg: i === 0 ? '#33383d' : 'rgba(255,255,255,0.9)',
+    }));
+    const rssItems = [
+      { title: 'Bases get grouped views', excerpt: 'The database core plugin picks up grouping and inline formulas.', when: '2H AGO' },
+      { title: 'A field guide to glass UI', excerpt: 'Where translucency helps legibility, and where it quietly ruins it.', when: '5H AGO' },
+      { title: 'Plugin API 1.9 notes', excerpt: 'View registration changes worth reading before you ship.', when: 'YESTERDAY' },
+    ];
+
+    const jiraFilters = ['Status: open', 'Assignee: me', 'Priority ≥ High', 'Sprint 42'].map(label => ({ label }));
+    const jiraRows = [
+      { key: 'SBD-412', title: 'Widget grid drag targets', status: 'IN PROG', tint: '#e7f0fb' },
+      { key: 'SBD-408', title: 'Calendar ICS refresh loop', status: 'REVIEW', tint: '#fdecec' },
+      { key: 'SBD-399', title: 'Heatmap metric switch', status: 'TODO', tint: '#f3edfd' },
+      { key: 'SBD-381', title: 'Templater dest folders', status: 'TODO', tint: '#e9f7ec' },
+      { key: 'SBD-370', title: 'Jira cache interval', status: 'BLOCKED', tint: '#fff4e0' },
+    ];
+
+    const calcKeys = ['C', '( )', '%', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+', '0', '.', 'rad', '='].map(label => {
+      const op = ['÷', '×', '−', '+', '='].includes(label);
+      const fn = ['C', '( )', '%', 'rad'].includes(label);
+      return {
+        label,
+        a: op ? 0.9 : fn ? 0.14 : 0.24,
+        fg: op ? '#23272b' : 'rgba(255,255,255,0.95)',
+      };
+    });
+
+    const gitChanges = [
+      { mark: 'M', color: '#f2902a', path: 'Atlas/Widget system.md' },
+      { mark: 'A', color: '#41bd3f', path: 'Templates/Meeting.md' },
+      { mark: 'M', color: '#f2902a', path: '2026-08-26.md' },
+      { mark: 'D', color: '#e0574f', path: 'Archive/dashboard-v1.md' },
+    ];
+
+    const forecastDays = [
+      { d: 'WED', isSun: true, isCloud: false, isRain: false, t: '21°' },
+      { d: 'THU', isSun: false, isCloud: true, isRain: false, t: '19°' },
+      { d: 'FRI', isSun: false, isCloud: false, isRain: true, t: '17°' },
+      { d: 'SAT', isSun: false, isCloud: true, isRain: false, t: '18°' },
+      { d: 'SUN', isSun: true, isCloud: false, isRain: false, t: '22°' },
+    ];
+
+    return {
+      embedLines, slideDots, jotLines, webRows,
+      clockTicks, clockAnalog: clock === 'analog', clockDigital: clock === 'digital',
+      weekLabels, miniRows, miniAgenda,
+      scheduleViews, hourLabels, weekDays,
+      tasksKanban: layout === 'kanban', tasksList: layout === 'list', taskColumns, taskList,
+      searchChips, linkTiles, commandItems, templateItems,
+      bookmarkItems, favoriteItems, recentFiles, leafLinks,
+      statTiles, heatWeeks, heatLegend, searchResults,
+      dvRows, dcCards, rssTabs, rssItems, jiraFilters, jiraRows,
+      calcKeys, gitChanges, forecastDays,
+    };
+  }
+}
+</script>
+</body>
+</html>
