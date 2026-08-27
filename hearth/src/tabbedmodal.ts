@@ -58,6 +58,11 @@ export abstract class SbdTabbedModal extends Modal {
 	 */
 	protected sbdRenderShell(): void {
 		const { contentEl } = this;
+		// The glass shell (same frosted material as the add-card picker) sits on
+		// modalEl, the outer `.modal` box Obsidian paints — contentEl is just the
+		// scrolling interior. Idempotent: addClass on an already-present class is
+		// a no-op, and this runs on every rebuild.
+		this.modalEl.addClass("sbd-glass-modal");
 		contentEl.empty();
 		contentEl.addClass("sbd-tabbed-modal");
 

@@ -2,6 +2,7 @@ import {
 	Component,
 	debounce,
 	setIcon,
+	setTooltip,
 	type TAbstractFile,
 } from "obsidian";
 import { emptyState } from "./cardbodies";
@@ -352,6 +353,7 @@ function renderCardControls(
 		attr: { "aria-label": t().dashboard.cardSettings },
 	});
 	setIcon(settingsBtn, "settings-2");
+	setTooltip(settingsBtn, t().dashboard.cardSettings);
 	settingsBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
 	settingsBtn.addEventListener("click", () => openCardSettings(view, card));
 
@@ -360,6 +362,7 @@ function renderCardControls(
 		attr: { "aria-label": t().dashboard.removeCard },
 	});
 	setIcon(remove, "trash-2");
+	setTooltip(remove, t().dashboard.removeCard);
 	remove.addEventListener("pointerdown", (e) => e.stopPropagation());
 	remove.addEventListener("click", () => {
 		confirmAction(view.app, {
@@ -403,6 +406,7 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 		setIcon(add.createSpan("sbd-tool-icon"), "plus");
 		add.createSpan({ cls: "sbd-tool-label", text: t().dashboard.addCard });
 		add.setAttribute("aria-label", t().dashboard.addCardAria);
+		setTooltip(add, t().dashboard.addCardAria);
 		add.addEventListener("click", () => {
 			openCardPicker(view.app, {
 				sbdVersion: view.plugin.manifest.version,
@@ -440,12 +444,13 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 				? t().dashboard.showTitles
 				: t().dashboard.hideTitles,
 		});
-		hideHdr.setAttribute(
-			"aria-label",
-			view.hideHeaderInArrange
+		{
+			const hideHdrLabel = view.hideHeaderInArrange
 				? t().dashboard.showCardHeaders
-				: t().dashboard.hideCardHeaders,
-		);
+				: t().dashboard.hideCardHeaders;
+			hideHdr.setAttribute("aria-label", hideHdrLabel);
+			setTooltip(hideHdr, hideHdrLabel);
+		}
 		hideHdr.addEventListener("click", () => {
 			view.hideHeaderInArrange = !view.hideHeaderInArrange;
 			view.render();
@@ -473,10 +478,13 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 			text: t().dashboard.doneArranging,
 		});
 	}
-	arrange.setAttribute(
-		"aria-label",
-		view.arrangeMode ? t().dashboard.finishArranging : t().dashboard.moveResize,
-	);
+	{
+		const arrangeLabel = view.arrangeMode
+			? t().dashboard.finishArranging
+			: t().dashboard.moveResize;
+		arrange.setAttribute("aria-label", arrangeLabel);
+		setTooltip(arrange, arrangeLabel);
+	}
 	arrange.addEventListener("click", () => {
 		view.arrangeMode = !view.arrangeMode;
 		view.render();

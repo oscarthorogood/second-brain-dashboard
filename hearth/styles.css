@@ -22,6 +22,7 @@
 	--sbd-radius-m: 14px;
 	--sbd-radius-l: 18px;
 	--sbd-radius-xl: 24px;
+	--sbd-radius-xxl: 28px;
 	--sbd-shadow-s: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(0, 0, 0, 0.05);
 	--sbd-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.09);
 	--sbd-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.16);
@@ -46,6 +47,7 @@ body.theme-dark {
 .sbd-setup-modal,
 .sbd-whatsnew-modal,
 .sbd-card-picker-modal,
+.sbd-glass-modal,
 .sbd-event-modal,
 .sbd-taskfields-modal,
 .sbd-taskdate-modal,
@@ -2034,6 +2036,11 @@ body.theme-dark {
    (.sbd-ribbon-tab): a row of tabs pinned to the top, one group's controls
    shown at a time, and a persistent action footer below. */
 
+/* Grouped into one pill, like the widget set's own view/tab switchers
+ * (.sbd-sched-views, .sbd-dv-lang), rather than a bare row over a divider —
+ * matches the tab vocabulary the rest of the glass surfaces use. A solid-ish
+ * backing (not fully transparent) keeps it legible while sticky, since the
+ * tab body scrolls underneath it. */
 .sbd-modal-ribbon {
 	display: flex;
 	flex-wrap: wrap;
@@ -2041,10 +2048,11 @@ body.theme-dark {
 	position: sticky;
 	top: 0;
 	z-index: 5;
-	padding-bottom: 10px;
-	margin-bottom: 6px;
-	background: transparent;
-	border-bottom: 1px solid var(--background-modifier-border);
+	width: fit-content;
+	padding: 4px;
+	margin-bottom: 14px;
+	background: color-mix(in srgb, var(--background-secondary) 82%, transparent);
+	border-radius: var(--sbd-radius-l);
 }
 
 /* Give the body a floor so switching from a dense tab (tasks) to a sparse one
@@ -3170,6 +3178,12 @@ body.theme-dark {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease;
+}
+
+.sbd-rss-tab:hover:not(.is-active) {
+	background: var(--background-modifier-active-hover, var(--background-modifier-hover));
+	color: var(--text-normal);
 }
 
 .sbd-rss-tab.is-active {
@@ -5604,8 +5618,8 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	gap: 7px;
-	padding: 6px 12px;
-	border-radius: var(--sbd-radius-s);
+	padding: 8px 16px;
+	border-radius: 999px;
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 	background: color-mix(in srgb, var(--background-primary) 70%, transparent);
 	backdrop-filter: var(--sbd-glass-blur);
@@ -5636,10 +5650,12 @@ body.theme-dark {
 	display: flex;
 }
 
-/* Compact icon-only toolbar button (e.g. the Arrange toggle at rest). */
+/* Compact icon-only toolbar button (e.g. the Arrange toggle at rest). Circular,
+ * matching the round icon-button vocabulary used everywhere else a control
+ * floats over the glass (card actions, modal close button). */
 .sbd-tool-btn.is-icon {
-	padding: 3px;
-	border-radius: var(--sbd-radius-s);
+	padding: 5px;
+	border-radius: 50%;
 	opacity: 0.55;
 }
 
@@ -5967,8 +5983,10 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 5px;
-	border-radius: 9px;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border-radius: 50%;
 	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 	background: color-mix(in srgb, var(--background-primary) 55%, transparent);
 	color: var(--text-muted);
@@ -9390,6 +9408,23 @@ body.sbd-dv-resizing {
 	}
 }
 
+/* ── Glass modal shell ──────────────────────────────────────────────────
+   The Add-a-card picker and the card settings modal both float above the
+   vault the way a dashboard card floats above the board, so they wear the
+   same frosted-glass material — colour-mixed from Obsidian's *real* theme
+   variables rather than the dashboard's fixed neutral palette, since a modal
+   sits outside .sbd-view and must still fit whatever appearance (and accent)
+   the user actually has chosen. Applied to modalEl (the outer `.modal` box)
+   by both callers, replacing Obsidian's flat modal surface wholesale. */
+.sbd-glass-modal {
+	background: color-mix(in srgb, var(--background-primary) 82%, transparent);
+	backdrop-filter: blur(24px) saturate(150%);
+	-webkit-backdrop-filter: blur(24px) saturate(150%);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 160%, transparent);
+	border-radius: var(--sbd-radius-xxl);
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
 /* ── Add-card picker ───────────────────────────────────────────────────
    The card catalogue outgrew a dropdown: ~30 templates in one column, with
    nothing but a name each. This is a browsable modal instead — a category
@@ -9427,11 +9462,12 @@ body.sbd-dv-resizing {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 0 10px;
+	padding: 0 14px;
 	margin-bottom: 12px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 10px;
-	background: var(--background-modifier-form-field);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 140%, transparent);
+	border-radius: var(--sbd-radius-m);
+	background: color-mix(in srgb, var(--background-modifier-form-field) 60%, transparent);
+	transition: border-color 120ms ease;
 }
 
 .sbd-picker-search:focus-within {
@@ -9488,15 +9524,16 @@ body.sbd-dv-resizing {
 	justify-content: flex-start;
 	gap: 8px;
 	width: 100%;
-	padding: 6px 10px;
+	padding: 8px 12px;
 	border: none;
-	border-radius: 8px;
+	border-radius: var(--sbd-radius-s);
 	background: transparent;
 	box-shadow: none;
 	color: var(--text-muted);
 	font-size: var(--font-ui-small);
 	text-align: left;
 	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease;
 }
 
 .sbd-picker-rail-btn:hover {
@@ -9581,11 +9618,11 @@ body.sbd-dv-resizing {
 	gap: 10px;
 	width: 100%;
 	height: auto;
-	padding: 10px;
+	padding: 12px 14px;
 	border: 1px solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	border-radius: 10px;
-	background: var(--sbd-card-surface, var(--background-primary));
+	border-radius: var(--sbd-radius-m);
+	background: color-mix(in srgb, var(--sbd-card-surface, var(--background-primary)) 55%, transparent);
 	box-shadow: none;
 	text-align: left;
 	cursor: pointer;

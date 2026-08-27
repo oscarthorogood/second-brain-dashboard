@@ -87,7 +87,7 @@ class CardPickerModal extends Modal {
 		const { contentEl, modalEl } = this;
 		// The frame is sized on modalEl (a grid of tiles needs more than the
 		// default modal width); the content layout hangs off contentEl.
-		modalEl.addClass("sbd-card-picker-modal");
+		modalEl.addClass("sbd-card-picker-modal", "sbd-glass-modal");
 		contentEl.empty();
 		contentEl.addClass("sbd-card-picker");
 
