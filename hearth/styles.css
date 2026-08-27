@@ -1950,6 +1950,14 @@ body.theme-dark {
 	--sbd-card-pad-y: 0px;
 }
 
+/* The search bar is `padding: 0 26px` in the reference: the bar row IS the
+ * card's interior and takes its full height. A vertical inset here would leave
+ * the pill floating in a band of glass. */
+.sbd-card.is-searchbar-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 10px;
+}
+
 /* When a card body holds a read-only embed/daily-note host directly, the host
  * is the scroll container (one vertical scrollbar) — the body itself doesn't
  * scroll, so it can't stack a second scrollbar next to the embed's. The same
@@ -7272,7 +7280,8 @@ body.theme-dark {
 	 * different thing from a label's contrast. */
 	color: var(--text-normal);
 	cursor: pointer;
-	font-size: 0.85rem;
+	/* 15px in the reference. */
+	font-size: 0.9375rem;
 	transition: var(--sbd-transition-interactive);
 }
 
@@ -7289,7 +7298,10 @@ body.theme-dark {
 /* The "Done arranging" pill (Canvas.dc.html): solid white rather than glass,
  * since it's the confirm action. */
 .sbd-tool-btn.is-active {
-	color: var(--text-on-accent);
+	/* Dark ink, as the reference writes it (#2a2e33) — not --text-on-accent,
+	 * which is white in Obsidian's own themes and put a white label on a white
+	 * pill. */
+	color: var(--sbd-ink-strong);
 	background: var(--sbd-btn-light-fill);
 	border-color: var(--sbd-btn-light-fill);
 	box-shadow: var(--sbd-btn-light-shadow);
