@@ -96,6 +96,12 @@
 
 	/* Card material: white at 10%, and a crisp white rim that does most of
 	 * the work of separating the card from the board. */
+	/* The scrim under the card's white tint. See the long note on .sbd-card
+	 * for why it exists — in short, the reference's flat artboard backdrop
+	 * hides a problem a real wallpaper doesn't. `transparent` restores the
+	 * reference's literal material. */
+	--sbd-card-scrim: rgba(20, 26, 34, 0.3);
+
 	--sbd-glass-card-fill: rgba(255, 255, 255, 0.1);
 	--sbd-glass-card-border: rgba(255, 255, 255, 0.42);
 
@@ -471,6 +477,10 @@ body.theme-dark {
 	 * opaque white card would swallow the white text on it — so the opaque
 	 * case tints from the board's own grey instead. */
 	--sbd-glass-tint: var(--background-primary);
+	/* An opaque card has no backdrop showing through, so there is nothing for
+	 * the scrim to darken — and low power exists to stop the board
+	 * compositing layers it doesn't need. */
+	--sbd-card-scrim: transparent;
 }
 
 .sbd-scroll {
@@ -1200,12 +1210,25 @@ body.theme-dark {
 			calc(var(--card-opacity, 1) * 100%),
 		transparent
 	);
-	/* The tint plus two highlights. The top one matches the reference
-	 * directly: sampling straight down from the rim shows the surface a good
-	 * ~20/255 brighter immediately under it, falling off to the flat interior
-	 * over about 12px — the light a pane of glass gathers along its lit edge.
-	 * The diagonal is the softer corner sheen over the rest of the face. */
-	background-color: var(--sbd-card-surface);
+	/* The scrim, the tint, then two highlights — painted bottom-up, since a
+	 * background-color sits under every background-image and each image sits
+	 * under the one before it.
+	 *
+	 * The scrim is the one value on the card NOT measured off the reference,
+	 * and it is here because the reference cannot supply it: its artboard
+	 * backs every card with one flat colour, so white-at-10% over an 18px
+	 * blur reads there as an evenly lit pane. Over a real wallpaper it does
+	 * not. A photograph varies at card scale, which no blur radius can
+	 * remove — blur attenuates detail, not the large shapes a card sits on —
+	 * so the card takes the picture's own light and dark patches and the
+	 * white text on it goes with them. Raising the white tint doesn't fix it
+	 * either: by the time it covers a bright patch the glass has gone milky
+	 * and it still fails on a high-key wallpaper. Darkening the backdrop
+	 * *underneath* the reference's white tint is what holds white text at a
+	 * readable contrast over any picture while leaving the tint, the rim and
+	 * the highlights exactly as measured. Set --sbd-card-scrim to
+	 * `transparent` for the reference's literal material. */
+	background-color: var(--sbd-card-scrim);
 	background-image:
 		linear-gradient(
 			to bottom,
@@ -1217,7 +1240,8 @@ body.theme-dark {
 			rgba(255, 255, 255, 0.1) 0%,
 			rgba(255, 255, 255, 0.03) 40%,
 			rgba(255, 255, 255, 0) 65%
-		);
+		),
+		linear-gradient(var(--sbd-card-surface), var(--sbd-card-surface));
 	/* Every text node in a card inherits this: a soft dark shadow keeps type
 	 * legible over any wallpaper showing through the glass, in place of
 	 * hand-tuning contrast per element. Lighter than it was (was 0.45 alpha
