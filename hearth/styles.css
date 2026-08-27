@@ -11621,8 +11621,10 @@ body.sbd-dv-resizing {
 .sbd-card-picker-modal {
 	display: flex;
 	flex-direction: column;
-	width: min(860px, 94vw);
-	max-width: min(860px, 94vw);
+	/* 920px in Canvas.dc.html. At that width the results column fits the
+	 * reference's two tile columns beside the 220px rail. */
+	width: min(920px, 94vw);
+	max-width: min(920px, 94vw);
 }
 
 .sbd-card-picker.sbd-card-picker {
@@ -11814,14 +11816,18 @@ body.sbd-dv-resizing {
  * card's own translucent surface. */
 /* Canvas.dc.html's card tiles, from the --sbd-tile-* tokens: a translucent
  * chip that brightens on hover and presses in on click. */
+/* Canvas.dc.html stacks the tile: the glyph on its own line, the card's name
+ * under it, the sentence under that. Side by side the glyph took a column out
+ * of an already narrow tile and pushed the description into three lines. */
 .sbd-card-tile {
 	display: flex;
+	flex-direction: column;
 	align-items: flex-start;
 	justify-content: flex-start;
-	gap: 10px;
+	gap: 8px;
 	width: 100%;
 	height: auto;
-	padding: 12px 14px;
+	padding: 14px 16px;
 	border: 1px solid var(--sbd-tile-border);
 	border-radius: var(--sbd-radius-l);
 	background: var(--sbd-tile-fill);
@@ -11849,20 +11855,26 @@ body.sbd-dv-resizing {
 .sbd-card-tile-icon {
 	display: inline-flex;
 	flex: none;
-	margin-top: 1px;
 	color: var(--text-accent);
+}
+
+.sbd-card-tile-icon .svg-icon {
+	width: 17px;
+	height: 17px;
 }
 
 .sbd-card-tile-text {
 	min-width: 0;
+	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
 }
 
 .sbd-card-tile-name {
-	font-weight: 600;
-	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: 700;
+	color: var(--sbd-ink);
 	line-height: 1.3;
 }
 
