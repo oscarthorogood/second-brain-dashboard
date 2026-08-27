@@ -35,12 +35,13 @@ export function renderSearchBar(
 	// overlay, mirroring the header's search column — the overlay is absolutely
 	// positioned against it, so the dropdown spans the card's width.
 	const wrap = body.createDiv("sbd-searchbar-card");
-	// The bar and its button share a row so the button sits beside the field
-	// rather than above the chips, exactly as in the header.
+	// The button rides inside the bar, against its trailing edge, exactly as
+	// the reference's SEARCHBAR block draws it — and exactly as the header
+	// does, so the two can't drift apart.
 	const row = wrap.createDiv("sbd-searchbar-row");
 	const bar = search.renderBar(row, { placeholder: cfg.placeholder });
 	if (cfg.button && cfg.button !== "none") {
-		row.append(createSearchBarButton(view, bar, cfg.button));
+		bar.append(createSearchBarButton(view, bar, cfg.button));
 	}
 	search.renderResultsAndFilters(wrap, wrap, component, {
 		filters: cfg.filters === true,

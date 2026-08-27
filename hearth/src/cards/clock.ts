@@ -142,7 +142,6 @@ export function renderClock(
 	const analog = cfg.mode === "analog";
 
 	const wrap = body.createDiv("sbd-clock");
-	const greetingEl = showGreeting ? wrap.createDiv("sbd-clock-greeting") : null;
 
 	// Pick the greeting once per time bucket so playful ones don't flicker.
 	let bucket = -1;
@@ -164,9 +163,17 @@ export function renderClock(
 	// nothing to the DOM 59 times out of 60.
 	const lowPower = lowPowerActive(view.plugin.settings);
 
+	// Reference order (Widget Set → CLOCK): the face or the time first, then a
+	// tight caption block under it carrying the greeting over the date. The
+	// greeting used to sit ABOVE the time, which put the card's smallest, most
+	// decorative line where its largest belongs.
 	const tickAnalog = analog ? renderAnalogClock(wrap, cfg, lowPower) : null;
 	const timeEl = analog ? null : wrap.createDiv("sbd-clock-time");
-	const dateEl = dateMode === "none" ? null : wrap.createDiv("sbd-clock-date");
+	const caption =
+		showGreeting || dateMode !== "none" ? wrap.createDiv("sbd-clock-caption") : null;
+	const greetingEl = showGreeting && caption ? caption.createDiv("sbd-clock-greeting") : null;
+	const dateEl =
+		dateMode === "none" || !caption ? null : caption.createDiv("sbd-clock-date");
 
 	const timeOpts: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
 	const hour12 = resolveHour12(cfg);

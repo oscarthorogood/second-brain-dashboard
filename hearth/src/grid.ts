@@ -873,7 +873,11 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 			layer = root.createDiv("sbd-frost");
 			layer.dataset.blur = blur;
 		}
-		const filter = `blur(${blur}px)`;
+		// saturate(120%) rides along with the blur, matching the reference's
+		// backdrop-filter exactly (blur(18px) saturate(120%)); the layer used to
+		// blur without it, leaving card interiors a shade flatter than the
+		// artboard's.
+		const filter = `blur(${blur}px) saturate(120%)`;
 		layer.style.setProperty("backdrop-filter", filter);
 		layer.style.setProperty("-webkit-backdrop-filter", filter);
 		const paths = group

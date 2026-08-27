@@ -79,19 +79,19 @@ export function renderHeader(view: HomeView, container: HTMLElement, component: 
 	// Layout:
 	//   searchWrap (flex row, align-items: flex-start)
 	//     ├─ searchCol (flex:1) — the bar's width
-	//     │     ├─ searchRow (the bar + (nothing else))
+	//     │     ├─ searchRow (the bar, which now carries the button inside it)
 	//     │     └─ filter chips + results dropdown (matching the bar's width)
-	//     └─ New-note button (beside the bar, top-aligned, flush)
-	// The button is a sibling of the column (not inside the bar's row) so the
-	// filters span only the bar's width; the button sits flush beside the bar,
-	// not pushed down among the filter chips.
+	// The button sits INSIDE the bar, as the reference's SEARCHBAR block draws
+	// it — a white square tucked against the bar's trailing edge rather than a
+	// second pill beside it. The filters still span exactly the bar's width,
+	// because the bar is the full width of the column either way.
 	const searchWrap = container.createDiv("sbd-search-wrap");
 	const searchCol = searchWrap.createDiv("sbd-search-col");
 	const searchRow = searchCol.createDiv("sbd-search");
 	const bar = search.renderBar(searchRow);
 
 	if (s.showNewNoteButton && !mobileOnly) {
-		searchWrap.append(createSearchBarButton(view, bar, s.newNoteButtonMode));
+		bar.append(createSearchBarButton(view, bar, s.newNoteButtonMode));
 	}
 
 	search.renderResultsAndFilters(searchCol, searchCol, component);
