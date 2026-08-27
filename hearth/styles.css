@@ -931,7 +931,7 @@ body.theme-dark {
 	min-height: 0;
 	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
-	border-radius: var(--sbd-card-radius, 32px);
+	border-radius: var(--sbd-card-radius, 42px);
 	/* The glass rim, at full token strength (white ~55%). Measured off the
 	 * reference, where the rim is the crispest thing about a card — blending
 	 * it further toward transparent, as this used to, is what let it fade to
@@ -5915,7 +5915,7 @@ body.theme-dark {
 	position: absolute;
 	inset: 0;
 	border: 1px dashed var(--interactive-accent);
-	border-radius: var(--sbd-card-radius, 32px);
+	border-radius: var(--sbd-card-radius, 42px);
 	opacity: 0.5;
 	pointer-events: none;
 }
@@ -5947,8 +5947,8 @@ body.theme-dark {
 	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
 	backdrop-filter: blur(6px);
 	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: var(--sbd-card-radius, 32px)
-		var(--sbd-card-radius, 32px) 0 0;
+	border-radius: var(--sbd-card-radius, 42px)
+		var(--sbd-card-radius, 42px) 0 0;
 }
 
 .sbd-card-title-input {
