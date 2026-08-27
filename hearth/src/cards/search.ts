@@ -45,6 +45,13 @@ export function renderSavedSearch(view: HomeView, card: DashboardCard, body: HTM
 			return;
 		}
 		body.empty();
+		// Reference (Widget Set → SEARCH): the query itself heads the card, set
+		// in mono, with the number of matches closing the row. Without it a
+		// saved-search card is a list of files with nothing saying what they
+		// have in common.
+		const head = body.createDiv("sbd-query-head");
+		head.createDiv({ cls: "sbd-query-text", text: query });
+		head.createDiv({ cls: "sbd-query-count", text: String(all.length) });
 		if (useTiles) {
 			renderQueryTiles(view, body, list);
 		} else {

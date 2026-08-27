@@ -61,6 +61,12 @@ export function renderDatacore(
 		source = datacoreQueryScript(query, cfg.pageSize);
 	}
 
+	// Reference (Widget Set → DATACORE): the query heads the card as a plain
+	// mono line, with the language it is written in closing the row.
+	const head = body.createDiv("sbd-query-head");
+	head.createDiv({ cls: "sbd-query-source is-bare", text: query });
+	head.createDiv({ cls: "sbd-query-lang", text: language });
+
 	const host = body.createDiv("sbd-datacore");
 	try {
 		runDatacoreScript(

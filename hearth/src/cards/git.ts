@@ -172,7 +172,15 @@ export function renderGit(
 					paintStatus(wrap, snapshot, loading, () => run("switchBranch"), refresh);
 					break;
 				case "actions":
-					paintActions(wrap, plugin, cfg.actions, cfg.actionStyle, busy, run);
+					paintActions(
+						wrap,
+						plugin,
+						cfg.actions,
+						cfg.actionStyle,
+						cfg.askForMessage ? undefined : cfg.commitMessage?.trim(),
+						busy,
+						run,
+					);
 					break;
 				case "changes":
 					paintChanges(view, plugin, wrap, snapshot, changeLimit, cfg.showPaths, refresh);
@@ -313,11 +321,21 @@ function paintActions(
 	plugin: GitPlugin,
 	configured: readonly GitAction[] | undefined,
 	style: GitActionStyle | undefined,
+	message: string | undefined,
 	busy: boolean,
 	run: (action: GitAction) => void,
 ): void {
 	const actions = gitActions(configured);
 	if (actions.length === 0) return;
+	// Reference (Widget Set → GIT): the message the commit will carry is shown
+	// on the card, on its own panel above the buttons — so you can read what
+	// pressing "Commit & push" is about to write without opening settings.
+	const commits = actions.some((a) => a === "commit" || a === "commitAndSync");
+	if (commits && message) {
+		const panel = wrap.createDiv("sbd-git-message");
+		panel.createDiv({ cls: "sbd-card-eyebrow", text: t().cards.git.messageLabel });
+		panel.createDiv({ cls: "sbd-git-message-text", text: message });
+	}
 	const labelled = style === "labelled";
 	const row = wrap.createDiv("sbd-git-actions");
 	row.toggleClass("is-labelled", labelled);

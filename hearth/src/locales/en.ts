@@ -2424,6 +2424,8 @@ export const en = {
 				history: "Open history",
 			},
 			refresh: "Re-read the repository",
+			/** Eyebrow over the commit message the card's commit button will use. */
+			messageLabel: "Message",
 			noBranch: "No branch",
 			noUpstream: "No upstream branch",
 			staged: "staged",

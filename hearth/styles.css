@@ -1779,6 +1779,89 @@ body.theme-dark {
 
 .sbd-card.is-bookmarks-card,
 .sbd-card.is-recent-card,
+/* SEARCH's head row: the saved query in mono over the card's glass, and the
+ * match count closing it. 14px on both, the count a touch brighter and bold —
+ * it is the answer, the query is the question. */
+.sbd-query-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex: none;
+	margin-bottom: 14px;
+}
+
+.sbd-query-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.92);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-query-count {
+	font-size: 0.875rem;
+	font-weight: 600;
+	flex: none;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+/* The reference lays these three cards out as a column: a head (the query,
+ * and for DATACORE its language) over a result that takes whatever height is
+ * left. Without the flex context the result box sizes to its rows and leaves
+ * the bottom of the card empty. */
+.sbd-card.is-dataview-card > .sbd-card-body,
+.sbd-card.is-datacore-card > .sbd-card-body,
+.sbd-card.is-search-card > .sbd-card-body {
+	display: flex;
+	flex-direction: column;
+}
+
+/* The query panel DATAVIEW puts above its result: the source in mono on a
+ * translucent panel, wrapping as written. Capped at four lines so a long
+ * query informs the card rather than taking it over. */
+.sbd-query-source {
+	flex: none;
+	margin-bottom: 14px;
+	padding: 11px 14px;
+	border-radius: 14px;
+	background: var(--sbd-panel-tier-fill);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: rgba(255, 255, 255, 0.9);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	max-height: 6em;
+	overflow: auto;
+}
+
+/* DATACORE writes the same line bare, in the head row beside its language. */
+.sbd-query-source.is-bare {
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+	background: none;
+	max-height: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+.sbd-query-lang {
+	flex: none;
+	padding: 5px 11px;
+	border-radius: 8px;
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-shadow: none;
+}
+
 .sbd-card.is-search-card {
 	--sbd-card-pad-x: 22px;
 }
@@ -2961,11 +3044,20 @@ body.theme-dark {
 
 /* The badge behind a result's glyph is an ink tint on a light sheet, not the
  * white one it wears on the glass. */
+/* Bare, not badged. The reference's result row is a name over a snippet and
+ * nothing else; a filled grey disc in front of every row was the loudest thing
+ * on a white sheet. The glyph stays — on a search result it says WHY the file
+ * matched — but it sits on the sheet rather than in a chip of its own. */
 .sbd-list.is-sheet .sbd-list-icon {
-	width: 22px;
-	height: 22px;
-	background: rgba(0, 0, 0, 0.06);
-	color: var(--sbd-sheet-ink-muted);
+	width: 16px;
+	height: 16px;
+	background: none;
+	color: var(--sbd-sheet-ink-faint);
+}
+
+.sbd-list.is-sheet .sbd-list-icon .svg-icon {
+	width: 16px;
+	height: 16px;
 }
 
 .sbd-list.is-sheet .sbd-list-item:hover .sbd-list-icon {
@@ -6571,9 +6663,12 @@ body.theme-dark {
 	--sched-gutter: 46px;
 }
 
+/* No rule under the header: in the reference each day's own glass column is
+ * what separates it from its neighbours, and a hairline across the top of them
+ * cut the columns off from the days they belong to. */
 .sbd-sched-gridhead {
 	display: flex;
-	border-bottom: 1px solid var(--background-modifier-border);
+	border-bottom: none;
 }
 
 .sbd-sched-gutterhead {
@@ -6583,16 +6678,22 @@ body.theme-dark {
 .sbd-sched-headcols {
 	display: grid;
 	grid-template-columns: repeat(var(--sched-cols, 7), minmax(0, 1fr));
+	gap: 8px;
 	flex: 1;
 	min-width: 0;
 }
 
+/* Reference: the weekday sits ABOVE its number, centred, in a 34px band over
+ * the column. Side by side they read as one word — "MON24" — and the number,
+ * which is what you actually look for, lost its own line. */
 .sbd-sched-headday {
 	display: flex;
-	align-items: baseline;
+	flex-direction: column;
+	align-items: center;
 	justify-content: center;
-	gap: 4px;
-	padding: 2px 0 5px;
+	gap: 2px;
+	height: 34px;
+	padding: 0;
 	border-radius: 6px 6px 0 0;
 	cursor: pointer;
 }
@@ -6709,6 +6810,7 @@ body.theme-dark {
 .sbd-sched-cols {
 	display: grid;
 	grid-template-columns: repeat(var(--sched-cols, 7), minmax(0, 1fr));
+	gap: 8px;
 	flex: 1;
 	min-width: 0;
 }
@@ -6738,9 +6840,13 @@ body.theme-dark {
 	width: calc(var(--ev-width, 100%) - 4px);
 	display: flex;
 	flex-direction: column;
-	padding: 1px 4px;
-	border-radius: 7px;
-	border-left: 3px solid var(--ev-color, var(--interactive-accent));
+	gap: 2px;
+	padding: 7px 9px;
+	border-radius: 11px;
+	/* No leading stripe: the block is painted in its own colour, and a darker
+	 * bar down one edge of an already-coloured block is a device from a list
+	 * view, where the row is neutral. */
+	border-left: none;
 	/* The reference paints an event block in its own colour at full strength
 	 * with white text on it. Mixing into --background-primary — the board's
 	 * opaque #a2a2a7 — desaturated every event to the same grey, which is
@@ -6800,16 +6906,23 @@ body.theme-dark {
 }
 
 .sbd-sched-blocktitle {
+	font-size: 0.8125rem;
 	font-weight: 600;
+	line-height: 1.2;
+	color: #ffffff;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
+/* On the block, both lines are white — the time at 80% of it. --text-muted is
+ * the app's grey and disappeared into a saturated event colour. */
 .sbd-sched-blocktime,
 .sbd-sched-blockplace {
-	color: var(--text-muted);
-	font-size: 0.66rem;
+	font-family: var(--sbd-font-mono);
+	color: rgba(255, 255, 255, 0.8);
+	font-size: 0.6875rem;
+	line-height: 1.2;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -7640,7 +7753,13 @@ body.theme-dark {
  * side by side and the tier's usual 20% made the card read as three cards.
  * It was mixing --background-secondary, an opaque grey. */
 .sbd-kanban-col {
-	flex: 1 0 140px;
+	/* The reference's three lanes divide the card between them. A 140px basis
+	 * on a content box plus 20px of padding made each lane 160px wide, so
+	 * three of them overflowed a 500px card and the third was cut off. Basis 0
+	 * with a 130px floor divides the width where the lanes fit and falls back
+	 * to the horizontal scroll only once they genuinely don't. */
+	box-sizing: border-box;
+	flex: 1 1 0;
 	align-self: stretch;
 	min-width: 130px;
 	display: flex;
@@ -10364,12 +10483,21 @@ body.sbd-dv-resizing {
 
 /* ---- Buttons ---- */
 
+/* Reference: the buttons sit on the card's bottom edge, the writing action
+ * spanning the full width on its own line and the read-only ones sharing the
+ * line under it. A wrapping flex row put three equal buttons on one line and
+ * left the primary indistinguishable by size. */
 .sbd-git-actions {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 6px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 9px;
+	margin-top: auto;
 	flex: 0 0 auto;
+}
+
+.sbd-git-actions .sbd-git-action.is-commitAndSync,
+.sbd-git-actions .sbd-git-action.is-commit {
+	grid-column: 1 / -1;
 }
 
 /* The reference gives git two tiers of action, and the split carries the
@@ -10382,15 +10510,15 @@ body.sbd-dv-resizing {
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	height: 44px;
+	height: 40px;
 	min-width: 44px;
 	padding: 0 14px;
 	border: none;
-	border-radius: var(--sbd-radius-field);
-	background: var(--sbd-panel-tier-fill);
-	color: rgba(255, 255, 255, 0.92);
-	font-size: 0.875rem;
-	font-weight: 700;
+	border-radius: 13px;
+	background: rgba(255, 255, 255, 0.22);
+	color: rgba(255, 255, 255, 0.94);
+	font-size: 0.8125rem;
+	font-weight: 600;
 	cursor: pointer;
 	box-shadow: none;
 	transition: var(--sbd-transition-interactive);
@@ -10411,8 +10539,12 @@ body.sbd-dv-resizing {
  * reads as the primary too when the card is configured without syncing. */
 .sbd-git-action.is-commitAndSync,
 .sbd-git-action.is-commit {
+	height: 44px;
+	border-radius: 14px;
 	background: var(--sbd-sheet-fill);
-	color: var(--sbd-ink);
+	color: var(--sbd-sheet-ink);
+	font-size: 0.875rem;
+	font-weight: 700;
 }
 
 .sbd-git-action.is-commitAndSync:hover:not(:disabled),
@@ -10446,28 +10578,43 @@ body.sbd-dv-resizing {
 	height: 15px;
 }
 
-/* Commit-and-sync is the one-click "save my vault" action, so it reads as the
-   primary one of the row. */
-.sbd-git-action.is-commitAndSync {
-	color: var(--text-accent);
-	border-color: var(--background-modifier-border-hover);
-}
-
 .sbd-git-action.is-destructive:hover:not(:disabled) {
 	color: var(--text-error);
 	border-color: var(--text-error);
 }
 
+/* The commit message the card's button will write, on the panel tier with a
+ * tracked-out mono eyebrow — the reference's MESSAGE block. */
+.sbd-git-message {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	flex: none;
+	padding: 12px 14px;
+	border-radius: 16px;
+	background: var(--sbd-panel-tier-fill);
+}
+
+.sbd-git-message-text {
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.94);
+	overflow-wrap: anywhere;
+}
+
 /* ---- Changed files ---- */
 
+/* The list takes the height it needs, not the height that is going. The card's
+ * slack belongs at the bottom, above the buttons, which is where the reference
+ * puts it — stretching the list opened a gap between the changed files and the
+ * message that reads as a missing section. */
 .sbd-git-changes {
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-height: 0;
 	overflow-y: auto;
 }
 
 .sbd-git-list {
-	gap: 0;
+	gap: 8px;
 }
 
 .sbd-git-file {
@@ -10477,9 +10624,13 @@ body.sbd-dv-resizing {
 
 /* Paths are set in mono, as the reference does — they are file paths, and
  * the mono column keeps them scanning down the card. */
-.sbd-git-file-path {
+/* The file's name is set in mono, as the reference sets its paths — a column
+ * of them scans straight down the card. (The folder line under it keeps the
+ * muted treatment further down this file.) */
+.sbd-git-file .sbd-list-label {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
+	font-weight: 400;
 	color: rgba(255, 255, 255, 0.92);
 }
 
@@ -10496,25 +10647,33 @@ body.sbd-dv-resizing {
 	height: auto;
 	border-radius: 0;
 	background: none;
-	color: rgba(255, 255, 255, 0.7);
+	color: var(--sbd-git-mark, rgba(255, 255, 255, 0.7));
 	font-weight: 700;
 	font-family: var(--sbd-font-mono);
-	font-size: 0.66rem;
+	font-size: 0.75rem;
 	line-height: 1;
 }
 
-.sbd-git-file.is-conflicted .sbd-git-letter {
-	background: var(--background-modifier-error);
-	color: var(--text-error);
+/* The reference colours the mark, not a badge behind it: amber for a change,
+ * green for something new, red for something gone. Stated as hues rather than
+ * --text-success/--text-error, which resolve against the app's chrome and came
+ * out unreadable over a light wallpaper. */
+.sbd-git-file.is-modified {
+	--sbd-git-mark: #e8862a;
 }
 
-.sbd-git-file.is-untracked .sbd-git-letter,
-.sbd-git-file.is-added .sbd-git-letter {
-	color: var(--text-success, var(--interactive-accent));
+.sbd-git-file.is-renamed {
+	--sbd-git-mark: #4a90e2;
 }
 
-.sbd-git-file.is-deleted .sbd-git-letter {
-	color: var(--text-error);
+.sbd-git-file.is-untracked,
+.sbd-git-file.is-added {
+	--sbd-git-mark: #3fb54a;
+}
+
+.sbd-git-file.is-deleted,
+.sbd-git-file.is-conflicted {
+	--sbd-git-mark: #e5534b;
 }
 
 /* Staged files carry a rail on the left: the same "this is going into the next
