@@ -8544,6 +8544,29 @@ body.sbd-dv-resizing {
 	cursor: pointer;
 }
 
+/* The reference's head and foot rows: what is counted and how far back,
+ * then where the grid starts beside the legend. */
+.sbd-heatmap-head,
+.sbd-heatmap-foot {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	flex: none;
+}
+
+.sbd-heatmap-title {
+	font-size: 1.3125rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+.sbd-heatmap-range,
+.sbd-heatmap-start {
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.6);
+}
+
 .sbd-heatmap-legend {
 	display: flex;
 	align-items: center;
@@ -10358,15 +10381,13 @@ body.sbd-dv-resizing {
 	transform-origin: 50% 100%;
 }
 
-/* The reference's caption is one tracked-out mono line ("MOOD · CHIPPER").
- * The name and the mood are its two halves, laid out on one row with the
- * reference's own separator between them. */
+/* The reference's caption is one tracked-out mono line naming the mood
+ * ("MOOD · CHIPPER"), at the top of the card. */
 .sbd-pet-caption {
 	display: flex;
 	align-items: baseline;
 	justify-content: center;
-	flex-wrap: wrap;
-	gap: 0 6px;
+	flex: none;
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
 	letter-spacing: var(--sbd-label-tracking);
@@ -10375,17 +10396,20 @@ body.sbd-dv-resizing {
 	line-height: 1.2;
 }
 
+/* The name closes the card, under the sprite. */
+.sbd-pet-foot {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	flex: none;
+}
+
 .sbd-pet-name {
-	font-weight: 600;
-	color: rgba(255, 255, 255, 0.72);
-}
-
-.sbd-pet-name:not(:empty) + .sbd-pet-mood::before {
-	content: "· ";
-}
-
-.sbd-pet-mood {
-	color: rgba(255, 255, 255, 0.6);
+	font-size: 1.1875rem;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.96);
+	line-height: 1.2;
 }
 
 .sbd-pet-activity {

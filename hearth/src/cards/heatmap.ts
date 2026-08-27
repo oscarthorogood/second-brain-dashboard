@@ -35,6 +35,13 @@ export function renderHeatmap(view: HomeView, card: DashboardCard, body: HTMLEle
 		if (key <= todayKey) peak = Math.max(peak, activity.get(key) ?? 0);
 	}
 
+	// Widget Set → HEATMAP heads the card with what is being counted and how
+	// far back it reaches, and closes it with the month the grid starts in
+	// beside the legend — otherwise a year of squares says nothing about when.
+	const head = wrap.createDiv("sbd-heatmap-head");
+	head.createDiv({ cls: "sbd-heatmap-title", text: t().cards.heatmap.metrics[metric] });
+	head.createDiv({ cls: "sbd-heatmap-range", text: t().cards.heatmap.weeksLabel(weeks) });
+
 	const grid = wrap.createDiv("sbd-heatmap-grid");
 	grid.style.gridTemplateColumns = `repeat(${weeks}, 1fr)`;
 	// Column-major fill (top-to-bottom, then next week): 7 rows, auto-flow column.
@@ -64,8 +71,12 @@ export function renderHeatmap(view: HomeView, card: DashboardCard, body: HTMLEle
 		}
 	}
 
+	// The footer: where the grid begins on the left, the legend on the right.
+	const foot = wrap.createDiv("sbd-heatmap-foot");
+	foot.createDiv({ cls: "sbd-heatmap-start", text: start.format("MMM YYYY") });
+
 	// A small Less→More legend.
-	const legend = wrap.createDiv("sbd-heatmap-legend");
+	const legend = foot.createDiv("sbd-heatmap-legend");
 	legend.createSpan({ cls: "sbd-heatmap-legend-label", text: t().cards.heatmap.less });
 	for (let l = 0; l <= 4; l++) {
 		const sq = legend.createDiv("sbd-heatmap-cell");

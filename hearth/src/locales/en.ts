@@ -2298,6 +2298,8 @@ export const en = {
 			moodBored: "A little bored",
 			moodSleepy: "Fast asleep",
 			moodNight: "Asleep for the night",
+			// The card's top caption, uppercased by CSS: "MOOD · CHIPPER".
+			moodCaption: (mood: string) => `Mood · ${mood}`,
 			petHint: "Click to pet",
 			todayCount: (count: number, metric: "modified" | "created") =>
 				metric === "created"
@@ -2456,6 +2458,13 @@ export const en = {
 		heatmap: {
 			less: "Less",
 			more: "More",
+			// The card's headline names what the squares count; the range says
+			// how far back the grid reaches.
+			metrics: {
+				modified: "Files modified",
+				created: "Files created",
+			},
+			weeksLabel: (n: number) => `${n} weeks`,
 		},
 		calendar: {
 			// Head of the week-number gutter. One letter: the column is 24px
