@@ -106,6 +106,10 @@
 	--sbd-panel-border: rgba(255, 255, 255, 0.7);
 	--sbd-panel-blur: blur(24px) saturate(150%);
 	--sbd-panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+	/* Rules INSIDE a panel — the picker's rail edge, a settings row's
+	 * underline, the separator above "Request a card". One step quieter than
+	 * --sbd-tile-border, which rims a surface rather than dividing two. */
+	--sbd-panel-divider: rgba(255, 255, 255, 0.5);
 
 	/* Glass pill button (the reference's "Add card" primary action). Its
 	 * blur is far shallower than a card's: this is a small pill floating
@@ -2307,6 +2311,56 @@ body.theme-dark {
 .sbd-modal-tabbody {
 	min-height: 220px;
 	animation: sbd-tab-fade 140ms ease;
+}
+
+/* ---- Card settings rows — Canvas.dc.html's CARD SETTINGS sheet ------
+ *
+ * Obsidian's own .setting-item is a centred flex row underlined along its
+ * TOP with the theme's border colour. The reference's row is underlined
+ * along its BOTTOM in the panel's own white rule, and its two halves are
+ * top-aligned so a two-line description doesn't drag the control down the
+ * row with it. Scoped to the glass modal's tab body so the plugin's settings
+ * tab (which lives in Obsidian's own chrome) is untouched. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item {
+	align-items: flex-start;
+	gap: 20px;
+	padding: 20px 0;
+	border-top: none;
+	border-bottom: 1px solid var(--sbd-panel-divider);
+}
+
+/* The last row in a tab sits directly above the sheet's own edge, so its
+ * rule would read as a second, floating border. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item:last-child {
+	border-bottom: none;
+}
+
+/* 380px, the reference's own measure: past it a description wraps rather
+ * than running the full width of the sheet and colliding with the control. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item-info {
+	max-width: 380px;
+}
+
+.sbd-glass-modal .sbd-modal-tabbody .setting-item-name {
+	font-size: 0.9375rem;
+	font-weight: 700;
+	color: var(--sbd-ink);
+}
+
+.sbd-glass-modal .sbd-modal-tabbody .setting-item-description {
+	font-size: 0.8125rem;
+	line-height: 1.4;
+	color: var(--sbd-ink-faint);
+}
+
+/* The control column must not stretch to the row's full height now that the
+ * row is top-aligned — a dropdown would grow with the description beside
+ * it. The 2px nudge is the reference's own optical alignment of a control
+ * against the first line of its label. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item-control {
+	flex: none;
+	align-items: flex-start;
+	margin-top: 2px;
 }
 
 /* The footer sits below the scrolling tab body, its actions right-aligned. */
@@ -6449,8 +6503,8 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	padding: 0;
 	border-radius: 50%;
 	border: none;
@@ -10164,7 +10218,7 @@ body.sbd-dv-resizing {
 	flex: none;
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 12px;
 	height: 46px;
 	padding: 0 16px;
 	margin-bottom: 12px;
@@ -10211,13 +10265,13 @@ body.sbd-dv-resizing {
 
 .sbd-picker-rail {
 	flex: none;
-	width: 168px;
+	width: 220px;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 	overflow-y: auto;
 	padding-right: 4px;
-	border-right: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--sbd-panel-divider);
 }
 
 /* Same reason as .sbd-card-tile: these are buttons, so left alignment has
@@ -10282,8 +10336,8 @@ body.sbd-dv-resizing {
 
 .sbd-picker-rail-sep {
 	height: 1px;
-	margin: 8px 10px;
-	background: var(--background-modifier-border);
+	margin: 10px 10px;
+	background: var(--sbd-panel-divider);
 }
 
 .sbd-picker-rail-btn.is-request {
@@ -10306,11 +10360,11 @@ body.sbd-dv-resizing {
 	letter-spacing: var(--sbd-label-tracking);
 	text-transform: uppercase;
 	color: var(--sbd-ink-label);
-	margin: 4px 0 8px;
+	margin: 0 0 12px;
 }
 
 .sbd-picker-section:not(:first-child) {
-	margin-top: 20px;
+	margin-top: 22px;
 }
 
 /* auto-fill, not auto-fit: a category with one card (Fun) keeps a card-sized
@@ -10318,7 +10372,7 @@ body.sbd-dv-resizing {
 .sbd-picker-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-	gap: 8px;
+	gap: 12px;
 }
 
 /* ---- One card tile ---- */
