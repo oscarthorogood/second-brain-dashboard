@@ -433,5 +433,8 @@ export const templaterCard: CardDefinition<"templater"> = {
 			};
 	},
 	liveness: { mode: "static" },
-	cardClass: "is-tile-card",
+	// The reference lays commands and templates out as full-width sheet
+	// rows, not as the vertical glass tiles a launchpad uses — so they need a
+	// class of their own beside the shared tile behaviour.
+	cardClass: "is-tile-card is-templater-card",
 };

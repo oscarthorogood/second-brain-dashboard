@@ -1,7 +1,7 @@
 import { setIcon, Setting, TFile } from "obsidian";
 import { emptyState } from "../cardbodies";
+import { formatCompactAge } from "../dates";
 import { addResetButton } from "../editors";
-import { applyFileIcon, fileIconOptions, resolveFileIcon } from "../fileicons";
 import { FILE_TYPE_GROUPS, fileTypeLabel, FOLDERS_GROUP_ID, groupForFile } from "../filetypes";
 import { t } from "../i18n";
 import { openFile } from "../opener";
@@ -36,12 +36,19 @@ export function renderRecent(view: HomeView, card: DashboardCard, body: HTMLElem
 		return;
 	}
 
-	const list = body.createDiv("sbd-list");
-	const icons = fileIconOptions(view.plugin.settings);
+	// Widget Set → RECENT: a tracked-out mono eyebrow naming the card, then
+	// bare rows of filename + how long ago, with no icon badge in front. The
+	// eyebrow only appears on an untitled card — a titled one already carries
+	// its name in the card header, and drawing both would say it twice.
+	if (!card.title?.trim()) {
+		body.createDiv({ cls: "sbd-card-eyebrow", text: t().cards.recent.eyebrow });
+	}
+
+	const list = body.createDiv("sbd-list is-bare");
 	for (const file of files) {
 		const row = list.createDiv("sbd-list-item");
-		applyFileIcon(row.createDiv("sbd-list-icon"), resolveFileIcon(view.app, file, icons));
 		row.createDiv({ cls: "sbd-list-label", text: file.basename });
+		row.createDiv({ cls: "sbd-list-age", text: formatCompactAge(file.stat.mtime) });
 		const open = () => void openFile(view, file, "card");
 		row.addEventListener("click", open);
 		makeClickable(row, open, file.basename);

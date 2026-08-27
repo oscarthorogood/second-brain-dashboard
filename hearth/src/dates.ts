@@ -25,6 +25,10 @@ interface Moment {
 }
 interface MomentFn {
 	(input?: string): Moment;
+	/** Epoch milliseconds. moment accepts these directly; the overload is
+	 * spelled out because this local interface is deliberately narrower than
+	 * moment's own, so anything it doesn't name is a compile error. */
+	(input: number): Moment;
 	/** Format-restricted strict parse — never falls back to `new Date()`. */
 	(input: string, formats: unknown, strict: boolean): Moment;
 }
@@ -229,6 +233,23 @@ export function formatRelativeDate(dateStr: string): string {
 	if (diff >= 7 && diff <= 13) return t().dates.nextWeekday(capitalize(m.format("dddd")));
 	if (diff <= -7 && diff >= -13) return t().dates.lastWeekday(capitalize(m.format("dddd")));
 	return m.format("D MMM");
+}
+
+/** Format a timestamp as the compact "how long ago" the Widget Set
+ *  reference's RECENT card puts down the right edge of each row: "2m", "40m",
+ *  "3h", then the short weekday inside the last week ("Tue"), then a compact
+ *  "D MMM" beyond it. Anything in the future, or within the last minute,
+ *  reads as "now" — a recent-files list is built from files you just touched,
+ *  so a negative age means a clock skew, not a scheduled file. */
+export function formatCompactAge(ts: number, now: number = Date.now()): string {
+	const mins = Math.floor((now - ts) / 60000);
+	if (mins < 1) return t().dates.justNow;
+	if (mins < 60) return t().dates.minutesShort(mins);
+	const hours = Math.floor(mins / 60);
+	if (hours < 24) return t().dates.hoursShort(hours);
+	const then = moment(ts);
+	if (moment(now).diff(then, "day") < 7) return capitalize(then.format("ddd"));
+	return then.format("D MMM");
 }
 
 function capitalize(s: string): string {

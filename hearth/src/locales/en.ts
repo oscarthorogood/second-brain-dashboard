@@ -2226,6 +2226,11 @@ export const en = {
 
 	// ---- Card bodies (rendered content) --------------------------------
 	cards: {
+		recent: {
+			// The tracked-out mono eyebrow drawn inside an untitled
+			// recent-files card, naming it the way the reference does.
+			eyebrow: "Recent",
+		},
 		empty: {
 			searchNoQuery: "Set a query in card settings",
 			searchNoMatches: "No matches",
@@ -2451,6 +2456,9 @@ export const en = {
 			more: "More",
 		},
 		calendar: {
+			// Head of the week-number gutter. One letter: the column is 24px
+			// wide, which a two-letter head crowds.
+			weekColumn: "W",
 			previousMonth: "Previous month",
 			nextMonth: "Next month",
 			backToToday: "Back to today",
@@ -2636,6 +2644,11 @@ export const en = {
 		daysAgo: (n: number) => `${n} days ago`,
 		nextWeekday: (weekday: string) => `Next ${weekday}`,
 		lastWeekday: (weekday: string) => `Last ${weekday}`,
+		// The recent-files card's compact age column. Deliberately terse — it
+		// sits in the few characters left at the end of a filename row.
+		justNow: "now",
+		minutesShort: (n: number) => `${n}m`,
+		hoursShort: (n: number) => `${n}h`,
 	},
 
 	// ---- Recurrence rule labels (tasks card) ---------------------------

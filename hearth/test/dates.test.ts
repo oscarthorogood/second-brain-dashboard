@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { moment } from "obsidian";
-import { formatRelativeDate, localDayKey, parseNaturalDate } from "../src/dates";
+import { formatCompactAge, formatRelativeDate, localDayKey, parseNaturalDate } from "../src/dates";
 
 /**
  * Date logic is the classic trap: without a frozen clock the same test passes
@@ -305,5 +305,50 @@ describe("localDayKey", () => {
 			const ts = base + i * 6 * 3600 * 1000;
 			expect(localDayKey(ts)).toBe(moment(new Date(ts)).format("YYYY-MM-DD"));
 		}
+	});
+});
+
+
+describe("formatCompactAge — the recent card's age column", () => {
+	beforeEach(() => freezeAt("2026-07-15")); // a Wednesday
+
+	/** `n` units before the frozen "now". */
+	function ago(amount: number, unit: "minute" | "hour" | "day"): number {
+		const ms = { minute: 60_000, hour: 3_600_000, day: 86_400_000 }[unit];
+		return Date.now() - amount * ms;
+	}
+
+	it("reads anything under a minute as 'now'", () => {
+		expect(formatCompactAge(Date.now())).toBe("now");
+		expect(formatCompactAge(ago(59, "minute") + 59 * 60_000)).toBe("now");
+	});
+
+	it("counts whole minutes up to the hour", () => {
+		expect(formatCompactAge(ago(2, "minute"))).toBe("2m");
+		expect(formatCompactAge(ago(40, "minute"))).toBe("40m");
+		expect(formatCompactAge(ago(59, "minute"))).toBe("59m");
+	});
+
+	it("switches to hours at the hour and holds until the day", () => {
+		expect(formatCompactAge(ago(60, "minute"))).toBe("1h");
+		expect(formatCompactAge(ago(3, "hour"))).toBe("3h");
+		expect(formatCompactAge(ago(23, "hour"))).toBe("23h");
+	});
+
+	it("names the weekday for the rest of the week", () => {
+		// 24h before Wednesday noon is Tuesday.
+		expect(formatCompactAge(ago(24, "hour"))).toBe("Tue");
+		expect(formatCompactAge(ago(6, "day"))).toBe("Thu");
+	});
+
+	it("falls back to a compact date beyond a week", () => {
+		expect(formatCompactAge(ago(7, "day"))).toBe("8 Jul");
+		expect(formatCompactAge(ago(40, "day"))).toBe("5 Jun");
+	});
+
+	it("treats a future timestamp as 'now' rather than a negative age", () => {
+		// A clock skew, not a scheduled file — a recent-files list is built
+		// from files that have already been touched.
+		expect(formatCompactAge(Date.now() + 5 * 60_000)).toBe("now");
 	});
 });

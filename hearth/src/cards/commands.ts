@@ -182,5 +182,8 @@ export const commandsCard: CardDefinition<"commands"> = {
 		if (source.commands) copy.commands = source.commands.map((c) => ({ ...c }));
 	},
 	liveness: { mode: "static" },
-	cardClass: "is-tile-card",
+	// The reference lays commands and templates out as full-width sheet
+	// rows, not as the vertical glass tiles a launchpad uses — so they need a
+	// class of their own beside the shared tile behaviour.
+	cardClass: "is-tile-card is-commands-card",
 };

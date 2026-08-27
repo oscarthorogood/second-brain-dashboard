@@ -16,6 +16,7 @@ import {
 	openDailyNote,
 	renderEventRow,
 	showDayMenu,
+	showEventDetail,
 	taskNotesSourceEditor,
 	type IcsContext,
 } from "../calendarsource";
@@ -94,6 +95,7 @@ export function renderCalendar(
 			cursor.clone().endOf("month").add(7, "days").valueOf(),
 		);
 		renderCalendarGrid(view, wrap, cursor, options, cfg, activity, ics);
+		renderMiniAgenda(view, wrap, ics);
 	};
 	ics.onLoaded(draw);
 	draw();
@@ -109,16 +111,26 @@ function renderCalendarHead(
 	cursor: Moment,
 	handlers: { onPrev: () => void; onNext: () => void; onToday: () => void },
 ): void {
+	// Widget Set → CALENDAR: the month name alone on the left, the year in
+	// mono on the right. The reference draws no month arrows at all — it is a
+	// still artboard — so the two the card actually needs are tucked beside
+	// the year and only fade in on hover, leaving the resting header exactly
+	// the reference's two pieces of text.
 	const head = wrap.createDiv("sbd-calendar-head");
-	const prev = head.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.previousMonth } });
-	setIcon(prev, "chevron-left");
-	prev.addEventListener("click", handlers.onPrev);
 
-	const label = head.createDiv({ cls: "sbd-calendar-label", text: cursor.format("MMMM YYYY") });
+	const label = head.createDiv({ cls: "sbd-calendar-label", text: cursor.format("MMMM") });
 	label.setAttribute("title", t().cards.calendar.backToToday);
 	label.addEventListener("click", handlers.onToday);
 
-	const next = head.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.nextMonth } });
+	const side = head.createDiv("sbd-calendar-side");
+	side.createDiv({ cls: "sbd-calendar-year", text: cursor.format("YYYY") });
+
+	const navs = side.createDiv("sbd-calendar-navs");
+	const prev = navs.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.previousMonth } });
+	setIcon(prev, "chevron-left");
+	prev.addEventListener("click", handlers.onPrev);
+
+	const next = navs.createEl("button", { cls: "sbd-calendar-nav", attr: { "aria-label": t().cards.calendar.nextMonth } });
 	setIcon(next, "chevron-right");
 	next.addEventListener("click", handlers.onNext);
 }
@@ -140,12 +152,18 @@ function renderCalendarGrid(
 	if (weekNumbers) {
 		// One extra leading column for the week number.
 		grid.addClass("has-week-numbers");
-		grid.createDiv({ cls: "sbd-calendar-dow sbd-calendar-wk", text: "wk" });
+		// A single "W", as the reference heads the gutter — the column is only
+		// 24px wide and a two-letter head crowds it.
+		grid.createDiv({ cls: "sbd-calendar-dow sbd-calendar-wk", text: t().cards.calendar.weekColumn });
 	}
 
 	for (let i = 0; i < 7; i++) {
 		const dow = (startOfWeek + i) % 7;
-		grid.createDiv({ cls: "sbd-calendar-dow", text: moment().day(dow).format("dd") });
+		// One letter per column, as the reference draws it (M T W T F S S).
+		// Array.from, not [0]: a locale whose short weekday starts with an
+		// astral character would otherwise be sliced mid-surrogate.
+		const short = moment().day(dow).format("dd");
+		grid.createDiv({ cls: "sbd-calendar-dow", text: Array.from(short)[0] ?? short });
 	}
 
 	const monthStart = cursor.clone().startOf("month");
@@ -219,6 +237,41 @@ function renderCalendarGrid(
 		makeClickable(cell, () => activate(), day.format("MMMM D, YYYY"));
 	}
 }
+
+
+/** The list the reference draws under the month grid, below a dashed rule: a
+ *  coloured dot, the event's title, and its start time down the right edge.
+ *  Scoped to today, which is what a month grid leaves unanswered — the grid
+ *  says which days are busy, this says what today actually holds. Renders
+ *  nothing at all when today is clear, so a card with no calendar attached
+ *  looks exactly as it did. */
+function renderMiniAgenda(view: HomeView, wrap: HTMLElement, ics: IcsContext): void {
+	const events = ics.on(moment().format("YYYY-MM-DD"));
+	if (!events.length) return;
+
+	const list = wrap.createDiv("sbd-mini-agenda");
+	for (const ev of events.slice(0, MINI_AGENDA_MAX)) {
+		const row = list.createDiv("sbd-mini-agenda-row");
+		const dot = row.createDiv("sbd-mini-agenda-dot");
+		dot.style.setProperty("--ev-color", ics.eventColor(ev));
+		row.createDiv({ cls: "sbd-mini-agenda-title", text: ev.summary });
+		// "LT" is moment's locale-aware short time, so this follows whatever
+		// clock the user's locale uses. The mini calendar has no clock setting
+		// of its own — unlike the schedule card, which offers one.
+		const at = ev.allDay
+			? t().cards.calendar.allDay
+			: moment(new Date(ev.start)).format("LT");
+		row.createDiv({ cls: "sbd-mini-agenda-time", text: at });
+		const open = () => showEventDetail(view, ev, ics);
+		row.addEventListener("click", open);
+		makeClickable(row, open, ev.summary);
+	}
+}
+
+/** How many of today's events the footer lists before it stops. The reference
+ *  draws two; a hard cap matters more than the exact number, because the
+ *  footer shares the card's height with the grid above it. */
+const MINI_AGENDA_MAX = 3;
 
 
 /** The agenda layout of the calendar card: a chronological list of days from
