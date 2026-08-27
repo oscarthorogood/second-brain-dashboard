@@ -1974,14 +1974,12 @@ export function effectiveAutoRefreshMinutes(s: HomeSettings, minutes: number): n
  * like frosted glass; a user (or a card) can no longer dial that down to
  * Solid or Minimal. Low power mode still overrides opacity/blur, since that's
  * a performance switch, not a styling choice. */
-/* 0.07, not the 0.4 this used to be, and the single biggest reason the board
- * used to read as opaque grey panels. Sampling a reference card against the
- * wallpaper immediately outside it shows the card lifting the backdrop by only
- * about 7/255 — it is very nearly clear glass. The old 0.4 was also mixed from
- * a mid grey rather than white (see --sbd-glass-tint), so it desaturated
- * whatever was behind it into a dull sheet instead of brightening it. */
-export const FIXED_CARD_OPACITY = 0.07;
-export const FIXED_CARD_BLUR = 22;
+/* 0.10 and 18px, matching the Widget Set reference exactly (every card in it
+ * is background:rgba(255,255,255,0.10) over backdrop-filter:blur(18px)) —
+ * not the 0.4/opaque-grey-panel look this used to be. Still very nearly
+ * clear glass, brightening the backdrop rather than covering it. */
+export const FIXED_CARD_OPACITY = 0.1;
+export const FIXED_CARD_BLUR = 18;
 export const FIXED_CARD_BORDER_WIDTH = 1;
 
 /** Effective card surface opacity for the active board. 0 = fully
