@@ -6033,49 +6033,54 @@ body.theme-dark {
 	color: var(--text-normal);
 }
 
+/* The reference sets the range as the card's headline, at display size. */
 .sbd-sched-title {
 	flex: 1;
 	min-width: 0;
-	font-size: 0.92rem;
+	font-size: 1.4375rem;
 	font-weight: 600;
-	color: var(--text-normal);
+	color: rgba(255, 255, 255, 0.96);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-/* The view switcher reads as one segmented control rather than four buttons. */
+/* Widget Set → SCHEDULE draws the view switcher as the reference's track:
+ * a translucent rail holding a near-white pill on the active view — the same
+ * control the card-settings sheet uses for its tabs. It was a bordered
+ * segmented control with hairlines between the segments. */
 .sbd-sched-views {
 	display: flex;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 9px;
+	gap: 6px;
+	padding: 4px;
+	border: none;
+	border-radius: var(--sbd-radius-track);
+	background: var(--sbd-track-fill);
 	overflow: hidden;
 }
 
 .sbd-sched-view {
-	padding: 3px 9px;
-	height: 26px;
+	padding: 6px 14px;
+	height: auto;
 	border: none;
-	border-radius: 0;
+	border-radius: 9px;
 	background: transparent;
-	color: var(--text-muted);
-	font-size: 0.74rem;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 0.8125rem;
+	font-weight: 600;
 	cursor: pointer;
 	box-shadow: none;
+	transition: var(--sbd-transition-interactive);
 }
 
-.sbd-sched-view + .sbd-sched-view {
-	border-left: 1px solid var(--background-modifier-border);
-}
-
-.sbd-sched-view:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
+.sbd-sched-view:hover:not(.is-active) {
+	background: var(--sbd-panel-tier-fill-hover);
+	color: #ffffff;
 }
 
 .sbd-sched-view.is-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: var(--sbd-track-pill-fill);
+	color: var(--sbd-ink);
 }
 
 /* The per-view toggles read as one list under their shared description. */
@@ -6419,8 +6424,9 @@ body.theme-dark {
 	top: 0;
 	right: 7px;
 	transform: translateY(-50%);
-	font-size: 0.66rem;
-	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.5);
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
@@ -6438,16 +6444,15 @@ body.theme-dark {
 
 /* One hour line per row, drawn by the background rather than by an element per
    hour — the grid stays one element deep however tall the day is. */
+/* The reference gives each day its own soft glass column with rounded ends,
+ * and rules nothing: the columns' own edges separate the days, so the
+ * hairline borders and the hour lines that used to stripe them are gone. */
 .sbd-sched-col {
 	position: relative;
-	border-left: 1px solid var(--background-modifier-border);
-	background-image: linear-gradient(
-		to bottom,
-		var(--background-modifier-border) 0,
-		var(--background-modifier-border) 1px,
-		transparent 1px
-	);
-	background-size: 100% var(--sched-hour, 44px);
+	border-left: none;
+	border-radius: var(--sbd-radius-l);
+	background-color: rgba(255, 255, 255, 0.1);
+	background-image: none;
 }
 
 .sbd-sched-col.is-today {
