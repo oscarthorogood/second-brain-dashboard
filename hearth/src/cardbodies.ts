@@ -664,7 +664,7 @@ export function applyTileSize(
 	const h = sizeH ?? legacySize;
 	// Use the fine cell size for span calculation so sizing is granular.
 	const cell = TILE_CELL;
-	const rowH = Math.round(TILE_CELL * 0.78);
+	const rowH = TILE_ROW;
 	const cs = w && w > 0 ? Math.max(1, Math.round(w / cell)) : DEFAULT_TILE_CS;
 	const rs = h && h > 0 ? Math.max(1, Math.round(h / rowH)) : DEFAULT_TILE_RS;
 	tile.style.setProperty("--sbd-tile-cs", String(cs));
@@ -689,11 +689,30 @@ function applyTileIconOnly(tile: HTMLElement, cs: number, rs: number): void {
 }
 
 
+/** A tile's height when none is saved: the same 2:2.4 proportion the
+ * reference's launchpad tiles have, so an unsized tile and a default-sized one
+ * land on the same span. */
+function defaultTileHeight(baseTile: number): number {
+	return Math.round(baseTile * 1.07);
+}
+
+
 /** Default span for a tile with no explicit size: 2 columns × 2 rows on the
- * fine grid (≈88×68px), matching the visual size of the old 90px default. */
+ * fine grid (102×108px), which is the reference launchpad's tile. */
 const DEFAULT_TILE_CS = 2;
 
 const DEFAULT_TILE_RS = 2;
+
+
+/** The gap between tiles, and the fine grid's row height. Both are the
+ * reference's launchpad measured back onto this grid: its 8 default tiles sit
+ * at 102x108 with 14px gutters, which is exactly a 2x2 tile here once a row is
+ * 47px and the gap is 14. Keep in step with `.sbd-links` in styles.css — the
+ * drag/resize maths below converts pointer pixels to grid lines and has to
+ * agree with what the browser laid out. */
+const TILE_GAP = 14;
+
+const TILE_ROW = 47;
 
 
 /** Fine grid (px) that tile sizes snap to, so tiles align like Android widgets. */
@@ -743,7 +762,7 @@ export function makeTileResizable(
 		const legacy = getLegacy();
 		startW = getW() ?? legacy ?? baseTile;
 		if (legacy != null && getW() == null) setW(legacy);
-		startH = getH() ?? legacy ?? Math.round(baseTile * 0.78);
+		startH = getH() ?? legacy ?? defaultTileHeight(baseTile);
 		if (legacy != null && getH() == null) setH(legacy);
 		startX = e.clientX;
 		startY = e.clientY;
@@ -762,12 +781,12 @@ export function makeTileResizable(
 		const w = Math.max(TILE_CELL, Math.min(480, snap(startW + dx, TILE_GRID)));
 		const h = Math.max(34, Math.min(480, snap(startH + dy, TILE_GRID)));
 		setW(w === baseTile ? undefined : w);
-		setH(h === Math.round(baseTile * 0.78) ? undefined : h);
+		setH(h === defaultTileHeight(baseTile) ? undefined : h);
 		setLegacy(undefined);
 		// Convert live pixel size to grid spans using the fine cell size so
 		// the tile grows in small, precise steps.
 		const cell = TILE_CELL;
-		const rowH = Math.round(TILE_CELL * 0.78);
+		const rowH = TILE_ROW;
 		const cs = Math.max(1, Math.round(w / cell));
 		const rs = Math.max(1, Math.round(h / rowH));
 		tile.style.setProperty("--sbd-tile-cs", String(cs));
@@ -1150,10 +1169,10 @@ function getTileCell(
 	const rect = tile.getBoundingClientRect();
 	const cRect = container.getBoundingClientRect();
 	if (cRect.width <= 0) return null;
-	const gap = 6;
+	const gap = TILE_GAP;
 	const columns = Math.max(1, Math.floor((cRect.width + gap) / (TILE_CELL + gap)));
 	const colW = (cRect.width - (columns - 1) * gap) / columns;
-	const rowH = Math.round(TILE_CELL * 0.78);
+	const rowH = TILE_ROW;
 	const relX = rect.left - cRect.left;
 	const relY = rect.top - cRect.top;
 	const col = Math.max(1, Math.round(relX / (colW + gap)) + 1);
@@ -1195,7 +1214,7 @@ function pickGridCell(
 ): { col: number; row: number } | null {
 	const rect = container.getBoundingClientRect();
 	if (rect.width <= 0) return null;
-	const gap = 6;
+	const gap = TILE_GAP;
 	// auto-fill column count at the current card width (matches the CSS
 	// `repeat(auto-fill, minmax(44px, 1fr))` grid).
 	const columns = Math.max(1, Math.floor((rect.width + gap) / (TILE_CELL + gap)));
@@ -1207,7 +1226,7 @@ function pickGridCell(
 		tile.style.getPropertyValue("--sbd-tile-cs") || String(DEFAULT_TILE_CS),
 		10,
 	) || DEFAULT_TILE_CS;
-	const rowH = Math.round(TILE_CELL * 0.78);
+	const rowH = TILE_ROW;
 	// Pointer relative to the grid's content box, in cells (1-based lines).
 	const relX = clientX - rect.left;
 	const relY = clientY - rect.top;

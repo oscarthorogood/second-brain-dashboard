@@ -594,7 +594,10 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	font-size: clamp(1.6rem, 18cqw, 3.4rem);
+	/* The board title sits in the header, outside any card, so it stays sized
+	 * against the window — unlike the display type inside cards, which is sized
+	 * in cqw against the card. */
+	font-size: clamp(2.2rem, 5vw, 3.4rem);
 	font-weight: 700;
 	letter-spacing: -0.02em;
 	color: var(--text-normal);
@@ -726,6 +729,13 @@ body.theme-dark {
 
 /* The date block leads the card and the note follows, so the two sit at
  * opposite ends of whatever height the card has. */
+/* DAILY is an embed host, but unlike the EMBED card its note sits in an inset
+ * panel rather than running to the card's edges — so it keeps the card's side
+ * padding that the generic host rule strips. */
+.sbd-card > .sbd-card-body.is-embed-host:has(> .sbd-daily-date) {
+	padding-inline: var(--sbd-card-pad-x);
+}
+
 .sbd-card-body.is-embed-host:has(> .sbd-daily-date) {
 	display: flex;
 	flex-direction: column;
@@ -758,8 +768,19 @@ body.theme-dark {
  * because the date above it is white on glass too, and a white sheet here
  * would split the card into two unrelated halves. */
 .sbd-view .sbd-embed.sbd-daily-note {
-	flex: 1 1 auto;
+	/* The panel hugs the note rather than stretching to the card. In the
+	 * reference a two-line note draws a 68px panel sitting on the card's
+	 * bottom edge, with the empty glass between it and the date left empty —
+	 * stretching it filled that gap with a slab of tint. It still shrinks and
+	 * scrolls once the note is longer than the space the date leaves. */
+	flex: 0 1 auto;
 	min-height: 0;
+	/* .sbd-embed sets height:100% for the standalone EMBED card, which fills
+	 * its body. Here the panel is one of two children and must not claim the
+	 * whole column — that pushed the date block off the top of the card. */
+	height: auto;
+	max-height: 100%;
+	overflow: auto;
 	background: var(--sbd-panel-tier-fill);
 	border-radius: var(--sbd-radius-l);
 	padding: 14px 16px;
@@ -772,6 +793,28 @@ body.theme-dark {
 	--background-primary: transparent;
 	--background-secondary: rgba(255, 255, 255, 0.14);
 	--link-color: #ffffff;
+}
+
+/* Headings inside the panel are set at the body's size, in the reference's
+ * dim caps-free treatment. A rendered `## Log` at Obsidian's h2 is 1.6rem —
+ * taller than the whole panel the reference draws, and it pushed the note off
+ * the bottom of the card. */
+.sbd-view .sbd-embed.sbd-daily-note :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0 0 4px;
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-view .sbd-embed.sbd-daily-note p {
+	margin: 0 0 6px;
+	font-size: 0.875rem;
+	line-height: 1.35;
+}
+
+.sbd-view .sbd-embed.sbd-daily-note > :last-child {
+	margin-bottom: 0;
 }
 
 /* ---- Leaf: the hosted view's name ---------------------------------- */
@@ -1491,9 +1534,19 @@ body.theme-dark {
 .sbd-card {
 	position: absolute;
 	box-sizing: border-box;
+	/* Display type inside a card is sized against the CARD, not the window.
+	 * The cqw clamps further down used to be vw-based, which meant a 238px card
+	 * on a 2560px monitor drew its day number at 230px where the reference
+	 * draws 64px. The container is the card rather than its padded body so one
+	 * coefficient holds whatever padding a kind sets. */
+	container-type: inline-size;
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
+	/* The card's content inset, consumed by the body and the title row. See the
+	 * per-kind table below .sbd-card-body. */
+	--sbd-card-pad-x: 24px;
+	--sbd-card-pad-y: 24px;
 	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
 	border-radius: var(--sbd-card-radius, 42px);
@@ -1637,7 +1690,9 @@ body.theme-dark {
 .sbd-card-head {
 	display: flex;
 	align-items: center;
-	padding: 6px 10px;
+	/* Tracks the body's side padding so a titled card's rule starts and ends
+	 * where its content does. */
+	padding: 10px var(--sbd-card-pad-x, 24px);
 	border-bottom: var(--card-border-width, 1px) solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
@@ -1669,17 +1724,75 @@ body.theme-dark {
 	display: none;
 }
 
+/* The reference gives every widget its own card padding, between 20px and
+ * 28px (see the table in the block comment below). 24px is the mode, so it is
+ * the base here and each kind that differs states its own. This used to be
+ * 8px/10px, which is most of why every widget read as cramped next to the
+ * reference: a 238px card was giving its content 218px of width where the
+ * reference gives it 190px, and the content ran right up to the rim. */
 .sbd-card-body {
-	/* Display type inside a card is sized against the CARD, not the window.
-	 * The sizes below used to be vw-based clamps, which meant a 238px card on
-	 * a 2560px monitor drew its day number at 230px — the reference's 64px is
-	 * 27% of that card's width, and cqw is the unit that actually says so. */
-	container-type: inline-size;
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
-	--sbd-card-pad-x: 10px;
-	padding: 8px var(--sbd-card-pad-x);
+	padding: var(--sbd-card-pad-y) var(--sbd-card-pad-x);
+}
+
+/* Per-kind padding, straight off the reference's artboard. Only the kinds that
+ * differ from the 24px base appear. WEB and LEAF are 20px because both host a
+ * framed view that wants the room; HEATMAP is 28px top-and-bottom because its
+ * grid is the widest thing on the board and needs the air; CLOCK and SLIDESHOW
+ * have none at all — the clock centres a face in the whole card, and the
+ * slideshow's photo is edge-to-edge. */
+.sbd-card.is-embed-card,
+.sbd-card.is-schedule-card {
+	--sbd-card-pad-x: 28px;
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-daily-card,
+.sbd-card.is-tasks-card,
+.sbd-card.is-git-card {
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-calendar-card {
+	--sbd-card-pad-x: 26px;
+}
+
+.sbd-card.is-stats-card,
+.sbd-card.is-weather-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-heatmap-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 28px;
+}
+
+.sbd-card.is-text-card,
+.sbd-card.is-commands-card,
+.sbd-card.is-favorites-card {
+	--sbd-card-pad-x: 22px;
+	--sbd-card-pad-y: 22px;
+}
+
+.sbd-card.is-bookmarks-card,
+.sbd-card.is-recent-card,
+.sbd-card.is-search-card {
+	--sbd-card-pad-x: 22px;
+}
+
+.sbd-card.is-web-card,
+.sbd-card.is-leaf-card {
+	--sbd-card-pad-x: 20px;
+	--sbd-card-pad-y: 20px;
+}
+
+.sbd-card.is-clock-card,
+.sbd-card.is-slideshow-card {
+	--sbd-card-pad-x: 0px;
+	--sbd-card-pad-y: 0px;
 }
 
 /* When a card body holds a read-only embed/daily-note host directly, the host
@@ -1728,7 +1841,7 @@ body.theme-dark {
  * top of the hang, not compared against it, so the checkbox keeps a full
  * gutter's clearance instead of landing flush against the clip edge. */
 .sbd-card-body.is-embed-host
-	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image),
+	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image):not(.sbd-daily-note),
 .sbd-card-body.is-jot-host .sbd-jot-preview {
 	padding-inline-start: max(
 		var(--sbd-card-pad-x),
@@ -3607,9 +3720,14 @@ body.theme-dark {
 	position: relative;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-	grid-auto-rows: 34px;
+	/* Row height and gutter are the reference's launchpad measured back onto
+	 * this grid: its tiles are 102x108 with 14px gutters, which is what a
+	 * default 2x2 tile comes to at these numbers. Kept in step with TILE_ROW
+	 * and TILE_GAP in cardbodies.ts, which convert drag/resize pixels to
+	 * grid lines. */
+	grid-auto-rows: 47px;
 	grid-auto-flow: dense;
-	gap: 6px;
+	gap: 14px;
 	justify-content: start;
 }
 
@@ -3930,6 +4048,10 @@ body.theme-dark {
 	gap: 11px;
 }
 
+.sbd-card.is-templater-card .sbd-links {
+	gap: 12px;
+}
+
 .sbd-card.is-commands-card .sbd-link-tile,
 .sbd-card.is-templater-card .sbd-link-tile {
 	flex-direction: row;
@@ -3965,6 +4087,66 @@ body.theme-dark {
 
 .sbd-card.is-commands-card .sbd-link-icon .svg-icon,
 .sbd-card.is-templater-card .sbd-link-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+/* TEMPLATER's row is wider than COMMANDS' and says more: a tinted 40px badge
+ * leads it, the name and the route it takes stack in the middle, and a chevron
+ * closes it. The badge takes a soft tint of the reference's blue; --sbd-tile-tint
+ * is the hook a per-item colour would set once items carry one. */
+.sbd-card.is-templater-card .sbd-link-tile {
+	gap: 15px;
+	padding: 0 20px;
+	border-radius: var(--sbd-radius-tile);
+}
+
+.sbd-card.is-templater-card .sbd-link-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 13px;
+	background: var(--sbd-tile-tint, rgba(47, 143, 240, 0.14));
+}
+
+.sbd-card.is-templater-card .sbd-link-icon .svg-icon {
+	width: 19px;
+	height: 19px;
+}
+
+.sbd-tile-text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	flex: 1;
+	min-width: 0;
+	text-align: left;
+}
+
+.sbd-card.is-templater-card .sbd-link-label {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+}
+
+/* The route is a path, so it is set in mono at the sheet's label grey — it
+ * reads as a machine-written line under a human-written name. */
+.sbd-tile-sub {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	color: var(--sbd-sheet-ink-label);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-tile-chevron {
+	display: flex;
+	align-items: center;
+	flex: none;
+	color: var(--sbd-sheet-ink-faint);
+}
+
+.sbd-tile-chevron .svg-icon {
 	width: 18px;
 	height: 18px;
 }
@@ -4039,50 +4221,54 @@ body.theme-dark {
 	color: rgba(255, 255, 255, 0.72);
 }
 
-/* Analogue clock face */
+/* Analogue clock face.
+ *
+ * The reference draws the face at 113px inside a 238px card — 47% of the
+ * card's width, not the near-full-bleed 220px this used to reach. And it
+ * draws every stroke in white at a graded alpha: the ring is a hairline, the
+ * ticks are soft, the hands are solid. The Obsidian theme variables this used
+ * to reference (--text-normal, --interactive-accent) resolve against the
+ * app's chrome, so on glass the hands came out grey-on-cream and the pin came
+ * out accent-purple — three colours the reference's face does not contain. */
 .sbd-analog {
-	width: 100%;
+	width: 47.7cqw;
 	max-width: 220px;
 	aspect-ratio: 1;
 	margin-bottom: 4px;
 }
 
 .sbd-analog-face {
-	fill: none;
-	stroke: var(--background-modifier-border);
-	stroke-width: 2;
-}
-
-.sbd-analog-tick {
-	stroke: var(--text-faint);
+	fill: rgba(255, 255, 255, 0.05);
+	stroke: rgba(255, 255, 255, 0.42);
 	stroke-width: 1;
 }
 
-.sbd-analog-tick-major {
-	stroke: var(--text-muted);
-	stroke-width: 2.4;
+.sbd-analog-tick {
+	stroke: rgba(255, 255, 255, 0.85);
+	stroke-width: 2.2;
+	stroke-linecap: round;
 }
 
 .sbd-analog-hour {
-	stroke: var(--text-normal);
+	stroke: rgba(255, 255, 255, 0.98);
 	stroke-width: 3.6;
 	stroke-linecap: round;
 }
 
 .sbd-analog-min {
-	stroke: var(--text-normal);
-	stroke-width: 2.4;
+	stroke: rgba(255, 255, 255, 0.98);
+	stroke-width: 3;
 	stroke-linecap: round;
 }
 
 .sbd-analog-sec {
-	stroke: var(--interactive-accent);
+	stroke: rgba(255, 255, 255, 0.7);
 	stroke-width: 1.2;
 	stroke-linecap: round;
 }
 
 .sbd-analog-pin {
-	fill: var(--interactive-accent);
+	fill: rgba(255, 255, 255, 0.98);
 }
 
 /* RSS feed card */
@@ -4743,6 +4929,36 @@ body.theme-dark {
 	flex: 0 0 auto;
 }
 
+/* The forecast's head row, at the reference's sizes: the wording block on the
+ * left, top-aligned, and the glyph beside a 46px temperature on the right.
+ * The tight glyph/temp sizes the compact style uses are for a single reading
+ * line — here the temperature is the card's headline. */
+.sbd-weather.is-forecast .sbd-weather-row {
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.sbd-weather.is-forecast .sbd-weather-rowtext {
+	gap: 3px;
+}
+
+.sbd-weather-now {
+	display: flex;
+	align-items: center;
+	flex: none;
+	gap: 10px;
+}
+
+.sbd-weather.is-forecast .sbd-weather-glyph {
+	font-size: 2.375rem;
+}
+
+.sbd-weather.is-forecast .sbd-weather-temp {
+	font-size: 2.875rem;
+	letter-spacing: -0.022em;
+}
+
 /* Widget Set → WEATHER lays the days out ACROSS the card as a row of
  * near-white tiles — day over glyph over temperature, centred — rather than
  * down it as a list of rows. Scoped to the forecast style, which is the one
@@ -4762,8 +4978,9 @@ body.theme-dark {
 	align-items: center;
 	justify-content: center;
 	gap: 7px;
+	box-sizing: border-box;
 	height: 96px;
-	padding: 8px 4px;
+	padding: 0 4px;
 	border-radius: var(--sbd-radius-l);
 	background: rgba(255, 255, 255, 0.8);
 	color: var(--sbd-sheet-ink-body);
@@ -4779,7 +4996,6 @@ body.theme-dark {
 	font-size: 0.875rem;
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: var(--sbd-label-tracking-tight);
 	color: var(--sbd-sheet-ink-body);
 }
 
@@ -8550,9 +8766,14 @@ body.sbd-dv-resizing {
 }
 
 /* ---- Activity heatmap card ------------------------------------------ */
+/* The reference's HEATMAP is three rows at the card's extremes: the title row
+ * on top, the year of days floating in the middle, the legend row at the
+ * bottom. The grid does not stretch to the space between them — a year of days
+ * is square days, and a stretched cell stops reading as a day. */
 .sbd-heatmap {
 	display: flex;
 	flex-direction: column;
+	justify-content: space-between;
 	gap: 8px;
 	height: 100%;
 }
@@ -8560,10 +8781,12 @@ body.sbd-dv-resizing {
 .sbd-heatmap-grid {
 	display: grid;
 	grid-auto-flow: column;
-	grid-template-rows: repeat(7, 1fr);
+	grid-template-rows: repeat(7, auto);
+	grid-auto-columns: 1fr;
 	gap: 3px;
-	flex: 1;
+	flex: 0 1 auto;
 	min-height: 0;
+	max-height: 100%;
 	overflow: hidden;
 }
 
@@ -8577,13 +8800,13 @@ body.sbd-dv-resizing {
 	align-items: center;
 	justify-content: center;
 	background: transparent;
-	/* Fill the grid cell without forcing a square aspect ratio: the cell's
-	   size is driven by the grid tracks (width = column / weeks, height =
-	   row / 7), so the grid scales smoothly with the card footprint instead
-	   of overflowing when the card's aspect ratio isn't weeks:7. */
+	/* Square. The column track sets the width (card width / weeks — about
+	 * 5.7px at the reference's 500px card, where the reference draws 5px) and
+	 * the aspect ratio sets the height, so the block of days keeps its shape
+	 * at any card size instead of smearing into bars on a tall card. */
 	min-width: 0;
 	width: 100%;
-	height: 100%;
+	aspect-ratio: 1;
 }
 
 .sbd-heatmap-cell::before {
@@ -8622,7 +8845,11 @@ body.sbd-dv-resizing {
 	color: rgba(255, 255, 255, 0.96);
 }
 
-.sbd-heatmap-range,
+.sbd-heatmap-range {
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.66);
+}
+
 .sbd-heatmap-start {
 	font-size: 0.8125rem;
 	color: rgba(255, 255, 255, 0.6);
@@ -8631,7 +8858,7 @@ body.sbd-dv-resizing {
 .sbd-heatmap-legend {
 	display: flex;
 	align-items: center;
-	gap: 3px;
+	gap: 6px;
 	justify-content: flex-end;
 	font-size: 0.75rem;
 	color: rgba(255, 255, 255, 0.55);
@@ -8640,11 +8867,16 @@ body.sbd-dv-resizing {
 .sbd-heatmap-legend .sbd-heatmap-cell {
 	width: 9px;
 	height: 9px;
+	flex: none;
 	aspect-ratio: auto;
 }
 
+.sbd-heatmap-legend .sbd-heatmap-cell::before {
+	border-radius: 2.5px;
+}
+
 .sbd-heatmap-legend-label {
-	margin: 0 3px;
+	margin: 0;
 }
 
 /* ---- Web card: external-open button & framing fallback -------------- */

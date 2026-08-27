@@ -507,21 +507,26 @@ function paintDetailed(wrap: HTMLElement, snapshot: WeatherSnapshot, cfg: Weathe
 /** Forecast: the curve is the point. The current conditions shrink to one line
  * above it and the daily strip sits below. */
 function paintForecast(wrap: HTMLElement, snapshot: WeatherSnapshot, cfg: WeatherConfig, r: Resolved): void {
+	// Reference (Widget Set → WEATHER): the wording leads on the left — place,
+	// condition, then the "feels / wind / UV" line — and the glyph and the big
+	// temperature close the row on the right. Reading it the other way round
+	// put a 46px number where the eye starts.
 	const row = wrap.createDiv("sbd-weather-row sbd-weather-row-tight");
-	glyph(row, weatherIcon(snapshot.now.code, snapshot.now.isDay), "sbd-weather-glyph");
-	row.createDiv({
-		cls: "sbd-weather-temp",
-		text: formatTemp(snapshot.now.temp, r.tempUnit),
-	});
 	const text = row.createDiv("sbd-weather-rowtext");
+	if (r.showLocation) placeLine(text, cfg, "sbd-weather-place");
 	if (r.showCondition) {
 		text.createDiv({
 			cls: "sbd-weather-condition",
 			text: conditionText(snapshot.now.code),
 		});
 	}
-	if (r.showLocation) placeLine(text, cfg, "sbd-weather-place");
 	metaLine(text, headlineBits(snapshot, r));
+	const now = row.createDiv("sbd-weather-now");
+	glyph(now, weatherIcon(snapshot.now.code, snapshot.now.isDay), "sbd-weather-glyph");
+	now.createDiv({
+		cls: "sbd-weather-temp",
+		text: formatTemp(snapshot.now.temp, r.tempUnit),
+	});
 
 	const hours = upcomingHours(snapshot, r.hourlyCount || defaultHourlyCount("forecast"));
 	if (hours.length >= 2) {

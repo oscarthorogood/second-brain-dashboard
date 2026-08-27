@@ -1,4 +1,4 @@
-import { Notice, setTooltip, Setting, TFile } from "obsidian";
+import { Notice, setIcon, setTooltip, Setting, TFile } from "obsidian";
 import {
 	applyTileSize,
 	emptyState,
@@ -75,7 +75,16 @@ export function renderTemplater(view: HomeView, card: DashboardCard, body: HTMLE
 		applyTileSize(tile, item.sizeW, item.sizeH, item.size, baseTile, item.col, item.row);
 		applyTileVisual(view, tile, item.icon, "file-plus-2");
 		const label = tileLabel(item);
-		tile.createDiv({ cls: "sbd-link-label", text: label });
+		// Reference (Widget Set -> TEMPLATER): the row names the template on top
+		// and the route it takes underneath — "Templates/Meeting.md ->
+		// Meetings/" — with a chevron closing the row. A launchpad tile is a
+		// picture you recognise; a template row is a sentence you read, and the
+		// destination is half of it.
+		const text = tile.createDiv("sbd-tile-text");
+		text.createDiv({ cls: "sbd-link-label", text: label });
+		const route = tileRoute(item);
+		if (route) text.createDiv({ cls: "sbd-tile-sub", text: route });
+		setIcon(tile.createDiv("sbd-tile-chevron"), "chevron-right");
 		setTooltip(tile, tileTooltip(item));
 
 		// One note per click. Creating one is asynchronous (Templater may open a
@@ -121,6 +130,19 @@ export function renderTemplater(view: HomeView, card: DashboardCard, body: HTMLE
  * added and never renamed still reads correctly. */
 function tileLabel(item: TemplaterItem): string {
 	return item.label.trim() || templateDisplayName(item.template) || t().cards.templater.untitledTile;
+}
+
+
+/** The row's second line: the template it runs and the folder the note lands
+ * in. Empty when the item names no template yet, so a half-configured row shows
+ * its name alone rather than a bare arrow. */
+function tileRoute(item: TemplaterItem): string {
+	const template = (item.template || "").trim();
+	if (!template) return "";
+	const folder = normalizeFolderPath(item.folder ?? "");
+	// No folder means the vault root, and "Templates/Meeting.md -> /" reads as a
+	// mistake — the template alone is the whole route in that case.
+	return folder ? `${template} → ${folder}/` : template;
 }
 
 

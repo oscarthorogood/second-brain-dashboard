@@ -82,26 +82,27 @@ function renderAnalogClock(
 ): (now: Date) => void {
 	const svg = svgEl(wrap, "svg", { viewBox: "0 0 100 100" }, "sbd-analog");
 	svgEl(svg, "circle", { cx: "50", cy: "50", r: "48" }, "sbd-analog-face");
+	// The reference's face draws twelve identical ticks — no long quarter
+	// markers. The major/minor split made the face read as a measuring
+	// instrument; the reference's reads as an ornament.
 	for (let i = 0; i < 12; i++) {
 		const a = (i / 12) * Math.PI * 2;
-		const major = i % 3 === 0;
-		const r1 = major ? 38 : 42;
 		svgEl(
 			svg,
 			"line",
 			{
-				x1: String(50 + Math.sin(a) * r1),
-				y1: String(50 - Math.cos(a) * r1),
-				x2: String(50 + Math.sin(a) * 46),
-				y2: String(50 - Math.cos(a) * 46),
+				x1: String(50 + Math.sin(a) * 38),
+				y1: String(50 - Math.cos(a) * 38),
+				x2: String(50 + Math.sin(a) * 45),
+				y2: String(50 - Math.cos(a) * 45),
 			},
-			major ? "sbd-analog-tick-major" : "sbd-analog-tick",
+			"sbd-analog-tick",
 		);
 	}
 	const hand = (cls: string, length: number) =>
 		svgEl(svg, "line", { x1: "50", y1: "50", x2: "50", y2: String(50 - length) }, cls);
-	const hourHand = hand("sbd-analog-hour", 26);
-	const minHand = hand("sbd-analog-min", 38);
+	const hourHand = hand("sbd-analog-hour", 25);
+	const minHand = hand("sbd-analog-min", 33);
 	const secHand = cfg.showSeconds && !lowPower ? hand("sbd-analog-sec", 42) : null;
 	svgEl(svg, "circle", { cx: "50", cy: "50", r: "2.5" }, "sbd-analog-pin");
 

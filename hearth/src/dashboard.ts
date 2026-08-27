@@ -112,6 +112,10 @@ export function renderDashboard(
 		gridLayout.elements.set(card, el);
 		applyCardPosition(el, card);
 
+		// Every card carries its kind as a class, so styles.css can state the
+		// reference's per-widget chrome (its card padding, above all) without
+		// each kind having to declare a cardClass of its own.
+		el.addClass(`is-${card.kind}-card`);
 		const kindClasses = cardClasses(card);
 		if (kindClasses.length) el.addClass(...kindClasses);
 		if (card.cardOpacity != null) {
