@@ -160,6 +160,11 @@
 	 * the accent is white on this board, and a white star on a white-tinted
 	 * row would vanish. */
 	--sbd-star: #f4c53c;
+	/* The reference's densest small surface: white at 42% carrying DARK text
+	 * — the web card's address chip, the embed's LIVE label. Between the
+	 * panel tier (translucent, white text) and the sheet (near-opaque). */
+	--sbd-badge-fill-strong: rgba(255, 255, 255, 0.42);
+	--sbd-badge-ink: #4d565e;
 	/* The near-opaque white sheet: the reference's top tier, used where a
 	 * surface has to carry DARK text on the glass — a primary action, a
 	 * rendered note body, a calculator's operator keys. Distinct from
@@ -715,6 +720,140 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
 	caret-color: var(--sbd-sheet-link);
+}
+
+/* ---- Daily note — Widget Set → DAILY ------------------------------- */
+
+/* The date block leads the card and the note follows, so the two sit at
+ * opposite ends of whatever height the card has. */
+.sbd-card-body.is-embed-host:has(> .sbd-daily-date) {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 14px;
+}
+
+.sbd-daily-date {
+	flex: none;
+}
+
+.sbd-daily-weekday,
+.sbd-daily-month {
+	font-size: 0.9375rem;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+/* 64px at the reference's card size, its -2px tracking expressed as an em so
+ * it holds as the card is resized. */
+.sbd-daily-daynum {
+	font-size: clamp(2.25rem, 9vw, 4rem);
+	font-weight: 600;
+	line-height: 1.05;
+	letter-spacing: -0.032em;
+	color: rgba(255, 255, 255, 0.98);
+}
+
+/* The note sits in the glass panel tier with white text — NOT the white
+ * sheet the standalone embed card uses. The reference draws it that way
+ * because the date above it is white on glass too, and a white sheet here
+ * would split the card into two unrelated halves. */
+.sbd-view .sbd-embed.sbd-daily-note {
+	flex: 1 1 auto;
+	min-height: 0;
+	background: var(--sbd-panel-tier-fill);
+	border-radius: var(--sbd-radius-l);
+	padding: 14px 16px;
+	color: rgba(255, 255, 255, 0.95);
+	text-shadow: inherit;
+	--text-normal: rgba(255, 255, 255, 0.95);
+	--text-muted: rgba(255, 255, 255, 0.7);
+	--text-faint: rgba(255, 255, 255, 0.5);
+	--text-accent: #ffffff;
+	--background-primary: transparent;
+	--background-secondary: rgba(255, 255, 255, 0.14);
+	--link-color: #ffffff;
+}
+
+/* ---- Leaf: the hosted view's name ---------------------------------- */
+
+.sbd-leaf-viewtype {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	flex: none;
+	padding: 0 6px;
+	margin-bottom: 12px;
+}
+
+.sbd-leaf-viewtype-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.sbd-leaf-viewtype-icon .svg-icon {
+	width: 16px;
+	height: 16px;
+}
+
+/* The view type is an id ("outgoing-link"), so the reference sets it in mono
+ * — it reads as a machine name rather than a title. */
+.sbd-leaf-viewtype-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.8);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ---- Web: the address chip ----------------------------------------- */
+
+.sbd-web-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: none;
+	padding: 0 8px;
+	margin-bottom: 14px;
+}
+
+/* The badge tier — white at 42%, carrying dark text. Denser than the panel
+ * tier and lighter than the sheet, which is exactly where a browser's
+ * address bar sits in the reference. */
+.sbd-web-url {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 34px;
+	padding: 0 14px;
+	border-radius: 11px;
+	background: var(--sbd-badge-fill-strong);
+	color: var(--sbd-badge-ink);
+	text-shadow: none;
+}
+
+.sbd-web-url-icon {
+	display: flex;
+	flex: none;
+	color: var(--sbd-badge-ink);
+}
+
+.sbd-web-url-icon .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
+.sbd-web-url-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.875rem;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* The hosted plugin view (→ LEAF): a 24px sheet under the mono view-type
@@ -1725,6 +1864,15 @@ body.theme-dark {
 	padding: 0;
 }
 
+/* …except the leaf card, which now carries a name row above the hosted
+ * view: that row needs the card's own padding, and the view below it gets
+ * its rounded box rather than bleeding to the card's edge. */
+.sbd-card-body.sbd-card-body-live:has(> .sbd-leaf-viewtype) {
+	display: flex;
+	flex-direction: column;
+	padding: var(--sbd-card-pad-y, 20px) var(--sbd-card-pad-x, 20px);
+}
+
 .sbd-embed-live {
 	display: flex;
 	flex-direction: column;
@@ -2088,16 +2236,25 @@ body.theme-dark {
 }
 
 /* Web / iframe embeds fill the whole card body. */
+/* The address chip sits above the page, so the body is a column and the
+ * frame takes what is left. Padding comes back for the chip's sake — the
+ * frame is given its own rounded box below rather than bleeding to the
+ * card's edge, which is how the reference frames it. */
 .sbd-card-body.sbd-web-body {
-	padding: 0;
+	display: flex;
+	flex-direction: column;
 	overflow: hidden;
 }
 
 .sbd-web {
 	display: block;
 	width: 100%;
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
 	border: 0;
+	border-radius: var(--sbd-radius-xl);
+	background: var(--sbd-sheet-fill);
 }
 
 .sbd-import-input {
@@ -2683,6 +2840,51 @@ body.theme-dark {
 	color: rgba(255, 255, 255, 0.55);
 }
 
+/* A card's own headline, drawn inside it: a glyph beside a title at reading
+ * size. Distinct from the mono eyebrow below — the reference uses the
+ * eyebrow to label a surface and this to title a card (BOOKMARKS, GIT). */
+.sbd-card-headline {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin-bottom: 14px;
+}
+
+.sbd-card-headline-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.sbd-card-headline-icon .svg-icon {
+	width: 17px;
+	height: 17px;
+}
+
+.sbd-card-headline-text {
+	font-size: 1.0625rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* A bare row keeps its glyph but loses the badge behind it — the reference
+ * sets bookmark glyphs straight on the glass at text size. */
+.sbd-list.is-bare .sbd-list-icon {
+	width: auto;
+	height: auto;
+	background: none;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.sbd-list.is-bare .sbd-list-icon .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
 /* The tracked-out mono caption the reference draws inside a card to name it
  * ("RECENT", "JOT", "6 LINKS"). Shared by every card that carries one. */
 .sbd-card-eyebrow {
@@ -2692,6 +2894,15 @@ body.theme-dark {
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	margin-bottom: 13px;
+}
+
+/* The same caption, but on the white sheet rather than the glass — the
+ * reference sets it in the sheet's own faint grey there ("JOT", "6 LINKS"),
+ * since white on white would vanish. */
+.sbd-card-eyebrow.is-on-sheet {
+	color: var(--sbd-sheet-ink-faint);
+	text-shadow: none;
+	margin-bottom: 12px;
 }
 
 .sbd-list-item {
@@ -8139,18 +8350,50 @@ body.sbd-dv-resizing {
 
 /* The caption sits over the picture with a gradient scrim, so it stays readable
  * on a light photo and a dark one alike. */
+/* The reference's caption block: a mono folder eyebrow over the picture's
+ * name, on a gradient that fades up out of the image. The gradient is the
+ * reference's blue-grey ink rather than pure black — over a warm photograph
+ * black reads as a bruise. */
 .sbd-slide-caption {
 	position: absolute;
 	inset: auto 0 0 0;
 	z-index: 3;
-	padding: 22px 12px 9px;
-	color: #fff;
-	font-size: 0.76rem;
-	font-weight: 500;
-	line-height: 1.35;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-	background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 22px 26px 18px;
+	color: #ffffff;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+	background: linear-gradient(
+		to top,
+		rgba(30, 36, 42, 0.62),
+		rgba(30, 36, 42, 0)
+	);
 	pointer-events: none;
+}
+
+.sbd-slide-caption-folder {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	letter-spacing: var(--sbd-label-tracking);
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.72);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-slide-caption-folder.is-hidden {
+	display: none;
+}
+
+.sbd-slide-caption-name {
+	font-size: 1.1875rem;
+	font-weight: 600;
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* Previous / pause / next and the position, revealed on hover or keyboard
@@ -9444,10 +9687,14 @@ body.sbd-dv-resizing {
 	animation: sbd-rss-spin 0.9s linear infinite;
 }
 
+/* Widget Set → JIRA lists each issue as its own near-opaque sheet card with
+ * dark text, not as rows divided by a rule — the same treatment RSS items
+ * and query results take. */
 .sbd-jira-issues {
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
+	gap: 10px;
 	min-height: 0;
 	overflow-y: auto;
 }
@@ -9455,22 +9702,35 @@ body.sbd-dv-resizing {
 .sbd-jira-issue {
 	display: flex;
 	align-items: center;
-	gap: 9px;
+	gap: 12px;
 	width: 100%;
-	padding: 8px 6px;
+	padding: 12px 16px;
 	border: 0;
-	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: 9px;
-	background: transparent;
-	color: var(--text-normal);
+	border-bottom: none;
+	border-radius: var(--sbd-radius-l);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
 	text-align: left;
 	cursor: pointer;
 }
 
 .sbd-jira-issue:hover {
-	background: var(--background-modifier-hover);
+	background: var(--sbd-sheet-fill-hover);
 }
 
+/* The row's ink ladder, so its key, summary and status chip stop inheriting
+ * the board's white. */
+.sbd-view .sbd-jira-issue {
+	--text-normal: var(--sbd-sheet-ink);
+	--text-muted: var(--sbd-sheet-ink-muted);
+	--text-faint: var(--sbd-sheet-ink-faint);
+	--text-accent: var(--sbd-sheet-link);
+}
+
+/* The reference marks the issue type with a small tinted SQUARE, not a
+ * round badge — round is the board's glyph-on-glass shape, and on a white
+ * sheet it read as a hole. */
 .sbd-jira-type {
 	display: flex;
 	align-items: center;
@@ -9478,8 +9738,8 @@ body.sbd-dv-resizing {
 	flex: 0 0 auto;
 	width: 28px;
 	height: 28px;
-	border-radius: 50%;
-	background: var(--sbd-badge-fill);
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.05);
 	color: var(--text-normal);
 }
 
@@ -9500,30 +9760,41 @@ body.sbd-dv-resizing {
 	font-size: 0.7rem;
 }
 
+/* Mono, quiet, under the summary — the reference sets the issue key as a
+ * reference number rather than as a link. */
 .sbd-jira-key {
-	color: var(--text-accent);
-	font-weight: 600;
+	font-family: var(--sbd-font-mono);
+	color: var(--sbd-sheet-ink-muted);
+	font-weight: 400;
 }
 
 .sbd-jira-summary {
-	margin-top: 2px;
+	margin-top: 0;
+	margin-bottom: 2px;
 	overflow: hidden;
-	font-size: 0.84rem;
-	font-weight: 500;
+	color: var(--sbd-sheet-ink);
+	font-size: 0.9375rem;
+	font-weight: 700;
 	line-height: 1.25;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
+/* The reference's status chip: a pale tinted pill carrying tracked-out dark
+ * mono caps, sitting on the white row rather than on the glass. */
 .sbd-jira-status {
 	flex: 0 0 auto;
 	max-width: 130px;
-	padding: 2px 7px;
+	padding: 4px 9px;
 	overflow: hidden;
-	border-radius: 999px;
-	background: var(--background-modifier-hover);
-	color: var(--text-muted);
-	font-size: 0.68rem;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.06);
+	color: var(--sbd-sheet-ink-muted);
+	font-family: var(--sbd-font-mono);
+	font-weight: 700;
+	letter-spacing: var(--sbd-label-tracking-tight);
+	text-transform: uppercase;
+	font-size: 0.6875rem;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -9785,9 +10056,11 @@ body.sbd-dv-resizing {
 	flex: 0 0 auto;
 }
 
-/* The reference's git actions are the sheet tier: a near-solid white button
- * with dark bold wording, which is what makes "Commit & push" read as the
- * card's action rather than as another row of metadata. */
+/* The reference gives git two tiers of action, and the split carries the
+ * meaning: the one that writes — "Commit & push" — is the near-solid white
+ * sheet with dark bold wording, and everything beside it (Pull, Fetch) is
+ * the quieter glass panel with white wording. Making them all white, as this
+ * did, left three equally loud buttons and no primary. */
 .sbd-git-action {
 	display: inline-flex;
 	align-items: center;
@@ -9798,8 +10071,8 @@ body.sbd-dv-resizing {
 	padding: 0 14px;
 	border: none;
 	border-radius: var(--sbd-radius-field);
-	background: var(--sbd-sheet-fill);
-	color: var(--sbd-ink);
+	background: var(--sbd-panel-tier-fill);
+	color: rgba(255, 255, 255, 0.92);
 	font-size: 0.875rem;
 	font-weight: 700;
 	cursor: pointer;
@@ -9808,12 +10081,33 @@ body.sbd-dv-resizing {
 }
 
 .sbd-git-action:hover:not(:disabled) {
-	background: var(--sbd-sheet-fill-hover);
+	background: var(--sbd-panel-tier-fill-hover);
+	color: #ffffff;
 }
 
 .sbd-git-action:active:not(:disabled) {
-	background: var(--sbd-sheet-fill-active);
+	background: var(--sbd-panel-tier-fill-active);
 	transform: var(--sbd-press);
+}
+
+/* The writing actions take the sheet. `commitAndSync` is the reference's
+ * "Commit & push"; plain `commit` is the same act without the push, so it
+ * reads as the primary too when the card is configured without syncing. */
+.sbd-git-action.is-commitAndSync,
+.sbd-git-action.is-commit {
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-ink);
+}
+
+.sbd-git-action.is-commitAndSync:hover:not(:disabled),
+.sbd-git-action.is-commit:hover:not(:disabled) {
+	background: var(--sbd-sheet-fill-hover);
+	color: var(--sbd-ink);
+}
+
+.sbd-git-action.is-commitAndSync:active:not(:disabled),
+.sbd-git-action.is-commit:active:not(:disabled) {
+	background: var(--sbd-sheet-fill-active);
 }
 
 .sbd-git-action:disabled {

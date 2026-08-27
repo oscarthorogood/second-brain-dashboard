@@ -63,7 +63,14 @@ export function renderBookmarks(view: HomeView, body: HTMLElement): void {
 		return;
 	}
 
-	renderBookmarkItems(view, body.createDiv("sbd-list"), tree);
+	// Widget Set → BOOKMARKS heads the card with a bookmark glyph and its own
+	// title, then lists bare rows on the glass — a small glyph and a name,
+	// with no badge behind the glyph and no chip behind the row.
+	const head = body.createDiv("sbd-card-headline");
+	setIcon(head.createDiv("sbd-card-headline-icon"), "bookmark");
+	head.createDiv({ cls: "sbd-card-headline-text", text: t().cards.bookmarks.heading });
+
+	renderBookmarkItems(view, body.createDiv("sbd-list is-bare"), tree);
 }
 
 

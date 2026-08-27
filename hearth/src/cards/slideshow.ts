@@ -202,7 +202,11 @@ export function renderSlideshow(
 		img.alt = pictureLabel(picture);
 	};
 
+	// Widget Set → SLIDESHOW splits the caption in two: the picture's folder
+	// as a tracked-out mono eyebrow, and its name below at reading size.
 	const caption = cfg.showCaption ? stage.createDiv("sbd-slide-caption") : null;
+	const captionFolder = caption?.createDiv("sbd-slide-caption-folder") ?? null;
+	const captionName = caption?.createDiv("sbd-slide-caption-name") ?? null;
 	// A single picture has nothing to step through, so it gets no chrome — such a
 	// card is just an image embed, and dead buttons would suggest otherwise.
 	const controls =
@@ -212,7 +216,17 @@ export function renderSlideshow(
 
 	const updateChrome = () => {
 		const picture = pictures[index];
-		if (caption) caption.setText(pictureLabel(picture));
+		if (captionName) {
+			captionName.setText(pictureLabel(picture));
+			// The folder the picture lives in, uppercased by CSS. Dropped when
+			// the image sits at the vault root, where there is no folder to
+			// name and an empty eyebrow would just add a gap.
+			const folder = picture.path.slice(0, picture.path.lastIndexOf("/"));
+			if (captionFolder) {
+				captionFolder.setText(folder);
+				captionFolder.toggleClass("is-hidden", folder === "");
+			}
+		}
 		if (counter) counter.setText(`${index + 1}/${count}`);
 		if (pauseButton) {
 			const paused = state.paused === true;

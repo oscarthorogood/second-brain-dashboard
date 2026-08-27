@@ -33,6 +33,13 @@ export function renderLeaf(
 		return;
 	}
 
+	// Widget Set → LEAF names the hosted view above it, in mono — the card is
+	// showing another plugin's panel, and which panel is the one thing the
+	// panel itself never says.
+	const nameRow = body.createDiv("sbd-leaf-viewtype");
+	setIcon(nameRow.createDiv("sbd-leaf-viewtype-icon"), "layout-panel-left");
+	nameRow.createDiv({ cls: "sbd-leaf-viewtype-text", text: type });
+
 	const host = body.createDiv("sbd-leaf-host");
 	// Hosted views are natively interactive and manage their own scrolling, so
 	// let them fill the card edge-to-edge like canvas/Excalidraw embeds do.

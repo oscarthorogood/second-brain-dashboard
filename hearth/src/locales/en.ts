@@ -2323,6 +2323,8 @@ export const en = {
 		},
 		text: {
 			placeholder: "Jot something down…",
+			// The mono caption drawn inside an untitled jot pad.
+			eyebrow: "Jot",
 		},
 		calculator: {
 			placeholder: "2 + 2, 10 km to miles, 10 € to USD…",
@@ -2514,6 +2516,8 @@ export const en = {
 		},
 		bookmarks: {
 			untitled: "Untitled",
+			// The card's own headline, drawn inside it beside a bookmark glyph.
+			heading: "Bookmarks",
 		},
 		tasks: {
 			createNewTask: "Create new task",

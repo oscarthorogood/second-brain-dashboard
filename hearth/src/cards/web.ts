@@ -21,6 +21,15 @@ export function renderWeb(card: DashboardCard, body: HTMLElement, component: Com
 	}
 
 	body.addClass("sbd-web-body");
+
+	// Widget Set → WEB puts the address above the page on a chip, the way a
+	// browser chrome does — without it the card is an unlabelled rectangle of
+	// someone else's site. Text only: it is a label, not a field.
+	const bar = body.createDiv("sbd-web-bar");
+	const chip = bar.createDiv("sbd-web-url");
+	setIcon(chip.createDiv("sbd-web-url-icon"), "lock");
+	chip.createDiv({ cls: "sbd-web-url-text", text: hostLabel(url) });
+
 	const frame = body.createEl("iframe", { cls: "sbd-web" });
 	frame.setAttribute("src", url);
 	frame.setAttribute("loading", "lazy");
@@ -65,6 +74,20 @@ export function renderWeb(card: DashboardCard, body: HTMLElement, component: Com
 		open.addEventListener("click", openExternally);
 	}, 4000);
 	component.register(() => window.clearTimeout(timer));
+}
+
+
+/** The host part of a URL, as the reference labels it ("status.obsidian.md").
+ *  The full address is rarely readable at card width and the host is what
+ *  identifies the page. Falls back to the raw string when it won't parse — a
+ *  malformed URL is the user's own text and showing it is more useful than
+ *  showing nothing. */
+function hostLabel(url: string): string {
+	try {
+		return new URL(url).host || url;
+	} catch {
+		return url;
+	}
 }
 
 
