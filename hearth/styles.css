@@ -30,6 +30,129 @@
 	 * the colour behind the glass reads as vivid and alive rather than a muddy
 	 * grey wash — the defining quality of the reference's frosted surfaces. */
 	--sbd-glass-blur: blur(32px) saturate(2.2) brightness(1.15) contrast(1.05);
+
+	/* ---- The glass / menu / button vocabulary --------------------------
+	 *
+	 * Every value below is measured off design-ref/Widget Set.dc.html and
+	 * design-ref/Canvas.dc.html, and this is the one place those literals
+	 * live: the components further down reference these rather than each
+	 * repeating an rgba() triple, so retuning the material moves the whole
+	 * system at once. Decorative only — nothing here sets a layout
+	 * property. */
+
+	/* The tracked-out monospace micro-label that names every surface in the
+	 * reference ("EMBED", "TOOLBAR", "NOTES & FILES"). */
+	--sbd-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--sbd-label-size: 0.75rem;
+	--sbd-label-tracking: 0.13em;
+	/* Dense in-grid labels (a day-of-week column head) keep the family but
+	 * not the tracking — 0.13em on a three-letter head blows the column
+	 * open. */
+	--sbd-label-tracking-tight: 0.05em;
+
+	/* Card material: white at 10%, and a crisp white rim that does most of
+	 * the work of separating the card from the board. */
+	--sbd-glass-card-fill: rgba(255, 255, 255, 0.1);
+	--sbd-glass-card-border: rgba(255, 255, 255, 0.42);
+
+	/* Floating panel/modal material — denser than a card, because unlike a
+	 * card it has to carry dark text over whatever happens to be behind
+	 * it. */
+	--sbd-panel-fill: rgba(255, 255, 255, 0.6);
+	--sbd-panel-border: rgba(255, 255, 255, 0.7);
+	--sbd-panel-blur: blur(24px) saturate(150%);
+	--sbd-panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+
+	/* Glass pill button (the reference's "Add card" primary action). Its
+	 * blur is far shallower than a card's: this is a small pill floating
+	 * directly on the wallpaper, not a card-sized surface. */
+	--sbd-btn-glass-fill: rgba(255, 255, 255, 0.3);
+	--sbd-btn-glass-fill-hover: rgba(255, 255, 255, 0.44);
+	--sbd-btn-glass-fill-active: rgba(255, 255, 255, 0.22);
+	--sbd-btn-glass-border: rgba(255, 255, 255, 0.5);
+	--sbd-btn-glass-blur: blur(10px) saturate(140%);
+
+	/* Near-solid light pill (the "Done arranging" confirm action). */
+	--sbd-btn-light-fill: rgba(255, 255, 255, 0.94);
+	--sbd-btn-light-fill-hover: #ffffff;
+	--sbd-btn-light-fill-active: #eceef0;
+	--sbd-btn-light-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	--sbd-btn-light-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.16);
+
+	/* The circular icon button, in its two habitats: floating on glass
+	 * (white fill) and sitting on a near-white panel (ink fill). */
+	--sbd-icon-btn-fill: rgba(255, 255, 255, 0.55);
+	--sbd-icon-btn-fill-hover: rgba(255, 255, 255, 0.85);
+	--sbd-icon-btn-fill-active: rgba(255, 255, 255, 0.4);
+	--sbd-icon-btn-ink-fill: rgba(0, 0, 0, 0.06);
+	--sbd-icon-btn-ink-fill-hover: rgba(0, 0, 0, 0.12);
+	--sbd-icon-btn-ink-fill-active: rgba(0, 0, 0, 0.18);
+
+	/* Small controls on a panel: dropdown pills, text fields, toggle
+	 * tracks, the card picker's search box. */
+	--sbd-control-fill: rgba(255, 255, 255, 0.55);
+	--sbd-control-fill-hover: rgba(255, 255, 255, 0.8);
+	--sbd-control-fill-active: rgba(255, 255, 255, 0.45);
+	--sbd-control-border: rgba(255, 255, 255, 0.6);
+	/* The quieter tier: a field or a toggle track at rest has to read as
+	 * recessed next to an actionable dropdown of the same size. */
+	--sbd-control-fill-quiet: rgba(255, 255, 255, 0.35);
+	--sbd-control-border-quiet: rgba(255, 255, 255, 0.5);
+
+	/* The track a tab switcher's pills sit inside, and the pill itself. */
+	--sbd-track-fill: rgba(255, 255, 255, 0.28);
+	--sbd-track-pill-fill: rgba(255, 255, 255, 0.9);
+
+	/* Catalogue tiles (the add-card picker's card chips). */
+	--sbd-tile-fill: rgba(255, 255, 255, 0.3);
+	--sbd-tile-fill-hover: rgba(255, 255, 255, 0.55);
+	--sbd-tile-fill-active: rgba(255, 255, 255, 0.7);
+	--sbd-tile-border: rgba(255, 255, 255, 0.55);
+	--sbd-tile-border-hover: rgba(255, 255, 255, 0.8);
+
+	/* The nav rail is the one place the reference leaves the translucent
+	 * vocabulary for a flat pale grey, so these two stay opaque. */
+	--sbd-rail-fill-hover: #eef1f4;
+	--sbd-rail-fill-active: #e4e7ea;
+
+	/* Ink on a light surface (panels, tiles, the rail). The board's own
+	 * white-on-glass text uses --text-normal/muted/faint instead. */
+	--sbd-ink-strong: #20242a;
+	--sbd-ink: #23272b;
+	--sbd-ink-muted: #565d64;
+	--sbd-ink-faint: #8b9198;
+	--sbd-ink-label: #9199a0;
+	--sbd-ink-icon: #5d646b;
+	--sbd-ink-rail: #3b4148;
+
+	/* Shape. (The generic --sbd-radius-* scale above is for surfaces; these
+	 * name the control shapes the reference calls out.) */
+	--sbd-radius-control: 12px;
+	--sbd-radius-field: 14px;
+	--sbd-radius-pill: 20px;
+	--sbd-radius-track: 16px;
+
+	/* Press. Every clickable thing dips, and the smaller it is the further
+	 * it dips: 0.96 on a 32px icon circle is a shift of one pixel and reads
+	 * as nothing at all. */
+	--sbd-press: scale(0.96);
+	--sbd-press-tile: scale(0.98);
+	--sbd-press-icon: scale(0.9);
+	--sbd-transition-interactive: background 150ms ease,
+		border-color 150ms ease, color 150ms ease, box-shadow 150ms ease,
+		transform 100ms ease;
+
+	/* Toggles. The reference only draws the OFF state (a glass track with a
+	 * white thumb), so the ON state is derived rather than copied: filling
+	 * the track with ink is the only move that keeps a white thumb visible
+	 * on a light panel — filling it with the board's white accent would
+	 * make thumb and track the same colour. */
+	--sbd-toggle-track: var(--sbd-control-fill-quiet);
+	--sbd-toggle-track-hover: var(--sbd-control-fill);
+	--sbd-toggle-track-on: rgba(32, 36, 42, 0.82);
+	--sbd-toggle-track-on-hover: rgba(32, 36, 42, 0.92);
+	--sbd-toggle-thumb: #ffffff;
+	--sbd-toggle-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 body.theme-dark {
@@ -77,7 +200,7 @@ body.theme-dark {
 	 * Widget Set reference exactly (border:1px solid rgba(255,255,255,0.42)
 	 * on every card); the card's inset highlights (see --sbd-card-lift) layer
 	 * the extra top/bottom grade on top of this flat rim colour. */
-	--background-modifier-border: rgba(255, 255, 255, 0.42);
+	--background-modifier-border: var(--sbd-glass-card-border);
 	--background-modifier-hover: rgba(120, 120, 128, 0.24);
 	--background-modifier-active-hover: rgba(120, 120, 128, 0.32);
 	/* All white, differentiated by opacity rather than by shifting toward grey —
@@ -1075,10 +1198,14 @@ body.theme-dark {
  * light, low-contrast muted colour can all but disappear against a busy or
  * light-toned image. The shadow is faint enough to be invisible on an opaque
  * card but keeps the label readable over any backdrop. */
+/* Monospace, not the UI face: in the reference every surface is named by a
+ * tracked-out mono caption, and the even advance width is most of what makes
+ * a three-word label read as a caption rather than a small heading. */
 .sbd-card-title {
+	font-family: var(--sbd-font-mono);
 	font-weight: 600;
-	font-size: 0.72rem;
-	letter-spacing: 0.06em;
+	font-size: var(--sbd-label-size);
+	letter-spacing: var(--sbd-label-tracking);
 	text-transform: uppercase;
 	color: var(--text-normal);
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
@@ -1792,10 +1919,11 @@ body.theme-dark {
 
 .sbd-settings-index-grouplabel {
 	padding: 22px 4px 8px;
-	font-size: var(--font-ui-smaller);
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.05em;
+	letter-spacing: var(--sbd-label-tracking);
 	color: var(--text-faint);
 }
 
@@ -1922,34 +2050,48 @@ body.theme-dark {
 	max-width: 58ch;
 }
 
+/* One pill in the tab switcher's track (.sbd-modal-ribbon). Both states
+ * carry the same 600 weight — in the reference the switcher reads by fill,
+ * not by weight, so an inactive tab must not look like a lighter-weight
+ * sibling of the active one; only its colour recedes. */
 .sbd-ribbon-tab {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	padding: 6px 10px;
-	border-radius: 10px;
+	gap: 8px;
+	padding: 9px 16px;
+	border-radius: var(--sbd-radius-control);
 	border: 1px solid transparent;
 	background: transparent;
-	color: var(--text-muted);
+	color: var(--sbd-ink-muted);
 	font-size: var(--font-ui-small);
-	font-weight: 500;
+	font-weight: 600;
 	cursor: pointer;
 	white-space: nowrap;
 	flex-shrink: 0;
 	box-shadow: none;
-	transition:
-		background 120ms ease,
-		color 120ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-ribbon-tab:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
+	background: var(--sbd-control-fill-hover);
+	color: var(--sbd-ink);
 }
 
+.sbd-ribbon-tab:active {
+	background: var(--sbd-tile-fill-active);
+	transform: var(--sbd-press);
+}
+
+/* The white pill inset in the track. It sits on the track's own translucent
+ * fill, so it is opaque-ish white rather than the accent colour — the
+ * accent is white on the board and would have made the pill invisible. */
 .sbd-ribbon-tab.is-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: var(--sbd-track-pill-fill);
+	color: var(--sbd-ink);
+}
+
+.sbd-ribbon-tab.is-active:hover {
+	background: var(--sbd-btn-light-fill-hover);
 }
 
 .sbd-ribbon-tab-icon {
@@ -2051,9 +2193,8 @@ body.theme-dark {
 	width: fit-content;
 	padding: 4px;
 	margin-bottom: 14px;
-	/* Literal reference value (Canvas.dc.html's Content/Layout tab group). */
-	background: rgba(255, 255, 255, 0.28);
-	border-radius: 16px;
+	background: var(--sbd-track-fill);
+	border-radius: var(--sbd-radius-track);
 }
 
 /* Give the body a floor so switching from a dense tab (tasks) to a sparse one
@@ -3606,9 +3747,10 @@ body.theme-dark {
 
 .sbd-weather-metric-label {
 	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
 	font-size: 0.68rem;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 }
 
 .sbd-weather-metric-value {
@@ -4513,10 +4655,11 @@ body.theme-dark {
 }
 
 .sbd-agenda-month {
+	font-family: var(--sbd-font-mono);
 	font-size: 0.7rem;
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 	color: var(--text-faint);
 	padding: 8px 4px 4px;
 }
@@ -4553,9 +4696,10 @@ body.theme-dark {
 }
 
 .sbd-agenda-dow {
+	font-family: var(--sbd-font-mono);
 	font-size: 0.62rem;
 	text-transform: uppercase;
-	letter-spacing: 0.03em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 	color: var(--text-faint);
 }
 
@@ -4841,10 +4985,11 @@ body.theme-dark {
 
 .sbd-event-desc-head .sbd-event-text {
 	color: var(--text-muted);
+	font-family: var(--sbd-font-mono);
 	font-size: 0.78rem;
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 }
 
 .sbd-event-desc-body {
@@ -5258,10 +5403,11 @@ body.theme-dark {
 }
 
 .sbd-sched-headdow {
+	font-family: var(--sbd-font-mono);
 	font-size: 0.68rem;
 	color: var(--text-faint);
 	text-transform: uppercase;
-	letter-spacing: 0.03em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 }
 
 .sbd-sched-headnum {
@@ -5618,51 +5764,59 @@ body.theme-dark {
 .sbd-tool-btn {
 	display: flex;
 	align-items: center;
-	gap: 7px;
-	padding: 8px 16px;
-	border-radius: 999px;
-	/* Literal reference values (the "Add card" pill in Canvas.dc.html): a
-	 * light glass-white fill and a much shallower blur than the card material
-	 * (--sbd-glass-blur is tuned for a card-sized surface, not a small pill
-	 * floating directly on the wallpaper). */
-	border: 1px solid rgba(255, 255, 255, 0.5);
-	background: rgba(255, 255, 255, 0.3);
-	backdrop-filter: blur(10px) saturate(140%);
-	-webkit-backdrop-filter: blur(10px) saturate(140%);
-	color: var(--text-muted);
+	gap: 8px;
+	/* Asymmetric on purpose (reference: 11px 18px 11px 16px) — the leading
+	 * icon needs less room before it than the label does after it, or the
+	 * pill reads as left-heavy. */
+	padding: 11px 18px 11px 16px;
+	border-radius: var(--sbd-radius-pill);
+	font-weight: 600;
+	/* The "Add card" pill in Canvas.dc.html: a light glass-white fill and a
+	 * much shallower blur than the card material (--sbd-glass-blur is tuned
+	 * for a card-sized surface, not a small pill floating directly on the
+	 * wallpaper — hence --sbd-btn-glass-blur). */
+	border: 1px solid var(--sbd-btn-glass-border);
+	background: var(--sbd-btn-glass-fill);
+	backdrop-filter: var(--sbd-btn-glass-blur);
+	-webkit-backdrop-filter: var(--sbd-btn-glass-blur);
+	/* Full white at rest, not --text-muted: this is the board's primary
+	 * action, and a dimmed label on a translucent pill over a light
+	 * wallpaper was barely there until the pointer found it. The icon-only
+	 * variant below still fades — that fade is the auto-hide affordance, a
+	 * different thing from a label's contrast. */
+	color: var(--text-normal);
 	cursor: pointer;
 	font-size: 0.85rem;
-	transition: all 120ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-tool-btn:hover {
-	color: var(--text-normal);
-	background: rgba(255, 255, 255, 0.44);
+	background: var(--sbd-btn-glass-fill-hover);
 	border-color: var(--interactive-accent);
 }
 
 .sbd-tool-btn:active {
-	background: rgba(255, 255, 255, 0.22);
-	transform: scale(0.96);
+	background: var(--sbd-btn-glass-fill-active);
+	transform: var(--sbd-press);
 }
 
 /* The "Done arranging" pill (Canvas.dc.html): solid white rather than glass,
  * since it's the confirm action. */
 .sbd-tool-btn.is-active {
 	color: var(--text-on-accent);
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	background: var(--sbd-btn-light-fill);
+	border-color: var(--sbd-btn-light-fill);
+	box-shadow: var(--sbd-btn-light-shadow);
 }
 
 .sbd-tool-btn.is-active:hover {
-	background: #ffffff;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+	background: var(--sbd-btn-light-fill-hover);
+	box-shadow: var(--sbd-btn-light-shadow-hover);
 }
 
 .sbd-tool-btn.is-active:active {
-	background: #eceef0;
-	transform: scale(0.96);
+	background: var(--sbd-btn-light-fill-active);
+	transform: var(--sbd-press);
 }
 
 .sbd-tool-icon {
@@ -5673,7 +5827,7 @@ body.theme-dark {
  * matching the round icon-button vocabulary used everywhere else a control
  * floats over the glass (card actions, modal close button). */
 .sbd-tool-btn.is-icon {
-	padding: 5px;
+	padding: 8px;
 	border-radius: 50%;
 	opacity: 0.55;
 }
@@ -6016,13 +6170,10 @@ body.theme-dark {
 	padding: 0;
 	border-radius: 50%;
 	border: none;
-	background: rgba(255, 255, 255, 0.85);
-	color: #5d646b;
+	background: var(--sbd-icon-btn-fill-hover);
+	color: var(--sbd-ink-icon);
 	cursor: pointer;
-	transition:
-		color 120ms ease,
-		background 120ms ease,
-		transform 80ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-card-action:hover {
@@ -6031,8 +6182,8 @@ body.theme-dark {
 }
 
 .sbd-card-action:active {
-	background: rgba(255, 255, 255, 0.7);
-	transform: scale(0.9);
+	background: var(--sbd-tile-fill-active);
+	transform: var(--sbd-press-icon);
 }
 
 .sbd-card-action.is-danger:hover {
@@ -7899,8 +8050,9 @@ body.sbd-dv-resizing {
 
 .sbd-taskfields-thead {
 	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
 	font-size: 0.74em;
-	letter-spacing: 0.04em;
+	letter-spacing: var(--sbd-label-tracking-tight);
 	text-transform: uppercase;
 }
 
@@ -8307,10 +8459,11 @@ body.sbd-dv-resizing {
 /* The Added / Changed / Fixed section labels within a release. */
 .sbd-whatsnew-release-body h3 {
 	margin: 18px 0 8px;
-	font-size: 0.72rem;
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: var(--sbd-label-tracking);
 	color: var(--text-muted);
 }
 
@@ -9444,16 +9597,14 @@ body.sbd-dv-resizing {
    the user actually has chosen. Applied to modalEl (the outer `.modal` box)
    by both callers, replacing Obsidian's flat modal surface wholesale. */
 .sbd-glass-modal {
-	/* Literal reference values (Canvas.dc.html's ADD A CARD / CARD SETTINGS
-	 * panels): background:rgba(255,255,255,0.60); backdrop-filter:blur(24px)
-	 * saturate(150%); border:1px solid rgba(255,255,255,0.7);
-	 * border-radius:36px; box-shadow:0 20px 60px rgba(0,0,0,0.22). */
-	background: rgba(255, 255, 255, 0.6);
-	backdrop-filter: blur(24px) saturate(150%);
-	-webkit-backdrop-filter: blur(24px) saturate(150%);
-	border: 1px solid rgba(255, 255, 255, 0.7);
+	/* The panel material (Canvas.dc.html's ADD A CARD / CARD SETTINGS
+	 * sheets), from the --sbd-panel-* tokens. */
+	background: var(--sbd-panel-fill);
+	backdrop-filter: var(--sbd-panel-blur);
+	-webkit-backdrop-filter: var(--sbd-panel-blur);
+	border: 1px solid var(--sbd-panel-border);
 	border-radius: var(--sbd-radius-xxl);
-	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+	box-shadow: var(--sbd-panel-shadow);
 	/* Same reasoning as .sbd-view's own fixed palette (see its comment): the
 	 * reference is a light glass-white surface with dark text regardless of
 	 * appearance, not a light/dark pair that follows Obsidian's theme — so
@@ -9463,19 +9614,237 @@ body.sbd-dv-resizing {
 	 * against a background forced to stay light. Every one of these is a
 	 * variable this modal's own content (search field, rail, card tiles,
 	 * Obsidian's native Setting rows) already reads. */
-	--background-modifier-border: rgba(255, 255, 255, 0.55);
-	--background-modifier-hover: rgba(255, 255, 255, 0.5);
-	--background-modifier-active-hover: rgba(255, 255, 255, 0.7);
-	--background-modifier-form-field: rgba(255, 255, 255, 0.5);
-	--background-secondary: rgba(0, 0, 0, 0.04);
+	--background-modifier-border: var(--sbd-tile-border);
+	--background-modifier-hover: var(--sbd-control-fill-hover);
+	--background-modifier-active-hover: var(--sbd-tile-fill-active);
+	--background-modifier-form-field: var(--sbd-control-fill);
+	--background-secondary: var(--sbd-icon-btn-ink-fill);
 	--background-primary: #ffffff;
-	--text-normal: #20242a;
-	--text-muted: #565d64;
-	--text-faint: #8b9198;
+	--text-normal: var(--sbd-ink-strong);
+	--text-muted: var(--sbd-ink-muted);
+	--text-faint: var(--sbd-ink-faint);
 	--text-accent: #2f8ff0;
-	--interactive-accent: rgba(255, 255, 255, 0.9);
-	--text-on-accent: #23272b;
+	--interactive-accent: var(--sbd-track-pill-fill);
+	--text-on-accent: var(--sbd-ink);
 	color: var(--text-normal);
+}
+
+/* ---- The panel's own controls ----------------------------------------
+   Obsidian draws a Setting row's dropdown, text field and toggle with its
+   app chrome, which lands as flat grey boxes inside a light glass panel.
+   These rules re-cut those three (plus the modal's title and close button)
+   in the reference's control vocabulary — a pill on a translucent white
+   fill — and are scoped to .sbd-glass-modal, so nothing outside the
+   plugin's own modals is touched.
+
+   Doubled class for specificity: Obsidian's own rules for these controls
+   are themselves written at two classes deep, and a single class here
+   loses to them. */
+
+/* The dialog's name: the reference sets it much larger and heavier than
+   Obsidian's default modal title, which is the main thing that makes the
+   panel read as a sheet rather than a dialog box. */
+.sbd-glass-modal.sbd-glass-modal .modal-title {
+	font-size: 1.6rem;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--sbd-ink-strong);
+}
+
+/* Circular icon button on a light surface. Obsidian ships this as a bare
+   glyph in the corner; the reference gives it a chip to sit in. */
+.sbd-glass-modal.sbd-glass-modal .modal-close-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: var(--sbd-icon-btn-fill);
+	color: var(--sbd-ink-icon);
+	cursor: pointer;
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-glass-modal.sbd-glass-modal .modal-close-button:hover {
+	background: var(--sbd-icon-btn-fill-hover);
+	color: var(--sbd-ink);
+}
+
+.sbd-glass-modal.sbd-glass-modal .modal-close-button:active {
+	background: var(--sbd-icon-btn-fill-active);
+	transform: var(--sbd-press-icon);
+}
+
+/* Dropdown pill. The chevron is a double caret (up over down) drawn inline
+   as a data URI rather than borrowed from Obsidian's own arrow, which is a
+   single caret in the app's text colour and reads as a different control
+   next to the reference's. background-image is set on the element itself
+   because a <select> cannot carry a pseudo-element. */
+.sbd-glass-modal.sbd-glass-modal select.dropdown {
+	/* Obsidian already clears the native control, but say so here too: the
+	 * rule is worthless if the platform arrow is left drawn on top of the
+	 * caret below. */
+	appearance: none;
+	-webkit-appearance: none;
+	height: auto;
+	padding: 9px 34px 9px 14px;
+	border: 1px solid var(--sbd-control-border);
+	border-radius: var(--sbd-radius-control);
+	background-color: var(--sbd-control-fill);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b9198' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 9l5-5 5 5M7 15l5 5 5-5'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 12px 12px;
+	box-shadow: none;
+	color: var(--sbd-ink);
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-glass-modal.sbd-glass-modal select.dropdown:hover {
+	background-color: var(--sbd-control-fill-hover);
+}
+
+.sbd-glass-modal.sbd-glass-modal select.dropdown:active {
+	background-color: var(--sbd-control-fill-active);
+}
+
+.sbd-glass-modal.sbd-glass-modal select.dropdown:focus-visible {
+	outline: 2px solid var(--sbd-control-border);
+	outline-offset: 1px;
+}
+
+/* Text/number fields and textareas: the quieter tier of the same pill, so a
+   field at rest doesn't compete with an actionable dropdown beside it. */
+.sbd-glass-modal.sbd-glass-modal input[type="text"],
+.sbd-glass-modal.sbd-glass-modal input[type="search"],
+.sbd-glass-modal.sbd-glass-modal input[type="number"],
+.sbd-glass-modal.sbd-glass-modal input[type="password"],
+.sbd-glass-modal.sbd-glass-modal textarea {
+	padding: 9px 14px;
+	border: 1px solid var(--sbd-control-border-quiet);
+	border-radius: var(--sbd-radius-control);
+	background: var(--sbd-control-fill-quiet);
+	box-shadow: none;
+	color: var(--sbd-ink);
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-glass-modal.sbd-glass-modal input[type="text"]:hover,
+.sbd-glass-modal.sbd-glass-modal input[type="search"]:hover,
+.sbd-glass-modal.sbd-glass-modal input[type="number"]:hover,
+.sbd-glass-modal.sbd-glass-modal input[type="password"]:hover,
+.sbd-glass-modal.sbd-glass-modal textarea:hover {
+	background: var(--sbd-control-fill);
+}
+
+.sbd-glass-modal.sbd-glass-modal input[type="text"]:focus,
+.sbd-glass-modal.sbd-glass-modal input[type="search"]:focus,
+.sbd-glass-modal.sbd-glass-modal input[type="number"]:focus,
+.sbd-glass-modal.sbd-glass-modal input[type="password"]:focus,
+.sbd-glass-modal.sbd-glass-modal textarea:focus {
+	background: var(--sbd-control-fill-hover);
+	border-color: var(--sbd-control-border);
+	box-shadow: none;
+}
+
+/* The picker's search box is its own composed field (icon + bare input), so
+   exempt that input from the pill above — it *is* the pill's interior. */
+.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input,
+.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input:hover,
+.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input:focus {
+	padding: 8px 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+}
+
+/* Toggle. Sized from the reference (44x26 track, 20px thumb) rather than
+   left on Obsidian's --toggle-* scale, which is narrower and squarer. The
+   thumb is Obsidian's ::after on the container. */
+.sbd-glass-modal.sbd-glass-modal .checkbox-container {
+	width: 44px;
+	height: 26px;
+	border: 1px solid var(--sbd-control-border-quiet);
+	border-radius: var(--sbd-radius-field);
+	background: var(--sbd-toggle-track);
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container:hover {
+	background: var(--sbd-toggle-track-hover);
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container::after {
+	width: 20px;
+	height: 20px;
+	top: 2px;
+	left: 2px;
+	border-radius: 50%;
+	background: var(--sbd-toggle-thumb);
+	box-shadow: var(--sbd-toggle-thumb-shadow);
+	transition: transform 150ms ease;
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled {
+	background: var(--sbd-toggle-track-on);
+	border-color: transparent;
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled:hover {
+	background: var(--sbd-toggle-track-on-hover);
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled::after {
+	transform: translateX(18px);
+}
+
+.sbd-glass-modal.sbd-glass-modal .checkbox-container:active {
+	transform: var(--sbd-press-tile);
+}
+
+/* Action buttons in a panel footer: the same two pills as the board's
+   toolbar — a light one for the confirm, a quiet glass one for the rest. */
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button {
+	padding: 11px 18px;
+	border: 1px solid var(--sbd-control-border);
+	border-radius: var(--sbd-radius-pill);
+	background: var(--sbd-control-fill);
+	box-shadow: none;
+	color: var(--sbd-ink);
+	font-weight: 600;
+	cursor: pointer;
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button:hover {
+	background: var(--sbd-control-fill-hover);
+}
+
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button:active {
+	background: var(--sbd-control-fill-active);
+	transform: var(--sbd-press);
+}
+
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta {
+	border-color: transparent;
+	background: var(--sbd-btn-light-fill);
+	box-shadow: var(--sbd-btn-light-shadow);
+	color: var(--sbd-ink);
+}
+
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta:hover {
+	background: var(--sbd-btn-light-fill-hover);
+	box-shadow: var(--sbd-btn-light-shadow-hover);
+}
+
+.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta:active {
+	background: var(--sbd-btn-light-fill-active);
+	transform: var(--sbd-press);
 }
 
 /* ── Add-card picker ───────────────────────────────────────────────────
@@ -9510,9 +9879,8 @@ body.sbd-dv-resizing {
 }
 
 /* ---- Search field ---- */
-/* Literal reference values (Canvas.dc.html's search field):
- * height:46px; border-radius:14px; background:rgba(255,255,255,0.5);
- * border:1px solid rgba(255,255,255,0.6). */
+/* Canvas.dc.html's search field: a 46px control pill. Only the height is
+ * literal here — the fill, rim and radius are the shared control tokens. */
 .sbd-picker-search {
 	flex: none;
 	display: flex;
@@ -9521,10 +9889,10 @@ body.sbd-dv-resizing {
 	height: 46px;
 	padding: 0 16px;
 	margin-bottom: 12px;
-	border: 1px solid rgba(255, 255, 255, 0.6);
-	border-radius: 14px;
-	background: rgba(255, 255, 255, 0.5);
-	transition: border-color 120ms ease;
+	border: 1px solid var(--sbd-control-border);
+	border-radius: var(--sbd-radius-field);
+	background: var(--sbd-control-fill);
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-picker-search:focus-within {
@@ -9579,36 +9947,42 @@ body.sbd-dv-resizing {
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 8px;
+	gap: 11px;
 	width: 100%;
-	padding: 8px 12px;
+	padding: 10px 12px;
 	border: none;
 	border-radius: var(--sbd-radius-s);
 	background: transparent;
 	box-shadow: none;
-	color: var(--text-muted);
+	/* Darker than the panel's --text-muted: in the reference an unselected
+	 * rail row is still a live destination, not secondary text. */
+	color: var(--sbd-ink-rail);
 	font-size: var(--font-ui-small);
+	font-weight: 500;
 	text-align: left;
 	cursor: pointer;
-	transition: background 120ms ease, color 120ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 /* Literal reference values (Canvas.dc.html's rail nav items): the one place
  * in the reference that breaks from the translucent-white vocabulary for a
  * flat pale grey — kept literal rather than folded into the glass pattern. */
 .sbd-picker-rail-btn:hover {
-	background: #eef1f4;
+	background: var(--sbd-rail-fill-hover);
 	color: var(--text-normal);
 }
 
 .sbd-picker-rail-btn.is-active {
-	background: #eef1f4;
+	background: var(--sbd-rail-fill-hover);
 	color: var(--text-normal);
-	font-weight: 600;
+	/* The reference's selected rail row is a full 700 against the others'
+	 * 500 — the weight step, not the fill alone, is what names the
+	 * current category at a glance. */
+	font-weight: 700;
 }
 
 .sbd-picker-rail-btn:active {
-	background: #e4e7ea;
+	background: var(--sbd-rail-fill-active);
 }
 
 .sbd-picker-rail-icon {
@@ -9647,11 +10021,12 @@ body.sbd-dv-resizing {
 }
 
 .sbd-picker-section {
-	font-size: var(--font-ui-smaller);
-	font-weight: 600;
-	letter-spacing: 0.04em;
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
+	font-weight: 700;
+	letter-spacing: var(--sbd-label-tracking);
 	text-transform: uppercase;
-	color: var(--text-muted);
+	color: var(--sbd-ink-label);
 	margin: 4px 0 8px;
 }
 
@@ -9675,10 +10050,8 @@ body.sbd-dv-resizing {
 /* A glass chip like the other in-card tiles/rows (list rows, favourite tiles):
  * a solid --background-primary fill would paint an opaque cutout on the
  * card's own translucent surface. */
-/* Literal reference values (Canvas.dc.html's card tiles): border-radius:18px;
- * border:1px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.30);
- * hover: background:rgba(255,255,255,0.55); border-color:rgba(255,255,255,0.8);
- * active: background:rgba(255,255,255,0.7); transform:scale(0.98). */
+/* Canvas.dc.html's card tiles, from the --sbd-tile-* tokens: a translucent
+ * chip that brightens on hover and presses in on click. */
 .sbd-card-tile {
 	display: flex;
 	align-items: flex-start;
@@ -9687,26 +10060,23 @@ body.sbd-dv-resizing {
 	width: 100%;
 	height: auto;
 	padding: 12px 14px;
-	border: 1px solid rgba(255, 255, 255, 0.55);
-	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.3);
+	border: 1px solid var(--sbd-tile-border);
+	border-radius: var(--sbd-radius-l);
+	background: var(--sbd-tile-fill);
 	box-shadow: none;
 	text-align: left;
 	cursor: pointer;
-	transition:
-		background 120ms ease,
-		border-color 120ms ease,
-		transform 80ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-card-tile:hover {
-	background: rgba(255, 255, 255, 0.55);
-	border-color: rgba(255, 255, 255, 0.8);
+	background: var(--sbd-tile-fill-hover);
+	border-color: var(--sbd-tile-border-hover);
 }
 
 .sbd-card-tile:active {
-	background: rgba(255, 255, 255, 0.7);
-	transform: scale(0.98);
+	background: var(--sbd-tile-fill-active);
+	transform: var(--sbd-press-tile);
 }
 
 .sbd-card-tile:focus-visible {
@@ -10043,9 +10413,10 @@ body.sbd-dv-resizing {
 
 .sbd-setup-grouplabel {
 	margin: 18px 0 8px;
-	font-size: 0.78em;
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
 	font-weight: 650;
-	letter-spacing: 0.06em;
+	letter-spacing: var(--sbd-label-tracking);
 	text-transform: uppercase;
 	color: var(--text-faint);
 }

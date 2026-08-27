@@ -15,6 +15,27 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **One set of design tokens behind every card, menu and button, and the
+  reference's monospace captions.** The glass, control, tile, rail and ink
+  values the restyle had been repeating inline are now named custom
+  properties declared once at `:root`, and the surfaces read those rather
+  than each carrying its own `rgba()` triple. Card titles and the section
+  headings in the picker, the settings index, the setup wizard and What's
+  new are now the reference's tracked-out monospace captions instead of
+  small headings.
+
+- **The card settings and Add-a-card panels now style their own controls.**
+  Dropdowns, text fields and toggles inside those two dialogs were still
+  Obsidian's stock chrome — flat grey boxes on a light glass sheet. They are
+  now the reference's control pills: a dropdown on a translucent white fill
+  with a double-caret chevron, a quieter pill for text fields, and a 44x26
+  glass toggle with a white thumb. The Content/Layout tab strip is a proper
+  pill switcher (a white pill inset in a translucent track), the dialog
+  title and close button match the reference's sheet header, and footer
+  actions use the same two button pills as the board toolbar. The toolbar's
+  "Add card" label is full white at rest rather than dimmed, and every
+  control now has both a hover and a pressed state.
+
 - **The glass material now matches the reference literally, and the toolbar,
   Add-a-card picker and card settings modal get the same treatment.** Card
   fill opacity, blur and border tint are now exact (0.10/18px/0.42 white,
