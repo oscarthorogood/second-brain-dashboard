@@ -15,6 +15,18 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **The glass material now matches the reference literally, and the toolbar,
+  Add-a-card picker and card settings modal get the same treatment.** Card
+  fill opacity, blur and border tint are now exact (0.10/18px/0.42 white,
+  not the close-but-independently-measured 0.07/22px/0.45 they were), and
+  corner radius is 42px (was 32px). The toolbar's "Add card" pill, the
+  card-header settings/remove buttons, and both the Add-a-card picker and
+  card settings modal now wear the same frosted-glass shell as the cards
+  themselves — previously the two modals were plain opaque Obsidian dialogs,
+  and the toolbar tinted from the board's grey rather than white glass.
+  Card-header actions and the icon-only toolbar button now show a real
+  tooltip on hover, and the RSS source tabs get a hover state.
+
 - **Lighter text shadow, and today's day is a filled tile, not a ring.** The
   text shadow every card's type inherits for legibility over the glass was
   strong enough to read as smudged rather than crisp, especially now that the
