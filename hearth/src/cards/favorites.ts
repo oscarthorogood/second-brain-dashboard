@@ -1,7 +1,6 @@
 import { setIcon, Setting, TFile } from "obsidian";
 import { emptyState } from "../cardbodies";
 import { moveItem } from "../editors";
-import { applyFileIcon, fileIconOptions, resolveFileIcon } from "../fileicons";
 import { t } from "../i18n";
 import { openFile } from "../opener";
 import { FilePickerModal } from "../pickers";
@@ -20,12 +19,16 @@ export function renderFavorites(view: HomeView, body: HTMLElement): void {
 	}
 
 	const grid = body.createDiv("sbd-favorites");
-	const icons = fileIconOptions(view.plugin.settings);
 	for (const path of paths) {
 		const file = view.app.vault.getAbstractFileByPath(path);
 		const card = grid.createDiv("sbd-fav-card");
 		if (file instanceof TFile) {
-			applyFileIcon(card.createDiv("sbd-fav-icon"), resolveFileIcon(view.app, file, icons));
+			// Widget Set → FAVORITES heads every row with the same amber star,
+			// not the file's own type icon: the card's subject is the fact that
+			// these are favourites, and a row of mixed file glyphs said the
+			// opposite. A missing entry still gets file-x, which is the one
+			// case where the glyph is carrying information.
+			setIcon(card.createDiv("sbd-fav-icon"), "star");
 			card.createDiv({ cls: "sbd-fav-name", text: file.basename });
 			const open = () => void openFile(view, file, "card");
 			card.addEventListener("click", open);

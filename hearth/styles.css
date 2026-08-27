@@ -144,6 +144,19 @@
 	--sbd-control-border-quiet: rgba(255, 255, 255, 0.5);
 
 	/* The track a tab switcher's pills sit inside, and the pill itself. */
+	/* The middle tier the reference stacks on a card: a glass panel that is
+	 * more present than the card under it but still translucent, still
+	 * carrying white text (favorites rows, stat tiles, task columns, the
+	 * schedule's day columns). Distinct from --sbd-chip-fill, which is the
+	 * near-opaque white sheet that flips its text to dark. */
+	--sbd-panel-tier-fill: rgba(255, 255, 255, 0.2);
+	--sbd-panel-tier-fill-hover: rgba(255, 255, 255, 0.3);
+	--sbd-panel-tier-fill-active: rgba(255, 255, 255, 0.38);
+	/* The reference's favourite star. A fixed amber rather than the accent:
+	 * the accent is white on this board, and a white star on a white-tinted
+	 * row would vanish. */
+	--sbd-star: #f4c53c;
+
 	--sbd-track-fill: rgba(255, 255, 255, 0.28);
 	--sbd-track-pill-fill: rgba(255, 255, 255, 0.9);
 
@@ -179,6 +192,9 @@
 	 * neither. */
 	--sbd-radius-searchbar: 34px;
 	--sbd-radius-track: 16px;
+	/* The reference's inner tile/panel corner — launchpad tiles, stat tiles,
+	 * task columns. */
+	--sbd-radius-tile: 20px;
 
 	/* Press. Every clickable thing dips, and the smaller it is the further
 	 * it dips: 0.96 on a 32px icon circle is a shift of one pixel and reads
@@ -2355,6 +2371,57 @@ body.theme-dark {
 	gap: 2px;
 }
 
+/* Widget Set → RECENT / BOOKMARKS: rows sitting directly on the card's glass
+ * with no chip behind them and no icon badge in front. The 12px rhythm and
+ * baseline alignment are the reference's, so a filename and its age sit on
+ * one line rather than being centred against each other. */
+.sbd-list.is-bare {
+	gap: 12px;
+}
+
+.sbd-list.is-bare .sbd-list-item {
+	align-items: baseline;
+	gap: 8px;
+	padding: 0;
+	border-radius: 0;
+}
+
+.sbd-list.is-bare .sbd-list-item:hover,
+.sbd-list.is-bare .sbd-list-item:active {
+	background: none;
+}
+
+.sbd-list.is-bare .sbd-list-item:hover .sbd-list-label {
+	color: #ffffff;
+}
+
+.sbd-list.is-bare .sbd-list-label {
+	flex: 1;
+	min-width: 0;
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.94);
+	transition: color 120ms ease;
+}
+
+/* The trailing "2m" / "3h" / "Tue" column. flex:none so a long filename
+ * ellipsises instead of squeezing the age out of the row. */
+.sbd-list-age {
+	flex: none;
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.55);
+}
+
+/* The tracked-out mono caption the reference draws inside a card to name it
+ * ("RECENT", "JOT", "6 LINKS"). Shared by every card that carries one. */
+.sbd-card-eyebrow {
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
+	letter-spacing: var(--sbd-label-tracking);
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
+	margin-bottom: 13px;
+}
+
 .sbd-list-item {
 	display: flex;
 	align-items: center;
@@ -2709,28 +2776,35 @@ body.theme-dark {
 }
 
 /* Favorites cards */
+/* Widget Set → FAVORITES: a stack of pill rows that share out the card's
+ * height, not a grid of tiles. Each row is a glass panel (white 20%) with the
+ * star and the name laid out along it. */
 .sbd-favorites {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-	gap: 10px;
-}
-
-/* A glass chip, not a flat opaque tile: painting a solid --background-secondary
- * here would read as a cut-out hole in the card's own translucent surface (see
- * --sbd-card-surface on .sbd-card). Tinting the same surface colour a little
- * stronger keeps it a shade lifted off the card without breaking the frost. */
-.sbd-fav-card {
 	display: flex;
 	flex-direction: column;
+	gap: 10px;
+	height: 100%;
+	min-height: 0;
+}
+
+/* A glass panel, not a flat opaque tile: painting a solid
+ * --background-secondary here would read as a cut-out hole in the card's own
+ * translucent surface (see --sbd-card-surface on .sbd-card). The reference's
+ * row is white at 20%, rimless, 18px round, and flexes to share the card's
+ * height with its siblings. */
+.sbd-fav-card {
+	flex: 1 1 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: row;
 	align-items: center;
-	gap: 8px;
-	padding: 14px 8px;
-	border-radius: var(--sbd-radius-m);
-	border: 1px solid
-		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: color-mix(in srgb, var(--sbd-badge-fill) 50%, transparent);
+	gap: 11px;
+	padding: 0 16px;
+	border-radius: var(--sbd-radius-l);
+	border: none;
+	background: var(--sbd-panel-tier-fill);
 	cursor: pointer;
-	text-align: center;
+	text-align: left;
 	transition:
 		border-color 120ms ease,
 		background 120ms ease,
@@ -2738,13 +2812,12 @@ body.theme-dark {
 }
 
 .sbd-fav-card:hover {
-	border-color: var(--interactive-accent);
-	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+	background: var(--sbd-panel-tier-fill-hover);
 }
 
 .sbd-fav-card:active {
-	background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
-	transform: scale(0.98);
+	background: var(--sbd-panel-tier-fill-active);
+	transform: var(--sbd-press-tile);
 }
 
 .sbd-fav-card.is-missing {
@@ -2752,21 +2825,23 @@ body.theme-dark {
 	cursor: default;
 }
 
-/* Round glass icon badge, matching the reference's icon-circle tiles. */
+/* The reference sets a bare 15px star at the head of the row — no badge
+ * behind it. A badge here would be a third surface inside a row that is
+ * already a panel on a card. */
 .sbd-fav-icon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	background: var(--sbd-badge-fill);
-	color: var(--text-normal);
+	flex: none;
+	width: 15px;
+	height: 15px;
+	background: none;
+	color: var(--sbd-star);
 }
 
 .sbd-fav-icon .svg-icon {
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 }
 
 .sbd-fav-icon .sbd-emoji-icon {
@@ -2776,9 +2851,11 @@ body.theme-dark {
 }
 
 .sbd-fav-name {
-	font-size: 0.85rem;
-	color: var(--text-normal);
-	max-width: 100%;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.95);
+	flex: 1;
+	min-width: 0;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -2987,27 +3064,27 @@ body.theme-dark {
  * the links/commands/search/templater tile grids all share one look: a soft
  * lifted surface with a round icon badge, like the reference's app-icon
  * tiles rather than a plain bordered box. */
+/* Widget Set → LINKS: a rimless glass panel, 20px round, holding a bare
+ * glyph over a small bold label. The reference alternates a few tiles to the
+ * near-opaque white sheet purely for variety on the artboard; a real
+ * launchpad has no basis for picking which, so every tile takes the glass
+ * tier the majority of them use. */
 .sbd-link-tile {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	/* Default span: 1 column × 1 row. Overridden per-tile via inline styles.
-	 * Kept tight (with the icon badge below) so a tile sized to the grid's
-	 * 2-row minimum still fits its icon and label without clipping. */
-	padding: 12px 8px;
-	border-radius: var(--sbd-radius-m);
-	border: 1px solid
-		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: color-mix(in srgb, var(--sbd-badge-fill) 50%, transparent);
+	gap: 7px;
+	/* Default span: 1 column × 1 row. Overridden per-tile via inline styles. */
+	padding: 8px;
+	border-radius: var(--sbd-radius-tile);
+	border: none;
+	background: var(--sbd-panel-tier-fill);
 	cursor: pointer;
 	text-align: center;
 	transition:
-		border-color 120ms ease,
 		background 120ms ease,
-		transform 120ms ease,
-		box-shadow 120ms ease;
+		transform 120ms ease;
 }
 
 /* Per-tile width/height: converted to grid column/row spans inline by
@@ -3020,22 +3097,22 @@ body.theme-dark {
 }
 
 /* Fixed icon size: the icon does NOT scale with tile height. Icons stay a
- * constant, readable size regardless of tile dimensions. A round glass badge
- * behind the glyph, matching the reference's icon-circle tiles. */
+ * constant, readable size regardless of tile dimensions. Bare, per the
+ * reference — the tile is already a panel, so a badge behind the glyph would
+ * stack a third surface inside it. */
 .sbd-link-icon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	background: var(--sbd-badge-fill);
+	width: 24px;
+	height: 24px;
+	background: none;
 	color: var(--text-normal);
 }
 
 .sbd-link-icon .svg-icon {
-	width: 17px;
-	height: 17px;
+	width: 24px;
+	height: 24px;
 }
 
 /* A vault image used as a tile icon (#119): the image covers the whole tile and
@@ -3226,10 +3303,16 @@ body.theme-dark {
 	pointer-events: none;
 }
 
+/* The reference lifts a tile by scaling it, not by nudging it up — a
+ * translate on a tile inside a tight grid reads as the row misaligning. */
 .sbd-link-tile:hover {
-	border-color: var(--interactive-accent);
-	background: var(--background-modifier-hover);
-	transform: translateY(-1px);
+	background: var(--sbd-panel-tier-fill-hover);
+	transform: scale(1.04);
+}
+
+.sbd-link-tile:active {
+	background: var(--sbd-panel-tier-fill-active);
+	transform: scale(0.95);
 }
 
 /* A tile whose action is still running — the Templater card creating a note,
@@ -3267,8 +3350,10 @@ body.theme-dark {
 }
 
 .sbd-link-label {
-	font-size: 0.8rem;
-	color: var(--text-normal);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1.15;
+	color: rgba(255, 255, 255, 0.94);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -4574,37 +4659,84 @@ body.theme-dark {
 }
 
 /* Mini calendar card */
+/* ---- Mini calendar — Widget Set → CALENDAR ------------------------- */
+
 .sbd-calendar {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	gap: 8px;
+	gap: 14px;
 }
 
+/* Month name left, year right. The arrows ride with the year (see
+ * .sbd-calendar-navs) rather than bracketing the label, so the resting
+ * header is the reference's two pieces of text and nothing else. */
 .sbd-calendar-head {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: 8px;
+}
+
+.sbd-calendar-label {
+	font-weight: 600;
+	font-size: 1.5rem;
+	color: rgba(255, 255, 255, 0.96);
+	cursor: pointer;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-calendar-side {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: none;
+}
+
+.sbd-calendar-year {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.66);
+}
+
+/* Hidden until the card is pointed at, so the header rests as the reference
+ * draws it. Kept laid out (opacity, not display) so revealing them never
+ * reflows the header. Always visible to keyboard users, who have no hover. */
+.sbd-calendar-navs {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.sbd-card:hover .sbd-calendar-navs,
+.sbd-calendar-navs:focus-within {
+	opacity: 1;
 }
 
 .sbd-calendar-nav {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex: 0 0 32px;
-	width: 32px;
-	height: 32px;
+	flex: 0 0 24px;
+	width: 24px;
+	height: 24px;
 	padding: 0;
-	border-radius: 10px;
+	border-radius: 50%;
 	border: none;
 	background: transparent;
-	color: var(--text-normal);
+	color: rgba(255, 255, 255, 0.8);
 	cursor: pointer;
+	transition: background 120ms ease;
 }
 
 .sbd-calendar-nav:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
+	background: var(--sbd-panel-tier-fill);
+	color: #ffffff;
 }
 
 /* Lucide chevron glyphs: size and stroke the actual <svg> element (Obsidian's
@@ -4612,105 +4744,152 @@ body.theme-dark {
    width/height; target both so the arrow is fully visible, not a faint dot). */
 .sbd-calendar-nav .svg-icon,
 .sbd-calendar-nav svg {
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 	display: flex;
 }
 .sbd-calendar-nav svg {
 	stroke-width: 2px;
 }
 
-.sbd-calendar-label {
-	font-weight: 600;
-	font-size: 0.92rem;
-	color: var(--text-normal);
-	cursor: pointer;
-}
-
+/* The reference's grid: a fixed 24px week-number gutter (not a fraction —
+ * a two-digit week number must not steal width from the day columns as the
+ * card narrows) then seven equal day columns, 5px apart. */
 .sbd-calendar-grid {
 	display: grid;
 	grid-template-columns: repeat(7, minmax(0, 1fr));
-	gap: 2px;
+	gap: 5px;
+	text-align: center;
+	align-items: center;
 	flex: 1;
 }
 
 .sbd-calendar-grid.has-week-numbers {
-	grid-template-columns: minmax(0, 0.6fr) repeat(7, minmax(0, 1fr));
+	grid-template-columns: 24px repeat(7, minmax(0, 1fr));
 }
 
 .sbd-calendar-dow {
 	text-align: center;
-	font-size: 0.7rem;
-	color: var(--text-faint);
-	padding-bottom: 4px;
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.66);
 }
 
+/* The head of the week-number gutter is quieter still than the day heads. */
+.sbd-calendar-dow.sbd-calendar-wk {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.45);
+}
+
+/* The cell is a plain 29px-tall slot; the tinted, rounded square is the
+ * number inside it (see .sbd-calendar-daynum), which is what lets the heat
+ * tint be a tile rather than a full-bleed cell wash. */
 .sbd-calendar-day {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 2px;
-	border-radius: 9px;
 	cursor: pointer;
-	min-height: 28px;
-}
-
-.sbd-calendar-day:hover {
-	background: var(--background-modifier-hover);
+	min-height: 29px;
 }
 
 .sbd-calendar-daynum {
-	font-size: 0.82rem;
-	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 29px;
+	height: 29px;
+	border-radius: 9px;
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.94);
+	transition: background 120ms ease;
+}
+
+.sbd-calendar-day:hover .sbd-calendar-daynum {
+	background: var(--sbd-panel-tier-fill);
+}
+
+/* The list under the month grid — Widget Set → CALENDAR draws it below a
+ * dashed rule, which is the only dashed line anywhere in the reference: it
+ * separates two different kinds of content inside one card rather than
+ * dividing rows of the same kind, and a solid rule read as a second card
+ * edge. flex:none so the grid above keeps its height as events arrive. */
+.sbd-mini-agenda {
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding-top: 14px;
+	border-top: 1px dashed rgba(255, 255, 255, 0.35);
+}
+
+.sbd-mini-agenda-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+}
+
+.sbd-mini-agenda-dot {
+	flex: none;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ev-color, var(--text-muted));
+}
+
+.sbd-mini-agenda-title {
+	flex: 1;
+	min-width: 0;
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.94);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: color 120ms ease;
+}
+
+.sbd-mini-agenda-row:hover .sbd-mini-agenda-title {
+	color: #ffffff;
+}
+
+.sbd-mini-agenda-time {
+	flex: none;
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.62);
 }
 
 .sbd-calendar-day.is-outside .sbd-calendar-daynum {
 	color: var(--text-faint);
 }
 
-/* Over a heavy heatmap tint the faint number becomes unreadable (worst on
-   outside/preview days). Restore a normal-weight colour and add a halo in the
-   card background colour so the digit stays legible at any tint. */
+/* The heat tint IS the cell's rounded tile in the reference: white at the
+ * day's own --heat alpha, filling the 29px square behind the number. No halo
+ * and no weight change — the reference keeps every number the same white at
+ * the same weight, and it stays readable because the tint is white on white
+ * rather than a colour ramp fighting the digit. */
 .sbd-calendar-day.has-heat .sbd-calendar-daynum {
-	color: var(--text-normal);
-	font-weight: 600;
-	text-shadow:
-		0 0 2px var(--background-primary),
-		0 0 3px var(--background-primary);
+	/* --heat is a 1–4 level (heatLevel in cardbodies.ts). 0.105 per step lands
+	 * the four steps on 0.105 / 0.21 / 0.315 / 0.42 — the reference's own
+	 * range, whose lightest day is ~0.10 and whose heaviest is 0.42. */
+	background: rgba(255, 255, 255, calc(var(--heat, 0) * 0.105));
 }
 
-/* Today stays clearly visible even under a heatmap tint: the day number keeps
-   its solid accent badge (stronger than the heat tint), and the cell itself
-   gets a bold accent ring so 'today' is unmistakable regardless of tint. */
-/* Already the reference's shape: a solid white badge carrying a dark number,
- * the same chip tier as an event row. It only needed the card's white-on-
- * wallpaper text-shadow cleared, which on dark-on-white just smears it. */
+/* Today is the strongest tile in the grid, not a ring around a cell: the
+ * reference's heaviest heat step is white at 42%, so today sits above it at
+ * near-solid white with the number flipped to dark — the same chip tier as
+ * an event row. The card's white-on-wallpaper text-shadow is cleared, which
+ * on dark-on-white would only smear it. */
 .sbd-calendar-day.is-today .sbd-calendar-daynum {
-	color: var(--text-on-accent);
-	background: var(--interactive-accent);
+	color: var(--sbd-chip-label);
+	background: var(--sbd-chip-fill);
 	text-shadow: none;
-	border-radius: 999px;
-	width: 20px;
-	height: 20px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	font-weight: 700;
 }
 
-/* A soft glass wash filling the cell, not a stroked ring around it — the same
- * material a hovered list row picks up (.sbd-list-item:hover), so "today"
- * reads as a highlighted tile rather than an outlined box. */
-.sbd-calendar-day.is-today {
-	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
-	border-radius: 10px;
-}
-
-/* Stronger than either state alone, so pointing at today still gives hover
- * feedback instead of the tint swallowing it. */
-.sbd-calendar-day.is-today:hover {
-	background: color-mix(in srgb, var(--interactive-accent) 16%, transparent);
+.sbd-calendar-day.is-today:hover .sbd-calendar-daynum {
+	background: #ffffff;
 }
 
 .sbd-calendar-dot {
@@ -6415,21 +6594,16 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 0.68rem;
-	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.42);
 }
 
-/* Heatmap tint for calendar day cells, driven by --heat (0–4). Built from the
- * stable --accent-h/s/l vars (not --interactive-accent-hsl, which is
- * comma-separated on some Obsidian versions and would break slash-alpha). */
-.sbd-calendar-day.has-heat {
-	background-color: hsla(
-		var(--accent-h),
-		var(--accent-s),
-		var(--accent-l),
-		calc(var(--heat, 0) * 0.22)
-	);
-}
+/* The heat tint is painted on the day NUMBER's 29px tile, not on the cell
+ * (see .sbd-calendar-day.has-heat .sbd-calendar-daynum above) — the
+ * reference tints a rounded square inside the cell, so a full-bleed cell
+ * wash here would fill the 5px gutters between them and turn the grid into
+ * a solid block. */
 
 /* ---- Tasks: TaskNotes quick-add button ------------------------------ */
 .sbd-tasks-wrap {
