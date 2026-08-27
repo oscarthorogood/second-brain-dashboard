@@ -66,7 +66,7 @@
 	 * multiply whatever colour happened to sit behind a surface, so a bar over
 	 * a faintly blue backdrop came out a saturated blue slab. 120% is a nudge,
 	 * not a stain. */
-	--sbd-glass-blur: blur(18px) saturate(120%) brightness(var(--sbd-glass-dim));
+	--sbd-glass-blur: blur(18px) saturate(120%);
 
 	/* ---- The glass / menu / button vocabulary --------------------------
 	 *
@@ -96,19 +96,6 @@
 
 	/* Card material: white at 10%, and a crisp white rim that does most of
 	 * the work of separating the card from the board. */
-	/* How far the frosted glass pulls its backdrop down, as a brightness()
-	 * multiplier inside the same backdrop-filter chain the reference
-	 * specifies. It exists because the reference's artboard backs every card
-	 * with one flat mid-tone, where white-at-10% over an 18px blur reads as
-	 * an evenly lit pane; over a real wallpaper — especially a bright one —
-	 * white text on that same glass goes with the picture's light patches.
-	 *
-	 * A multiplier, not an overlay: it scales what is behind the card
-	 * instead of covering it, so a cream painting stays cream and a blue one
-	 * stays blue. A flat dark scrim (which this replaced) flattened both to
-	 * the same olive grey. 1 gives the reference's literal material. */
-	--sbd-glass-dim: 0.76;
-
 	--sbd-glass-card-fill: rgba(255, 255, 255, 0.1);
 	--sbd-glass-card-border: rgba(255, 255, 255, 0.42);
 
@@ -496,9 +483,6 @@ body.theme-dark {
 	 * opaque white card would swallow the white text on it — so the opaque
 	 * case tints from the board's own grey instead. */
 	--sbd-glass-tint: var(--background-primary);
-	/* An opaque card has no backdrop showing through, so there is nothing
-	 * left to dim. */
-	--sbd-glass-dim: 1;
 }
 
 .sbd-scroll {
@@ -1359,13 +1343,14 @@ body.theme-dark {
 	 * glass gathers along its lit edge. The diagonal is the softer corner
 	 * sheen over the rest of the face.
 	 *
-	 * There is deliberately NO dark overlay here. An earlier pass put one
-	 * under the tint to hold white text over a bright wallpaper; it worked
-	 * over a dark one and turned every card into a flat olive slab over a
-	 * light one, because a fixed colour laid over a backdrop erases the
-	 * backdrop's own colour. The darkening now lives in the blur instead
-	 * (--sbd-glass-dim), where it scales with what is actually behind the
-	 * card rather than covering it. */
+	 * There is deliberately NO darkening here, and none in the blur either.
+	 * Two earlier passes added some — first a dark scrim under the tint,
+	 * then a brightness() multiplier inside the backdrop-filter — on the
+	 * assumption that white text could not hold over a bright wallpaper.
+	 * Rendering the reference artboard over the very wallpaper it is drawn
+	 * on settles it: the card there is this stack and nothing else, and it
+	 * reads as a barely-there pane with a crisp rim. Anything added under
+	 * the tint makes it a slab. */
 	background-color: var(--sbd-card-surface);
 	background-image:
 		linear-gradient(
