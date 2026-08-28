@@ -15,6 +15,28 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Every widget, menu and button measured against the design reference.**
+  The card body's padding was `8px 10px` everywhere; the reference gives each
+  widget its own inset (20-28px), so a 238px card was handing its content 28px
+  more width than it should and everything ran up against the rim. Each card now
+  carries its kind as a class and takes the reference's own padding. The clamps
+  sizing a card's display type were `vw`-based — a percentage of the *window* —
+  so on a large monitor a daily-note card drew its day number at 230px where the
+  reference draws 64; they are card-relative now. On top of that: the clock's
+  analogue face is drawn in white on the glass rather than in Obsidian's theme
+  colours; the daily note's panel no longer fills the card and pushes the date
+  off the top; a default launchpad tile is the reference's size; Templater rows
+  gain the template's route and a chevron; stat tiles group their figures and
+  drop the glyph the reference doesn't draw; heatmap days are square again;
+  the weather forecast's head reads left-to-right as the reference has it;
+  Schedule's day lanes gain their gutter and its blocks the reference's chrome;
+  a Kanban lane no longer overflows a three-column board; Git gains the commit
+  message panel and coloured status marks; Search, Dataview and Datacore show
+  the query itself; the jot pad, embed and hosted-view sheets are inset instead
+  of clipped at the card's edge; the web card's address row gains a reload
+  control. The Add-a-card picker takes the reference's width and stacked tiles,
+  and "Done arranging" is dark-on-white rather than white-on-white.
+
 - **One set of design tokens behind every card, menu and button, and the
   reference's monospace captions.** The glass, control, tile, rail and ink
   values the restyle had been repeating inline are now named custom
