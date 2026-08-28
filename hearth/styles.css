@@ -1757,8 +1757,10 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	/* Tracks the body's side padding so a titled card's rule starts and ends
-	 * where its content does. */
-	padding: 10px var(--sbd-card-pad-x, 24px);
+	 * where its content does — with a floor, because CLOCK and SLIDESHOW set
+	 * that padding to zero for their own edge-to-edge content, and a title
+	 * flush against the card's rim reads as a rendering fault. */
+	padding: 10px max(var(--sbd-card-pad-x, 24px), 14px);
 	border-bottom: var(--card-border-width, 1px) solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
