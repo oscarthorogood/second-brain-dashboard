@@ -77,10 +77,10 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 		// The day-streak tile only appears when daily notes are configured — same
 		// as it always has — whether or not it's explicitly selected.
 		if (id === "dayStreak") {
-			if (streak !== null) addStat(grid, STAT_ICONS.dayStreak, streak, t().cards.stats.dayStreak);
+			if (streak !== null) addStat(grid, undefined, streak, t().cards.stats.dayStreak);
 			continue;
 		}
-		addStat(grid, STAT_ICONS[id], values[id], t().cards.stats[id]);
+		addStat(grid, undefined, values[id], t().cards.stats[id]);
 	}
 
 	if (!advanced) return;
@@ -89,7 +89,7 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 	for (const groupId of cfg?.attachmentTypes ?? []) {
 		const group = groupById(groupId);
 		if (!group) continue;
-		addStat(grid, group.icon, byType.get(groupId) ?? 0, fileTypeLabel(group));
+		addStat(grid, undefined, byType.get(groupId) ?? 0, fileTypeLabel(group));
 	}
 
 	// Custom query counts.
@@ -101,15 +101,22 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 }
 
 
-function addStat(grid: HTMLElement, icon: string, value: number, label: string): void {
+/**
+ * One tile: the figure, then the wording under it — the order Widget Set →
+ * STATS uses, and the reason the glyph is not above the value where it took a
+ * third of the tile's height.
+ *
+ * `icon` is undefined for the built-in counts, which the reference draws as a
+ * bare number over a bare label. A custom query keeps its glyph, because there
+ * the user picked it and it is the only thing naming what the count is of.
+ */
+function addStat(grid: HTMLElement, icon: string | undefined, value: number, label: string): void {
 	const cell = grid.createDiv("sbd-stat");
-	// Widget Set → STATS puts the figure first and the wording under it. The
-	// glyph moves inside that label row rather than sitting above the value:
-	// as its own line it took a third of the tile's height and competed with
-	// the number the tile exists to show.
-	cell.createDiv({ cls: "sbd-stat-value", text: String(value) });
+	// Grouped, as the reference writes them: "2,481", not "2481". Four digits
+	// with no separator read as a year at a glance.
+	cell.createDiv({ cls: "sbd-stat-value", text: value.toLocaleString() });
 	const row = cell.createDiv("sbd-stat-label");
-	setIcon(row.createDiv("sbd-stat-icon"), icon);
+	if (icon) setIcon(row.createDiv("sbd-stat-icon"), icon);
 	row.createSpan({ cls: "sbd-stat-label-text", text: label });
 }
 

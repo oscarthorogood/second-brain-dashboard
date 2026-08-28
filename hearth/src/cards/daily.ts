@@ -1,4 +1,4 @@
-import { Component, Notice, setIcon, Setting, TFile } from "obsidian";
+import { Component, moment, Notice, setIcon, Setting, TFile } from "obsidian";
 import {
 	cardOverlayButton,
 	dailyNotesOptions,
@@ -64,15 +64,34 @@ export function renderDaily(
 		});
 	}
 
+	// Widget Set → DAILY leads with the date, set large and unadorned on the
+	// card's glass — the weekday, then the day number at display size, then
+	// the month and year — with the note itself in a panel below it. The card
+	// used to be nothing but the note, which made it indistinguishable from a
+	// plain embed pointed at today.
+	renderDailyDate(body);
+
 	if (card.editable) {
 		if (card.livePreview && renderLivePreviewEmbed(view, file, body, component)) return;
 		renderEditableEmbed(view, file, body, component);
 		return;
 	}
 
-	const host = body.createDiv("sbd-embed markdown-rendered");
+	const host = body.createDiv("sbd-embed sbd-daily-note markdown-rendered");
 	body.addClass("is-embed-host");
 	void renderMarkdownFile(view, file, host, component);
+}
+
+
+/** The reference's date block: weekday over the day number over "month year".
+ *  Plain text on the card's glass — no chip, no panel — so the number is the
+ *  loudest thing on the card. */
+function renderDailyDate(body: HTMLElement): void {
+	const now = moment();
+	const wrap = body.createDiv("sbd-daily-date");
+	wrap.createDiv({ cls: "sbd-daily-weekday", text: now.format("dddd") });
+	wrap.createDiv({ cls: "sbd-daily-daynum", text: now.format("D") });
+	wrap.createDiv({ cls: "sbd-daily-month", text: now.format("MMMM YYYY") });
 }
 
 

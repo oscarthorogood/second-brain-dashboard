@@ -15,6 +15,12 @@ export function renderText(
 	component: Component,
 ): void {
 	const wrap = body.createDiv("sbd-jot");
+	// Widget Set → TEXT labels the pad with a tracked-out mono caption inside
+	// it. Only on an untitled card: a titled one already says its name in the
+	// card header.
+	if (!card.title?.trim()) {
+		wrap.createDiv({ cls: "sbd-card-eyebrow is-on-sheet", text: t().cards.text.eyebrow });
+	}
 	body.addClass("is-jot-host");
 	const preview = wrap.createDiv("sbd-jot-preview markdown-rendered");
 	preview.setAttribute("title", t().cards.embed.editHint);

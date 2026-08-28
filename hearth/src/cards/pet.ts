@@ -761,11 +761,16 @@ export function renderPet(
 	// the mood ("MOOD · CHIPPER") and gives the sprite the rest of the room.
 	// The name and the activity read as that same caption's neighbours, so
 	// the three sit together above the stage rather than stacked under it.
+	// Widget Set → PET: the mood caption at the top in tracked mono, the pet
+	// itself in the middle with the card's whole height to live in, and its
+	// name at the bottom. The name belongs under the sprite, not beside the
+	// mood — that is the one line naming the creature you are looking at.
 	const caption = wrap.createDiv("sbd-pet-caption");
-	const name = caption.createDiv("sbd-pet-name");
 	const moodEl = caption.createDiv("sbd-pet-mood");
 	const stage = wrap.createDiv("sbd-pet-stage");
-	const activity = wrap.createDiv("sbd-pet-activity");
+	const foot = wrap.createDiv("sbd-pet-foot");
+	const name = foot.createDiv("sbd-pet-name");
+	const activity = foot.createDiv("sbd-pet-activity");
 
 	/** Re-derive everything from the vault and repaint. Cheap enough to run on
 	 * every vault event: one pass over the file list plus a few dozen rects. */
@@ -862,7 +867,10 @@ export function renderPet(
 
 		name.setText(petName(cfg));
 		name.toggle(cfg.showName !== false);
-		moodEl.setText(night && mood === "sleepy" ? t().cards.pet.moodNight : moodLabel(mood));
+		// "Mood · Chipper", as the reference captions it. The label is joined
+		// here rather than in CSS so it stays translatable.
+		const moodText = night && mood === "sleepy" ? t().cards.pet.moodNight : moodLabel(mood);
+		moodEl.setText(t().cards.pet.moodCaption(moodText));
 		moodEl.toggle(cfg.showMood !== false);
 		const parts = [t().cards.pet.todayCount(pulse.today, cfg.metric ?? "modified")];
 		if (pulse.streak > 1) parts.push(t().cards.pet.streak(pulse.streak));

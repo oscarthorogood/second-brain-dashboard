@@ -4,6 +4,7 @@ import { applyFileIcon, fileIconOptions, resolveFileIcon } from "../fileicons";
 import { t } from "../i18n";
 import { type BookmarkItem } from "../obsidian-ext";
 import { openFile } from "../opener";
+import { type DashboardCard } from "../types";
 import { makeClickable } from "../ui";
 import { type HomeView } from "../view";
 import { type CardDefinition } from "./definition";
@@ -36,7 +37,7 @@ function pruneBookmarks(items: BookmarkItem[], view: HomeView): BookmarkItem[] {
 }
 
 
-export function renderBookmarks(view: HomeView, body: HTMLElement): void {
+export function renderBookmarks(view: HomeView, card: DashboardCard, body: HTMLElement): void {
 	const plugin = view.app.internalPlugins.getPluginById("bookmarks");
 	const instance = plugin?.instance as
 		| { items?: BookmarkItem[]; getBookmarks?: () => BookmarkItem[] }
@@ -63,7 +64,18 @@ export function renderBookmarks(view: HomeView, body: HTMLElement): void {
 		return;
 	}
 
-	renderBookmarkItems(view, body.createDiv("sbd-list"), tree);
+	// Widget Set → BOOKMARKS heads the card with a bookmark glyph and its own
+	// title, then lists bare rows on the glass — a small glyph and a name,
+	// with no badge behind the glyph and no chip behind the row.
+	// Only on an untitled card: a titled one already carries its name in the
+	// card header, and drawing both would say it twice.
+	if (!card.title?.trim()) {
+		const head = body.createDiv("sbd-card-headline");
+		setIcon(head.createDiv("sbd-card-headline-icon"), "bookmark");
+		head.createDiv({ cls: "sbd-card-headline-text", text: t().cards.bookmarks.heading });
+	}
+
+	renderBookmarkItems(view, body.createDiv("sbd-list is-bare"), tree);
 }
 
 
@@ -198,6 +210,6 @@ export const bookmarksCard: CardDefinition<"bookmarks"> = {
 	templates: [
 		{ id: "bookmarks", name: "Bookmarks", icon: "bookmark", build: () => ({ kind: "bookmarks", title: "Bookmarks", w: 4, h: 3 }) },
 	],
-	render: (view, _card, body) => renderBookmarks(view, body),
+	render: (view, card, body) => renderBookmarks(view, card, body),
 	liveness: { mode: "static" },
 };

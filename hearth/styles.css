@@ -96,12 +96,6 @@
 
 	/* Card material: white at 10%, and a crisp white rim that does most of
 	 * the work of separating the card from the board. */
-	/* The scrim under the card's white tint. See the long note on .sbd-card
-	 * for why it exists — in short, the reference's flat artboard backdrop
-	 * hides a problem a real wallpaper doesn't. `transparent` restores the
-	 * reference's literal material. */
-	--sbd-card-scrim: rgba(20, 26, 34, 0.3);
-
 	--sbd-glass-card-fill: rgba(255, 255, 255, 0.1);
 	--sbd-glass-card-border: rgba(255, 255, 255, 0.42);
 
@@ -166,6 +160,11 @@
 	 * the accent is white on this board, and a white star on a white-tinted
 	 * row would vanish. */
 	--sbd-star: #f4c53c;
+	/* The reference's densest small surface: white at 42% carrying DARK text
+	 * — the web card's address chip, the embed's LIVE label. Between the
+	 * panel tier (translucent, white text) and the sheet (near-opaque). */
+	--sbd-badge-fill-strong: rgba(255, 255, 255, 0.42);
+	--sbd-badge-ink: #4d565e;
 	/* The near-opaque white sheet: the reference's top tier, used where a
 	 * surface has to carry DARK text on the glass — a primary action, a
 	 * rendered note body, a calculator's operator keys. Distinct from
@@ -489,10 +488,6 @@ body.theme-dark {
 	 * opaque white card would swallow the white text on it — so the opaque
 	 * case tints from the board's own grey instead. */
 	--sbd-glass-tint: var(--background-primary);
-	/* An opaque card has no backdrop showing through, so there is nothing for
-	 * the scrim to darken — and low power exists to stop the board
-	 * compositing layers it doesn't need. */
-	--sbd-card-scrim: transparent;
 }
 
 .sbd-scroll {
@@ -599,6 +594,9 @@ body.theme-dark {
 	display: flex;
 	align-items: center;
 	gap: 12px;
+	/* The board title sits in the header, outside any card, so it stays sized
+	 * against the window — unlike the display type inside cards, which is sized
+	 * in cqw against the card. */
 	font-size: clamp(2.2rem, 5vw, 3.4rem);
 	font-weight: 700;
 	letter-spacing: -0.02em;
@@ -717,14 +715,260 @@ body.theme-dark {
 	padding: 18px 20px;
 }
 
+/* Type on the sheet, at the reference's sizes: 14px body under an 18px
+ * heading. Obsidian's own scale is absolute (an h2 is 1.6rem however small the
+ * box holding it), which on a 500x280 card drew a heading half again as big as
+ * the reference's and a body a size over it. The ladder is kept — a note's
+ * structure should still read — just rebased on the card. Live-preview and
+ * image hosts are excluded: the first is a real editor and takes the app's
+ * own type, the second has no text. */
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) {
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0 0 10px;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h1 {
+	font-size: 1.375rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h2 {
+	font-size: 1.125rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) h3 {
+	font-size: 1rem;
+}
+
+.sbd-view .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image) :is(h4, h5, h6) {
+	font-size: 0.9375rem;
+}
+
 /* The jot pad (→ TEXT): a 24px sheet filling the card's padding box, dark
  * text on it, and the caret in the reference's blue. */
 .sbd-view .sbd-jot {
+	/* Inset from the card's rim, as the reference draws it. The body zeroes its
+	 * own inline padding so the scrolling pad inside can carry the gutter (see
+	 * the checkbox-hang note further down), which left the sheet running edge
+	 * to edge and clipped by the card. A margin puts the inset back without
+	 * moving the clip box. */
+	margin-inline: var(--sbd-card-pad-x);
+	padding-block: 20px;
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
 	caret-color: var(--sbd-sheet-link);
+}
+
+/* ---- Daily note — Widget Set → DAILY ------------------------------- */
+
+/* The date block leads the card and the note follows, so the two sit at
+ * opposite ends of whatever height the card has. */
+/* DAILY is an embed host, but unlike the EMBED card its note sits in an inset
+ * panel rather than running to the card's edges — so it keeps the card's side
+ * padding that the generic host rule strips. */
+.sbd-card > .sbd-card-body.is-embed-host:has(> .sbd-daily-date) {
+	padding-inline: var(--sbd-card-pad-x);
+}
+
+.sbd-card-body.is-embed-host:has(> .sbd-daily-date) {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 14px;
+}
+
+.sbd-daily-date {
+	flex: none;
+}
+
+.sbd-daily-weekday,
+.sbd-daily-month {
+	font-size: 0.9375rem;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+/* 64px at the reference's card size, its -2px tracking expressed as an em so
+ * it holds as the card is resized. */
+.sbd-daily-daynum {
+	font-size: clamp(1.75rem, 27cqw, 4rem);
+	font-weight: 600;
+	line-height: 1.05;
+	letter-spacing: -0.032em;
+	color: rgba(255, 255, 255, 0.98);
+}
+
+/* The note sits in the glass panel tier with white text — NOT the white
+ * sheet the standalone embed card uses. The reference draws it that way
+ * because the date above it is white on glass too, and a white sheet here
+ * would split the card into two unrelated halves. */
+.sbd-view .sbd-embed.sbd-daily-note {
+	/* The panel hugs the note rather than stretching to the card. In the
+	 * reference a two-line note draws a 68px panel sitting on the card's
+	 * bottom edge, with the empty glass between it and the date left empty —
+	 * stretching it filled that gap with a slab of tint. It still shrinks and
+	 * scrolls once the note is longer than the space the date leaves. */
+	flex: 0 1 auto;
+	min-height: 0;
+	/* .sbd-embed sets height:100% for the standalone EMBED card, which fills
+	 * its body. Here the panel is one of two children and must not claim the
+	 * whole column — that pushed the date block off the top of the card. */
+	height: auto;
+	max-height: 100%;
+	overflow: auto;
+	background: var(--sbd-panel-tier-fill);
+	border-radius: var(--sbd-radius-l);
+	padding: 14px 16px;
+	color: rgba(255, 255, 255, 0.95);
+	text-shadow: inherit;
+	--text-normal: rgba(255, 255, 255, 0.95);
+	--text-muted: rgba(255, 255, 255, 0.7);
+	--text-faint: rgba(255, 255, 255, 0.5);
+	--text-accent: #ffffff;
+	--background-primary: transparent;
+	--background-secondary: rgba(255, 255, 255, 0.14);
+	--link-color: #ffffff;
+}
+
+/* Headings inside the panel are set at the body's size, in the reference's
+ * dim caps-free treatment. A rendered `## Log` at Obsidian's h2 is 1.6rem —
+ * taller than the whole panel the reference draws, and it pushed the note off
+ * the bottom of the card. */
+.sbd-view .sbd-embed.sbd-daily-note :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0 0 4px;
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-view .sbd-embed.sbd-daily-note p {
+	margin: 0 0 6px;
+	font-size: 0.875rem;
+	line-height: 1.35;
+}
+
+.sbd-view .sbd-embed.sbd-daily-note > :last-child {
+	margin-bottom: 0;
+}
+
+/* ---- Leaf: the hosted view's name ---------------------------------- */
+
+.sbd-leaf-viewtype {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	flex: none;
+	padding: 0 6px;
+	margin-bottom: 12px;
+}
+
+.sbd-leaf-viewtype-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.sbd-leaf-viewtype-icon .svg-icon {
+	width: 16px;
+	height: 16px;
+}
+
+/* The view type is an id ("outgoing-link"), so the reference sets it in mono
+ * — it reads as a machine name rather than a title. */
+.sbd-leaf-viewtype-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.8);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ---- Web: the address chip ----------------------------------------- */
+
+.sbd-web-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: none;
+	padding: 0 8px;
+	margin-bottom: 14px;
+}
+
+/* The badge tier — white at 42%, carrying dark text. Denser than the panel
+ * tier and lighter than the sheet, which is exactly where a browser's
+ * address bar sits in the reference. */
+.sbd-web-url {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 34px;
+	padding: 0 14px;
+	border-radius: 11px;
+	background: var(--sbd-badge-fill-strong);
+	color: var(--sbd-badge-ink);
+	text-shadow: none;
+}
+
+.sbd-web-url-icon {
+	display: flex;
+	flex: none;
+	color: var(--sbd-badge-ink);
+}
+
+.sbd-web-url-icon .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
+.sbd-web-url-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.875rem;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The reload glyph and the interval beside it — bare on the glass, not a
+ * button-shaped control: the address chip is the only filled thing on the row
+ * and a second one would compete with it. */
+.sbd-web-reload {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	padding: 0;
+	border: none;
+	background: none;
+	box-shadow: none;
+	color: rgba(255, 255, 255, 0.9);
+	cursor: pointer;
+}
+
+.sbd-web-reload:hover {
+	color: #ffffff;
+}
+
+.sbd-web-reload .svg-icon {
+	width: 19px;
+	height: 19px;
+}
+
+.sbd-web-every {
+	flex: none;
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.72);
 }
 
 /* The hosted plugin view (→ LEAF): a 24px sheet under the mono view-type
@@ -744,6 +988,44 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
 	padding: 16px 18px;
+}
+
+/* The reference's table on the sheet: tracked-out grey column heads over a
+ * hairline rule, blue file links, and mono for the date column. */
+.sbd-view .sbd-dataview table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.sbd-view .sbd-dataview th {
+	padding: 0 12px 8px 0;
+	border-bottom: 1px solid var(--sbd-sheet-rule);
+	color: var(--sbd-sheet-ink-label);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-align: left;
+	text-transform: uppercase;
+}
+
+.sbd-view .sbd-dataview td {
+	padding: 9px 12px 0 0;
+	font-size: 0.875rem;
+	color: var(--sbd-sheet-ink-body);
+}
+
+.sbd-view .sbd-dataview td a {
+	color: var(--sbd-sheet-link);
+	font-weight: 500;
+	text-decoration: none;
+}
+
+/* Both query panes fill whatever height the card has left, rather than
+ * shrinking to their rows and leaving the card half empty. */
+.sbd-view .sbd-dataview,
+.sbd-view .sbd-datacore {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
 .sbd-view .sbd-datacore {
@@ -1327,6 +1609,10 @@ body.theme-dark {
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
+	/* The card's content inset, consumed by the body and the title row. See the
+	 * per-kind table below .sbd-card-body. */
+	--sbd-card-pad-x: 24px;
+	--sbd-card-pad-y: 24px;
 	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
 	border-radius: var(--sbd-card-radius, 42px);
@@ -1346,25 +1632,22 @@ body.theme-dark {
 			calc(var(--card-opacity, 1) * 100%),
 		transparent
 	);
-	/* The scrim, the tint, then two highlights — painted bottom-up, since a
-	 * background-color sits under every background-image and each image sits
-	 * under the one before it.
+	/* The tint plus two highlights, exactly as the reference measures them.
+	 * The top highlight matches it directly: sampling straight down from the
+	 * rim shows the surface a good ~20/255 brighter immediately under it,
+	 * falling off to the flat interior over about 12px — the light a pane of
+	 * glass gathers along its lit edge. The diagonal is the softer corner
+	 * sheen over the rest of the face.
 	 *
-	 * The scrim is the one value on the card NOT measured off the reference,
-	 * and it is here because the reference cannot supply it: its artboard
-	 * backs every card with one flat colour, so white-at-10% over an 18px
-	 * blur reads there as an evenly lit pane. Over a real wallpaper it does
-	 * not. A photograph varies at card scale, which no blur radius can
-	 * remove — blur attenuates detail, not the large shapes a card sits on —
-	 * so the card takes the picture's own light and dark patches and the
-	 * white text on it goes with them. Raising the white tint doesn't fix it
-	 * either: by the time it covers a bright patch the glass has gone milky
-	 * and it still fails on a high-key wallpaper. Darkening the backdrop
-	 * *underneath* the reference's white tint is what holds white text at a
-	 * readable contrast over any picture while leaving the tint, the rim and
-	 * the highlights exactly as measured. Set --sbd-card-scrim to
-	 * `transparent` for the reference's literal material. */
-	background-color: var(--sbd-card-scrim);
+	 * There is deliberately NO darkening here, and none in the blur either.
+	 * Two earlier passes added some — first a dark scrim under the tint,
+	 * then a brightness() multiplier inside the backdrop-filter — on the
+	 * assumption that white text could not hold over a bright wallpaper.
+	 * Rendering the reference artboard over the very wallpaper it is drawn
+	 * on settles it: the card there is this stack and nothing else, and it
+	 * reads as a barely-there pane with a crisp rim. Anything added under
+	 * the tint makes it a slab. */
+	background-color: var(--sbd-card-surface);
 	background-image:
 		linear-gradient(
 			to bottom,
@@ -1376,8 +1659,7 @@ body.theme-dark {
 			rgba(255, 255, 255, 0.1) 0%,
 			rgba(255, 255, 255, 0.03) 40%,
 			rgba(255, 255, 255, 0) 65%
-		),
-		linear-gradient(var(--sbd-card-surface), var(--sbd-card-surface));
+		);
 	/* Every text node in a card inherits this: a soft dark shadow keeps type
 	 * legible over any wallpaper showing through the glass, in place of
 	 * hand-tuning contrast per element. Lighter than it was (was 0.45 alpha
@@ -1474,7 +1756,11 @@ body.theme-dark {
 .sbd-card-head {
 	display: flex;
 	align-items: center;
-	padding: 6px 10px;
+	/* Tracks the body's side padding so a titled card's rule starts and ends
+	 * where its content does — with a floor, because CLOCK and SLIDESHOW set
+	 * that padding to zero for their own edge-to-edge content, and a title
+	 * flush against the card's rim reads as a rendering fault. */
+	padding: 10px max(var(--sbd-card-pad-x, 24px), 14px);
 	border-bottom: var(--card-border-width, 1px) solid
 		color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
@@ -1506,12 +1792,182 @@ body.theme-dark {
 	display: none;
 }
 
+/* The reference gives every widget its own card padding, between 20px and
+ * 28px (see the table in the block comment below). 24px is the mode, so it is
+ * the base here and each kind that differs states its own. This used to be
+ * 8px/10px, which is most of why every widget read as cramped next to the
+ * reference: a 238px card was giving its content 218px of width where the
+ * reference gives it 190px, and the content ran right up to the rim. */
 .sbd-card-body {
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
-	--sbd-card-pad-x: 10px;
-	padding: 8px var(--sbd-card-pad-x);
+	padding: var(--sbd-card-pad-y) var(--sbd-card-pad-x);
+}
+
+/* Per-kind padding, straight off the reference's artboard. Only the kinds that
+ * differ from the 24px base appear. WEB and LEAF are 20px because both host a
+ * framed view that wants the room; HEATMAP is 28px top-and-bottom because its
+ * grid is the widest thing on the board and needs the air; CLOCK and SLIDESHOW
+ * have none at all — the clock centres a face in the whole card, and the
+ * slideshow's photo is edge-to-edge. */
+.sbd-card.is-embed-card,
+.sbd-card.is-schedule-card {
+	--sbd-card-pad-x: 28px;
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-daily-card,
+.sbd-card.is-tasks-card,
+.sbd-card.is-git-card {
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-calendar-card {
+	--sbd-card-pad-x: 26px;
+}
+
+.sbd-card.is-stats-card,
+.sbd-card.is-weather-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 26px;
+}
+
+.sbd-card.is-heatmap-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 28px;
+}
+
+.sbd-card.is-text-card,
+.sbd-card.is-commands-card,
+.sbd-card.is-favorites-card {
+	--sbd-card-pad-x: 22px;
+	--sbd-card-pad-y: 22px;
+}
+
+.sbd-card.is-bookmarks-card,
+.sbd-card.is-recent-card,
+/* SEARCH's head row: the saved query in mono over the card's glass, and the
+ * match count closing it. 14px on both, the count a touch brighter and bold —
+ * it is the answer, the query is the question. */
+.sbd-query-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex: none;
+	margin-bottom: 14px;
+}
+
+.sbd-query-text {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.92);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-query-count {
+	font-size: 0.875rem;
+	font-weight: 600;
+	flex: none;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+/* The reference lays these three cards out as a column: a head (the query,
+ * and for DATACORE its language) over a result that takes whatever height is
+ * left. Without the flex context the result box sizes to its rows and leaves
+ * the bottom of the card empty. */
+.sbd-card.is-dataview-card > .sbd-card-body,
+.sbd-card.is-datacore-card > .sbd-card-body,
+.sbd-card.is-search-card > .sbd-card-body {
+	display: flex;
+	flex-direction: column;
+}
+
+/* The query panel DATAVIEW puts above its result: the source in mono on a
+ * translucent panel, wrapping as written. Capped at four lines so a long
+ * query informs the card rather than taking it over. */
+.sbd-query-source {
+	flex: none;
+	margin-bottom: 14px;
+	padding: 11px 14px;
+	border-radius: 14px;
+	background: var(--sbd-panel-tier-fill);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: rgba(255, 255, 255, 0.9);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	max-height: 6em;
+	overflow: auto;
+}
+
+/* DATACORE writes the same line bare, in the head row beside its language. */
+.sbd-query-source.is-bare {
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+	background: none;
+	max-height: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+.sbd-query-lang {
+	flex: none;
+	padding: 5px 11px;
+	border-radius: 8px;
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-shadow: none;
+}
+
+.sbd-card.is-search-card {
+	--sbd-card-pad-x: 22px;
+}
+
+.sbd-card.is-web-card,
+.sbd-card.is-leaf-card {
+	--sbd-card-pad-x: 20px;
+	--sbd-card-pad-y: 20px;
+}
+
+.sbd-card.is-clock-card,
+.sbd-card.is-slideshow-card {
+	--sbd-card-pad-x: 0px;
+	--sbd-card-pad-y: 0px;
+}
+
+/* Display type inside a card is sized against the CARD, not the window: the
+ * cqw clamps in the three kinds below used to be vw-based, which meant a 238px
+ * card on a 2560px monitor drew its day number at 230px where the reference
+ * draws 64px.
+ *
+ * Only these three become query containers, and deliberately so —
+ * `container-type` brings `contain: layout` with it, which makes the element a
+ * containing block for `position: fixed` descendants. Every card carrying that
+ * would silently re-anchor any popover that escapes to the viewport (the Jira
+ * card's filter menu on a narrow pane, for one). */
+.sbd-card.is-daily-card,
+.sbd-card.is-clock-card,
+.sbd-card.is-calculator-card {
+	container-type: inline-size;
+}
+
+/* The search bar is `padding: 0 26px` in the reference: the bar row IS the
+ * card's interior and takes its full height. A vertical inset here would leave
+ * the pill floating in a band of glass. */
+.sbd-card.is-searchbar-card {
+	--sbd-card-pad-x: 26px;
+	--sbd-card-pad-y: 10px;
 }
 
 /* When a card body holds a read-only embed/daily-note host directly, the host
@@ -1529,9 +1985,20 @@ body.theme-dark {
  * view avoids this because its `--file-margins` gutter is interior. The rules
  * below zero the body's inline padding and re-apply it on the scroll/clip
  * elements themselves, so text lands in exactly the same place. */
+/* A column: the path row (when there is one) over the note, which takes what
+ * is left. `.sbd-embed` asks for height:100%, which alone would push the sheet
+ * past the bottom of the card by the height of the row above it. */
 .sbd-card-body.is-embed-host,
 .sbd-card-body.is-jot-host {
+	display: flex;
+	flex-direction: column;
 	overflow: hidden;
+}
+
+.sbd-card-body.is-embed-host > .sbd-embed {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
 }
 
 /* Scoped through `.sbd-card` purely for specificity: compact mode sets the
@@ -1560,13 +2027,60 @@ body.theme-dark {
  * top of the hang, not compared against it, so the checkbox keeps a full
  * gutter's clearance instead of landing flush against the clip edge. */
 .sbd-card-body.is-embed-host
-	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image),
+	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image):not(.sbd-daily-note),
 .sbd-card-body.is-jot-host .sbd-jot-preview {
+	/* --sbd-embed-gutter is the interior gutter. It is the card's own padding
+	 * for a host that runs edge to edge, and the reference's 20px for the note
+	 * sheet below, which carries the card's inset as a margin instead. */
+	--sbd-embed-gutter: var(--sbd-card-pad-x);
 	padding-inline-start: max(
-		var(--sbd-card-pad-x),
-		calc(var(--checkbox-size, 1em) * 1.5 - 3ch + var(--sbd-card-pad-x))
+		var(--sbd-embed-gutter),
+		calc(var(--checkbox-size, 1em) * 1.5 - 3ch + var(--sbd-embed-gutter))
 	);
-	padding-inline-end: var(--sbd-card-pad-x);
+	padding-inline-end: var(--sbd-embed-gutter);
+}
+
+/* The path row over an embedded note: the file's glyph and its vault path in
+ * white on the card's glass. The body zeroes its inline padding for the sheet
+ * below, so the row carries the card's own gutter itself. */
+.sbd-embed-path {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: none;
+	min-width: 0;
+	padding-inline: var(--sbd-card-pad-x);
+	margin-bottom: 16px;
+}
+
+.sbd-embed-path-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.88);
+}
+
+.sbd-embed-path-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.sbd-embed-path-text {
+	font-size: 1rem;
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.95);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The note sheet is inset from the card's rim, as the reference draws it: the
+ * body zeroes its own inline padding so this element can be the clip box (see
+ * the checkbox note above), so the inset arrives as a margin. */
+.sbd-card-body.is-embed-host
+	> .sbd-embed:not(.sbd-embed-live):not(.sbd-embed-image):not(.sbd-daily-note) {
+	--sbd-embed-gutter: 20px;
+	margin-inline: var(--sbd-card-pad-x);
 }
 
 /* The raw editor is a *sibling* of the preview inside `.sbd-jot`, not a
@@ -1739,6 +2253,15 @@ body.theme-dark {
 	padding: 0;
 }
 
+/* …except the leaf card, which now carries a name row above the hosted
+ * view: that row needs the card's own padding, and the view below it gets
+ * its rounded box rather than bleeding to the card's edge. */
+.sbd-card-body.sbd-card-body-live:has(> .sbd-leaf-viewtype) {
+	display: flex;
+	flex-direction: column;
+	padding: var(--sbd-card-pad-y, 20px) var(--sbd-card-pad-x, 20px);
+}
+
 .sbd-embed-live {
 	display: flex;
 	flex-direction: column;
@@ -1749,6 +2272,7 @@ body.theme-dark {
  * The host and the leaf's own container both fill the card body so the hosted
  * view lays out to the card size instead of its natural sidebar width/height. */
 .sbd-leaf-host {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -2102,16 +2626,25 @@ body.theme-dark {
 }
 
 /* Web / iframe embeds fill the whole card body. */
+/* The address chip sits above the page, so the body is a column and the
+ * frame takes what is left. Padding comes back for the chip's sake — the
+ * frame is given its own rounded box below rather than bleeding to the
+ * card's edge, which is how the reference frames it. */
 .sbd-card-body.sbd-web-body {
-	padding: 0;
+	display: flex;
+	flex-direction: column;
 	overflow: hidden;
 }
 
 .sbd-web {
 	display: block;
 	width: 100%;
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
 	border: 0;
+	border-radius: var(--sbd-radius-xl);
+	background: var(--sbd-sheet-fill);
 }
 
 .sbd-import-input {
@@ -2662,11 +3195,20 @@ body.theme-dark {
 
 /* The badge behind a result's glyph is an ink tint on a light sheet, not the
  * white one it wears on the glass. */
+/* Bare, not badged. The reference's result row is a name over a snippet and
+ * nothing else; a filled grey disc in front of every row was the loudest thing
+ * on a white sheet. The glyph stays — on a search result it says WHY the file
+ * matched — but it sits on the sheet rather than in a chip of its own. */
 .sbd-list.is-sheet .sbd-list-icon {
-	width: 22px;
-	height: 22px;
-	background: rgba(0, 0, 0, 0.06);
-	color: var(--sbd-sheet-ink-muted);
+	width: 16px;
+	height: 16px;
+	background: none;
+	color: var(--sbd-sheet-ink-faint);
+}
+
+.sbd-list.is-sheet .sbd-list-icon .svg-icon {
+	width: 16px;
+	height: 16px;
 }
 
 .sbd-list.is-sheet .sbd-list-item:hover .sbd-list-icon {
@@ -2697,6 +3239,51 @@ body.theme-dark {
 	color: rgba(255, 255, 255, 0.55);
 }
 
+/* A card's own headline, drawn inside it: a glyph beside a title at reading
+ * size. Distinct from the mono eyebrow below — the reference uses the
+ * eyebrow to label a surface and this to title a card (BOOKMARKS, GIT). */
+.sbd-card-headline {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin-bottom: 14px;
+}
+
+.sbd-card-headline-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.sbd-card-headline-icon .svg-icon {
+	width: 17px;
+	height: 17px;
+}
+
+.sbd-card-headline-text {
+	font-size: 1.0625rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* A bare row keeps its glyph but loses the badge behind it — the reference
+ * sets bookmark glyphs straight on the glass at text size. */
+.sbd-list.is-bare .sbd-list-icon {
+	width: auto;
+	height: auto;
+	background: none;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.sbd-list.is-bare .sbd-list-icon .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
 /* The tracked-out mono caption the reference draws inside a card to name it
  * ("RECENT", "JOT", "6 LINKS"). Shared by every card that carries one. */
 .sbd-card-eyebrow {
@@ -2706,6 +3293,15 @@ body.theme-dark {
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	margin-bottom: 13px;
+}
+
+/* The same caption, but on the white sheet rather than the glass — the
+ * reference sets it in the sheet's own faint grey there ("JOT", "6 LINKS"),
+ * since white on white would vanish. */
+.sbd-card-eyebrow.is-on-sheet {
+	color: var(--sbd-sheet-ink-faint);
+	text-shadow: none;
+	margin-bottom: 12px;
 }
 
 .sbd-list-item {
@@ -3151,15 +3747,34 @@ body.theme-dark {
  * double-click (so links in the preview stay clickable). The wrapper fills
  * the card body; exactly one of preview/textarea is shown at a time, and that
  * one is the single scroll container (one vertical scrollbar). */
+/* The sheet is a column: the JOT caption, then the pad under it taking what
+ * is left. Both were 100% tall, so the caption pushed the pad past the bottom
+ * of the card and got clipped by the sheet's own rounded corner. */
 .sbd-jot {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 	height: 100%;
 	overflow: hidden;
 }
 
 .sbd-jot-preview {
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
 	overflow: auto;
 	cursor: text;
+	/* 15px at the reference, with its lines 9px apart — the card's own body
+	 * size drew the pad a size larger than the note it stands in for. */
+	font-size: 0.9375rem;
+	line-height: 1.3;
+}
+
+.sbd-jot-preview > p {
+	margin: 0 0 9px;
+}
+
+.sbd-jot-preview > :last-child {
+	margin-bottom: 0;
 }
 
 .sbd-jot-preview.is-empty {
@@ -3252,7 +3867,7 @@ body.theme-dark {
 }
 
 .sbd-calc-result {
-	font-size: clamp(1.4rem, 4.5vw, 2.375rem);
+	font-size: clamp(1.25rem, 12.7cqw, 2.375rem);
 	font-weight: 600;
 	line-height: 1.15;
 	color: rgba(255, 255, 255, 0.98);
@@ -3367,9 +3982,14 @@ body.theme-dark {
 	position: relative;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-	grid-auto-rows: 34px;
+	/* Row height and gutter are the reference's launchpad measured back onto
+	 * this grid: its tiles are 102x108 with 14px gutters, which is what a
+	 * default 2x2 tile comes to at these numbers. Kept in step with TILE_ROW
+	 * and TILE_GAP in cardbodies.ts, which convert drag/resize pixels to
+	 * grid lines. */
+	grid-auto-rows: 47px;
 	grid-auto-flow: dense;
-	gap: 6px;
+	gap: 14px;
 	justify-content: start;
 }
 
@@ -3680,6 +4300,20 @@ body.theme-dark {
  * out as full-width sheet rows — near-opaque white, glyph leading a bold
  * dark label — rather than the vertical glass tiles LINKS uses. A command
  * is a thing you read and press, not an icon you recognise. */
+/* The reference's rows divide the card's height between them rather than
+ * standing at the launchpad grid's 34px row. */
+.sbd-card.is-commands-card .sbd-links,
+.sbd-card.is-templater-card .sbd-links {
+	height: 100%;
+	grid-template-columns: 1fr;
+	grid-auto-rows: 1fr;
+	gap: 11px;
+}
+
+.sbd-card.is-templater-card .sbd-links {
+	gap: 12px;
+}
+
 .sbd-card.is-commands-card .sbd-link-tile,
 .sbd-card.is-templater-card .sbd-link-tile {
 	flex-direction: row;
@@ -3715,6 +4349,66 @@ body.theme-dark {
 
 .sbd-card.is-commands-card .sbd-link-icon .svg-icon,
 .sbd-card.is-templater-card .sbd-link-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+/* TEMPLATER's row is wider than COMMANDS' and says more: a tinted 40px badge
+ * leads it, the name and the route it takes stack in the middle, and a chevron
+ * closes it. The badge takes a soft tint of the reference's blue; --sbd-tile-tint
+ * is the hook a per-item colour would set once items carry one. */
+.sbd-card.is-templater-card .sbd-link-tile {
+	gap: 15px;
+	padding: 0 20px;
+	border-radius: var(--sbd-radius-tile);
+}
+
+.sbd-card.is-templater-card .sbd-link-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 13px;
+	background: var(--sbd-tile-tint, rgba(47, 143, 240, 0.14));
+}
+
+.sbd-card.is-templater-card .sbd-link-icon .svg-icon {
+	width: 19px;
+	height: 19px;
+}
+
+.sbd-tile-text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	flex: 1;
+	min-width: 0;
+	text-align: left;
+}
+
+.sbd-card.is-templater-card .sbd-link-label {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+}
+
+/* The route is a path, so it is set in mono at the sheet's label grey — it
+ * reads as a machine-written line under a human-written name. */
+.sbd-tile-sub {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	color: var(--sbd-sheet-ink-label);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-tile-chevron {
+	display: flex;
+	align-items: center;
+	flex: none;
+	color: var(--sbd-sheet-ink-faint);
+}
+
+.sbd-tile-chevron .svg-icon {
 	width: 18px;
 	height: 18px;
 }
@@ -3755,7 +4449,7 @@ body.theme-dark {
 /* 58px at the reference's card size, with its -2px tracking expressed as an
  * em so it holds at every card size. */
 .sbd-clock-time {
-	font-size: clamp(2rem, 6.5vw, 3.625rem);
+	font-size: clamp(1.5rem, 24.4cqw, 3.625rem);
 	font-weight: 600;
 	letter-spacing: -0.035em;
 	color: rgba(255, 255, 255, 0.98);
@@ -3769,7 +4463,7 @@ body.theme-dark {
  * bold smears the strokes. */
 .sbd-clock-greeting {
 	font-family: var(--sbd-font-script);
-	font-size: clamp(1.4rem, 4.2vw, 2.125rem);
+	font-size: clamp(1.1rem, 14.3cqw, 2.125rem);
 	font-weight: 400;
 	letter-spacing: 0;
 	line-height: 1;
@@ -3789,50 +4483,54 @@ body.theme-dark {
 	color: rgba(255, 255, 255, 0.72);
 }
 
-/* Analogue clock face */
+/* Analogue clock face.
+ *
+ * The reference draws the face at 113px inside a 238px card — 47% of the
+ * card's width, not the near-full-bleed 220px this used to reach. And it
+ * draws every stroke in white at a graded alpha: the ring is a hairline, the
+ * ticks are soft, the hands are solid. The Obsidian theme variables this used
+ * to reference (--text-normal, --interactive-accent) resolve against the
+ * app's chrome, so on glass the hands came out grey-on-cream and the pin came
+ * out accent-purple — three colours the reference's face does not contain. */
 .sbd-analog {
-	width: 100%;
+	width: 47.7cqw;
 	max-width: 220px;
 	aspect-ratio: 1;
 	margin-bottom: 4px;
 }
 
 .sbd-analog-face {
-	fill: none;
-	stroke: var(--background-modifier-border);
-	stroke-width: 2;
-}
-
-.sbd-analog-tick {
-	stroke: var(--text-faint);
+	fill: rgba(255, 255, 255, 0.05);
+	stroke: rgba(255, 255, 255, 0.42);
 	stroke-width: 1;
 }
 
-.sbd-analog-tick-major {
-	stroke: var(--text-muted);
-	stroke-width: 2.4;
+.sbd-analog-tick {
+	stroke: rgba(255, 255, 255, 0.85);
+	stroke-width: 2.2;
+	stroke-linecap: round;
 }
 
 .sbd-analog-hour {
-	stroke: var(--text-normal);
+	stroke: rgba(255, 255, 255, 0.98);
 	stroke-width: 3.6;
 	stroke-linecap: round;
 }
 
 .sbd-analog-min {
-	stroke: var(--text-normal);
-	stroke-width: 2.4;
+	stroke: rgba(255, 255, 255, 0.98);
+	stroke-width: 3;
 	stroke-linecap: round;
 }
 
 .sbd-analog-sec {
-	stroke: var(--interactive-accent);
+	stroke: rgba(255, 255, 255, 0.7);
 	stroke-width: 1.2;
 	stroke-linecap: round;
 }
 
 .sbd-analog-pin {
-	fill: var(--interactive-accent);
+	fill: rgba(255, 255, 255, 0.98);
 }
 
 /* RSS feed card */
@@ -4493,6 +5191,36 @@ body.theme-dark {
 	flex: 0 0 auto;
 }
 
+/* The forecast's head row, at the reference's sizes: the wording block on the
+ * left, top-aligned, and the glyph beside a 46px temperature on the right.
+ * The tight glyph/temp sizes the compact style uses are for a single reading
+ * line — here the temperature is the card's headline. */
+.sbd-weather.is-forecast .sbd-weather-row {
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.sbd-weather.is-forecast .sbd-weather-rowtext {
+	gap: 3px;
+}
+
+.sbd-weather-now {
+	display: flex;
+	align-items: center;
+	flex: none;
+	gap: 10px;
+}
+
+.sbd-weather.is-forecast .sbd-weather-glyph {
+	font-size: 2.375rem;
+}
+
+.sbd-weather.is-forecast .sbd-weather-temp {
+	font-size: 2.875rem;
+	letter-spacing: -0.022em;
+}
+
 /* Widget Set → WEATHER lays the days out ACROSS the card as a row of
  * near-white tiles — day over glyph over temperature, centred — rather than
  * down it as a list of rows. Scoped to the forecast style, which is the one
@@ -4512,8 +5240,9 @@ body.theme-dark {
 	align-items: center;
 	justify-content: center;
 	gap: 7px;
+	box-sizing: border-box;
 	height: 96px;
-	padding: 8px 4px;
+	padding: 0 4px;
 	border-radius: var(--sbd-radius-l);
 	background: rgba(255, 255, 255, 0.8);
 	color: var(--sbd-sheet-ink-body);
@@ -4528,6 +5257,7 @@ body.theme-dark {
 	flex: none;
 	font-size: 0.875rem;
 	font-weight: 600;
+	text-transform: uppercase;
 	color: var(--sbd-sheet-ink-body);
 }
 
@@ -5836,49 +6566,54 @@ body.theme-dark {
 	color: var(--text-normal);
 }
 
+/* The reference sets the range as the card's headline, at display size. */
 .sbd-sched-title {
 	flex: 1;
 	min-width: 0;
-	font-size: 0.92rem;
+	font-size: 1.4375rem;
 	font-weight: 600;
-	color: var(--text-normal);
+	color: rgba(255, 255, 255, 0.96);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-/* The view switcher reads as one segmented control rather than four buttons. */
+/* Widget Set → SCHEDULE draws the view switcher as the reference's track:
+ * a translucent rail holding a near-white pill on the active view — the same
+ * control the card-settings sheet uses for its tabs. It was a bordered
+ * segmented control with hairlines between the segments. */
 .sbd-sched-views {
 	display: flex;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 9px;
+	gap: 6px;
+	padding: 4px;
+	border: none;
+	border-radius: var(--sbd-radius-track);
+	background: var(--sbd-track-fill);
 	overflow: hidden;
 }
 
 .sbd-sched-view {
-	padding: 3px 9px;
-	height: 26px;
+	padding: 6px 14px;
+	height: auto;
 	border: none;
-	border-radius: 0;
+	border-radius: 9px;
 	background: transparent;
-	color: var(--text-muted);
-	font-size: 0.74rem;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 0.8125rem;
+	font-weight: 600;
 	cursor: pointer;
 	box-shadow: none;
+	transition: var(--sbd-transition-interactive);
 }
 
-.sbd-sched-view + .sbd-sched-view {
-	border-left: 1px solid var(--background-modifier-border);
-}
-
-.sbd-sched-view:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
+.sbd-sched-view:hover:not(.is-active) {
+	background: var(--sbd-panel-tier-fill-hover);
+	color: #ffffff;
 }
 
 .sbd-sched-view.is-active {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
+	background: var(--sbd-track-pill-fill);
+	color: var(--sbd-ink);
 }
 
 /* The per-view toggles read as one list under their shared description. */
@@ -6098,9 +6833,12 @@ body.theme-dark {
 	--sched-gutter: 46px;
 }
 
+/* No rule under the header: in the reference each day's own glass column is
+ * what separates it from its neighbours, and a hairline across the top of them
+ * cut the columns off from the days they belong to. */
 .sbd-sched-gridhead {
 	display: flex;
-	border-bottom: 1px solid var(--background-modifier-border);
+	border-bottom: none;
 }
 
 .sbd-sched-gutterhead {
@@ -6110,16 +6848,22 @@ body.theme-dark {
 .sbd-sched-headcols {
 	display: grid;
 	grid-template-columns: repeat(var(--sched-cols, 7), minmax(0, 1fr));
+	gap: 8px;
 	flex: 1;
 	min-width: 0;
 }
 
+/* Reference: the weekday sits ABOVE its number, centred, in a 34px band over
+ * the column. Side by side they read as one word — "MON24" — and the number,
+ * which is what you actually look for, lost its own line. */
 .sbd-sched-headday {
 	display: flex;
-	align-items: baseline;
+	flex-direction: column;
+	align-items: center;
 	justify-content: center;
-	gap: 4px;
-	padding: 2px 0 5px;
+	gap: 2px;
+	height: 34px;
+	padding: 0;
 	border-radius: 6px 6px 0 0;
 	cursor: pointer;
 }
@@ -6222,8 +6966,9 @@ body.theme-dark {
 	top: 0;
 	right: 7px;
 	transform: translateY(-50%);
-	font-size: 0.66rem;
-	color: var(--text-faint);
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.5);
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
@@ -6235,22 +6980,22 @@ body.theme-dark {
 .sbd-sched-cols {
 	display: grid;
 	grid-template-columns: repeat(var(--sched-cols, 7), minmax(0, 1fr));
+	gap: 8px;
 	flex: 1;
 	min-width: 0;
 }
 
 /* One hour line per row, drawn by the background rather than by an element per
    hour — the grid stays one element deep however tall the day is. */
+/* The reference gives each day its own soft glass column with rounded ends,
+ * and rules nothing: the columns' own edges separate the days, so the
+ * hairline borders and the hour lines that used to stripe them are gone. */
 .sbd-sched-col {
 	position: relative;
-	border-left: 1px solid var(--background-modifier-border);
-	background-image: linear-gradient(
-		to bottom,
-		var(--background-modifier-border) 0,
-		var(--background-modifier-border) 1px,
-		transparent 1px
-	);
-	background-size: 100% var(--sched-hour, 44px);
+	border-left: none;
+	border-radius: var(--sbd-radius-l);
+	background-color: rgba(255, 255, 255, 0.1);
+	background-image: none;
 }
 
 .sbd-sched-col.is-today {
@@ -6265,9 +7010,13 @@ body.theme-dark {
 	width: calc(var(--ev-width, 100%) - 4px);
 	display: flex;
 	flex-direction: column;
-	padding: 1px 4px;
-	border-radius: 7px;
-	border-left: 3px solid var(--ev-color, var(--interactive-accent));
+	gap: 2px;
+	padding: 7px 9px;
+	border-radius: 11px;
+	/* No leading stripe: the block is painted in its own colour, and a darker
+	 * bar down one edge of an already-coloured block is a device from a list
+	 * view, where the row is neutral. */
+	border-left: none;
 	/* The reference paints an event block in its own colour at full strength
 	 * with white text on it. Mixing into --background-primary — the board's
 	 * opaque #a2a2a7 — desaturated every event to the same grey, which is
@@ -6327,16 +7076,23 @@ body.theme-dark {
 }
 
 .sbd-sched-blocktitle {
+	font-size: 0.8125rem;
 	font-weight: 600;
+	line-height: 1.2;
+	color: #ffffff;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
+/* On the block, both lines are white — the time at 80% of it. --text-muted is
+ * the app's grey and disappeared into a saturated event colour. */
 .sbd-sched-blocktime,
 .sbd-sched-blockplace {
-	color: var(--text-muted);
-	font-size: 0.66rem;
+	font-family: var(--sbd-font-mono);
+	color: rgba(255, 255, 255, 0.8);
+	font-size: 0.6875rem;
+	line-height: 1.2;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -6536,7 +7292,8 @@ body.theme-dark {
 	 * different thing from a label's contrast. */
 	color: var(--text-normal);
 	cursor: pointer;
-	font-size: 0.85rem;
+	/* 15px in the reference. */
+	font-size: 0.9375rem;
 	transition: var(--sbd-transition-interactive);
 }
 
@@ -6553,7 +7310,10 @@ body.theme-dark {
 /* The "Done arranging" pill (Canvas.dc.html): solid white rather than glass,
  * since it's the confirm action. */
 .sbd-tool-btn.is-active {
-	color: var(--text-on-accent);
+	/* Dark ink, as the reference writes it (#2a2e33) — not --text-on-accent,
+	 * which is white in Obsidian's own themes and put a white label on a white
+	 * pill. */
+	color: var(--sbd-ink-strong);
 	background: var(--sbd-btn-light-fill);
 	border-color: var(--sbd-btn-light-fill);
 	box-shadow: var(--sbd-btn-light-shadow);
@@ -7167,7 +7927,14 @@ body.theme-dark {
  * side by side and the tier's usual 20% made the card read as three cards.
  * It was mixing --background-secondary, an opaque grey. */
 .sbd-kanban-col {
-	flex: 1 0 140px;
+	/* The reference's three lanes divide the card between them. A 140px basis
+	 * on a content box plus 20px of padding made each lane 160px wide, so
+	 * three of them overflowed a 500px card and the third was cut off. Basis 0
+	 * with a 130px floor divides the width where the lanes fit and falls back
+	 * to the horizontal scroll only once they genuinely don't. */
+	box-sizing: border-box;
+	flex: 1 1 0;
+	align-self: stretch;
 	min-width: 130px;
 	display: flex;
 	flex-direction: column;
@@ -7206,10 +7973,10 @@ body.theme-dark {
 .sbd-kanban-col-body {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	padding: 6px;
+	gap: 9px;
+	padding: 0;
 	overflow-y: auto;
-	flex: 1;
+	flex: 1 1 auto;
 	min-height: 32px;
 }
 
@@ -8153,18 +8920,50 @@ body.sbd-dv-resizing {
 
 /* The caption sits over the picture with a gradient scrim, so it stays readable
  * on a light photo and a dark one alike. */
+/* The reference's caption block: a mono folder eyebrow over the picture's
+ * name, on a gradient that fades up out of the image. The gradient is the
+ * reference's blue-grey ink rather than pure black — over a warm photograph
+ * black reads as a bruise. */
 .sbd-slide-caption {
 	position: absolute;
 	inset: auto 0 0 0;
 	z-index: 3;
-	padding: 22px 12px 9px;
-	color: #fff;
-	font-size: 0.76rem;
-	font-weight: 500;
-	line-height: 1.35;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-	background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 22px 26px 18px;
+	color: #ffffff;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+	background: linear-gradient(
+		to top,
+		rgba(30, 36, 42, 0.62),
+		rgba(30, 36, 42, 0)
+	);
 	pointer-events: none;
+}
+
+.sbd-slide-caption-folder {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	letter-spacing: var(--sbd-label-tracking);
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.72);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-slide-caption-folder.is-hidden {
+	display: none;
+}
+
+.sbd-slide-caption-name {
+	font-size: 1.1875rem;
+	font-weight: 600;
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* Previous / pause / next and the position, revealed on hover or keyboard
@@ -8260,9 +9059,14 @@ body.sbd-dv-resizing {
 }
 
 /* ---- Activity heatmap card ------------------------------------------ */
+/* The reference's HEATMAP is three rows at the card's extremes: the title row
+ * on top, the year of days floating in the middle, the legend row at the
+ * bottom. The grid does not stretch to the space between them — a year of days
+ * is square days, and a stretched cell stops reading as a day. */
 .sbd-heatmap {
 	display: flex;
 	flex-direction: column;
+	justify-content: space-between;
 	gap: 8px;
 	height: 100%;
 }
@@ -8270,10 +9074,12 @@ body.sbd-dv-resizing {
 .sbd-heatmap-grid {
 	display: grid;
 	grid-auto-flow: column;
-	grid-template-rows: repeat(7, 1fr);
+	grid-template-rows: repeat(7, auto);
+	grid-auto-columns: 1fr;
 	gap: 3px;
-	flex: 1;
+	flex: 0 1 auto;
 	min-height: 0;
+	max-height: 100%;
 	overflow: hidden;
 }
 
@@ -8287,13 +9093,13 @@ body.sbd-dv-resizing {
 	align-items: center;
 	justify-content: center;
 	background: transparent;
-	/* Fill the grid cell without forcing a square aspect ratio: the cell's
-	   size is driven by the grid tracks (width = column / weeks, height =
-	   row / 7), so the grid scales smoothly with the card footprint instead
-	   of overflowing when the card's aspect ratio isn't weeks:7. */
+	/* Square. The column track sets the width (card width / weeks — about
+	 * 5.7px at the reference's 500px card, where the reference draws 5px) and
+	 * the aspect ratio sets the height, so the block of days keeps its shape
+	 * at any card size instead of smearing into bars on a tall card. */
 	min-width: 0;
 	width: 100%;
-	height: 100%;
+	aspect-ratio: 1;
 }
 
 .sbd-heatmap-cell::before {
@@ -8315,10 +9121,37 @@ body.sbd-dv-resizing {
 	cursor: pointer;
 }
 
+/* The reference's head and foot rows: what is counted and how far back,
+ * then where the grid starts beside the legend. */
+.sbd-heatmap-head,
+.sbd-heatmap-foot {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	flex: none;
+}
+
+.sbd-heatmap-title {
+	font-size: 1.3125rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+.sbd-heatmap-range {
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.66);
+}
+
+.sbd-heatmap-start {
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.6);
+}
+
 .sbd-heatmap-legend {
 	display: flex;
 	align-items: center;
-	gap: 3px;
+	gap: 6px;
 	justify-content: flex-end;
 	font-size: 0.75rem;
 	color: rgba(255, 255, 255, 0.55);
@@ -8327,11 +9160,16 @@ body.sbd-dv-resizing {
 .sbd-heatmap-legend .sbd-heatmap-cell {
 	width: 9px;
 	height: 9px;
+	flex: none;
 	aspect-ratio: auto;
 }
 
+.sbd-heatmap-legend .sbd-heatmap-cell::before {
+	border-radius: 2.5px;
+}
+
 .sbd-heatmap-legend-label {
-	margin: 0 3px;
+	margin: 0;
 }
 
 /* ---- Web card: external-open button & framing fallback -------------- */
@@ -9458,10 +10296,14 @@ body.sbd-dv-resizing {
 	animation: sbd-rss-spin 0.9s linear infinite;
 }
 
+/* Widget Set → JIRA lists each issue as its own near-opaque sheet card with
+ * dark text, not as rows divided by a rule — the same treatment RSS items
+ * and query results take. */
 .sbd-jira-issues {
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
+	gap: 10px;
 	min-height: 0;
 	overflow-y: auto;
 }
@@ -9469,22 +10311,35 @@ body.sbd-dv-resizing {
 .sbd-jira-issue {
 	display: flex;
 	align-items: center;
-	gap: 9px;
+	gap: 12px;
 	width: 100%;
-	padding: 8px 6px;
+	padding: 12px 16px;
 	border: 0;
-	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: 9px;
-	background: transparent;
-	color: var(--text-normal);
+	border-bottom: none;
+	border-radius: var(--sbd-radius-l);
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
 	text-align: left;
 	cursor: pointer;
 }
 
 .sbd-jira-issue:hover {
-	background: var(--background-modifier-hover);
+	background: var(--sbd-sheet-fill-hover);
 }
 
+/* The row's ink ladder, so its key, summary and status chip stop inheriting
+ * the board's white. */
+.sbd-view .sbd-jira-issue {
+	--text-normal: var(--sbd-sheet-ink);
+	--text-muted: var(--sbd-sheet-ink-muted);
+	--text-faint: var(--sbd-sheet-ink-faint);
+	--text-accent: var(--sbd-sheet-link);
+}
+
+/* The reference marks the issue type with a small tinted SQUARE, not a
+ * round badge — round is the board's glyph-on-glass shape, and on a white
+ * sheet it read as a hole. */
 .sbd-jira-type {
 	display: flex;
 	align-items: center;
@@ -9492,8 +10347,8 @@ body.sbd-dv-resizing {
 	flex: 0 0 auto;
 	width: 28px;
 	height: 28px;
-	border-radius: 50%;
-	background: var(--sbd-badge-fill);
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.05);
 	color: var(--text-normal);
 }
 
@@ -9514,30 +10369,41 @@ body.sbd-dv-resizing {
 	font-size: 0.7rem;
 }
 
+/* Mono, quiet, under the summary — the reference sets the issue key as a
+ * reference number rather than as a link. */
 .sbd-jira-key {
-	color: var(--text-accent);
-	font-weight: 600;
+	font-family: var(--sbd-font-mono);
+	color: var(--sbd-sheet-ink-muted);
+	font-weight: 400;
 }
 
 .sbd-jira-summary {
-	margin-top: 2px;
+	margin-top: 0;
+	margin-bottom: 2px;
 	overflow: hidden;
-	font-size: 0.84rem;
-	font-weight: 500;
+	color: var(--sbd-sheet-ink);
+	font-size: 0.9375rem;
+	font-weight: 700;
 	line-height: 1.25;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
+/* The reference's status chip: a pale tinted pill carrying tracked-out dark
+ * mono caps, sitting on the white row rather than on the glass. */
 .sbd-jira-status {
 	flex: 0 0 auto;
 	max-width: 130px;
-	padding: 2px 7px;
+	padding: 4px 9px;
 	overflow: hidden;
-	border-radius: 999px;
-	background: var(--background-modifier-hover);
-	color: var(--text-muted);
-	font-size: 0.68rem;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.06);
+	color: var(--sbd-sheet-ink-muted);
+	font-family: var(--sbd-font-mono);
+	font-weight: 700;
+	letter-spacing: var(--sbd-label-tracking-tight);
+	text-transform: uppercase;
+	font-size: 0.6875rem;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -9791,43 +10657,79 @@ body.sbd-dv-resizing {
 
 /* ---- Buttons ---- */
 
+/* Reference: the buttons sit on the card's bottom edge, the writing action
+ * spanning the full width on its own line and the read-only ones sharing the
+ * line under it. A wrapping flex row put three equal buttons on one line and
+ * left the primary indistinguishable by size. */
 .sbd-git-actions {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 6px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 9px;
+	margin-top: auto;
 	flex: 0 0 auto;
 }
 
-/* The reference's git actions are the sheet tier: a near-solid white button
- * with dark bold wording, which is what makes "Commit & push" read as the
- * card's action rather than as another row of metadata. */
+.sbd-git-actions .sbd-git-action.is-commitAndSync,
+.sbd-git-actions .sbd-git-action.is-commit {
+	grid-column: 1 / -1;
+}
+
+/* The reference gives git two tiers of action, and the split carries the
+ * meaning: the one that writes — "Commit & push" — is the near-solid white
+ * sheet with dark bold wording, and everything beside it (Pull, Fetch) is
+ * the quieter glass panel with white wording. Making them all white, as this
+ * did, left three equally loud buttons and no primary. */
 .sbd-git-action {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	height: 44px;
+	height: 40px;
 	min-width: 44px;
 	padding: 0 14px;
 	border: none;
-	border-radius: var(--sbd-radius-field);
-	background: var(--sbd-sheet-fill);
-	color: var(--sbd-ink);
-	font-size: 0.875rem;
-	font-weight: 700;
+	border-radius: 13px;
+	background: rgba(255, 255, 255, 0.22);
+	color: rgba(255, 255, 255, 0.94);
+	font-size: 0.8125rem;
+	font-weight: 600;
 	cursor: pointer;
 	box-shadow: none;
 	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-git-action:hover:not(:disabled) {
-	background: var(--sbd-sheet-fill-hover);
+	background: var(--sbd-panel-tier-fill-hover);
+	color: #ffffff;
 }
 
 .sbd-git-action:active:not(:disabled) {
-	background: var(--sbd-sheet-fill-active);
+	background: var(--sbd-panel-tier-fill-active);
 	transform: var(--sbd-press);
+}
+
+/* The writing actions take the sheet. `commitAndSync` is the reference's
+ * "Commit & push"; plain `commit` is the same act without the push, so it
+ * reads as the primary too when the card is configured without syncing. */
+.sbd-git-action.is-commitAndSync,
+.sbd-git-action.is-commit {
+	height: 44px;
+	border-radius: 14px;
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink);
+	font-size: 0.875rem;
+	font-weight: 700;
+}
+
+.sbd-git-action.is-commitAndSync:hover:not(:disabled),
+.sbd-git-action.is-commit:hover:not(:disabled) {
+	background: var(--sbd-sheet-fill-hover);
+	color: var(--sbd-ink);
+}
+
+.sbd-git-action.is-commitAndSync:active:not(:disabled),
+.sbd-git-action.is-commit:active:not(:disabled) {
+	background: var(--sbd-sheet-fill-active);
 }
 
 .sbd-git-action:disabled {
@@ -9850,64 +10752,102 @@ body.sbd-dv-resizing {
 	height: 15px;
 }
 
-/* Commit-and-sync is the one-click "save my vault" action, so it reads as the
-   primary one of the row. */
-.sbd-git-action.is-commitAndSync {
-	color: var(--text-accent);
-	border-color: var(--background-modifier-border-hover);
-}
-
 .sbd-git-action.is-destructive:hover:not(:disabled) {
 	color: var(--text-error);
 	border-color: var(--text-error);
 }
 
+/* The commit message the card's button will write, on the panel tier with a
+ * tracked-out mono eyebrow — the reference's MESSAGE block. */
+.sbd-git-message {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	flex: none;
+	padding: 12px 14px;
+	border-radius: 16px;
+	background: var(--sbd-panel-tier-fill);
+}
+
+.sbd-git-message-text {
+	font-size: 0.875rem;
+	color: rgba(255, 255, 255, 0.94);
+	overflow-wrap: anywhere;
+}
+
 /* ---- Changed files ---- */
 
+/* The list takes the height it needs, not the height that is going. The card's
+ * slack belongs at the bottom, above the buttons, which is where the reference
+ * puts it — stretching the list opened a gap between the changed files and the
+ * message that reads as a missing section. */
 .sbd-git-changes {
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-height: 0;
 	overflow-y: auto;
 }
 
 .sbd-git-list {
-	gap: 0;
+	gap: 8px;
 }
 
 .sbd-git-file {
-	gap: 8px;
-	padding: 4px 6px;
+	gap: 10px;
+	padding: 0;
 }
 
-/* The single-letter status badge. Monospaced and boxed so a column of them
-   lines up and reads as a gutter rather than as part of the file name. */
+/* Paths are set in mono, as the reference does — they are file paths, and
+ * the mono column keeps them scanning down the card. */
+/* The file's name is set in mono, as the reference sets its paths — a column
+ * of them scans straight down the card. (The folder line under it keeps the
+ * muted treatment further down this file.) */
+.sbd-git-file .sbd-list-label {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	font-weight: 400;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+/* The single-letter status marker. Monospaced and given a fixed gutter so a
+ * column of them lines up — but bare, and carrying the status colour itself:
+ * the reference has no badge behind it, and a grey box swallowed the one
+ * piece of colour in the card. */
 .sbd-git-letter {
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	flex: 0 0 auto;
-	width: 17px;
-	height: 17px;
-	border-radius: 6px;
-	background: var(--background-modifier-border);
-	color: var(--text-muted);
-	font-family: var(--font-monospace);
-	font-size: 0.66rem;
+	width: 18px;
+	height: auto;
+	border-radius: 0;
+	background: none;
+	color: var(--sbd-git-mark, rgba(255, 255, 255, 0.7));
+	font-weight: 700;
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
 	line-height: 1;
 }
 
-.sbd-git-file.is-conflicted .sbd-git-letter {
-	background: var(--background-modifier-error);
-	color: var(--text-error);
+/* The reference colours the mark, not a badge behind it: amber for a change,
+ * green for something new, red for something gone. Stated as hues rather than
+ * --text-success/--text-error, which resolve against the app's chrome and came
+ * out unreadable over a light wallpaper. */
+.sbd-git-file.is-modified {
+	--sbd-git-mark: #e8862a;
 }
 
-.sbd-git-file.is-untracked .sbd-git-letter,
-.sbd-git-file.is-added .sbd-git-letter {
-	color: var(--text-success, var(--interactive-accent));
+.sbd-git-file.is-renamed {
+	--sbd-git-mark: #4a90e2;
 }
 
-.sbd-git-file.is-deleted .sbd-git-letter {
-	color: var(--text-error);
+.sbd-git-file.is-untracked,
+.sbd-git-file.is-added {
+	--sbd-git-mark: #3fb54a;
+}
+
+.sbd-git-file.is-deleted,
+.sbd-git-file.is-conflicted {
+	--sbd-git-mark: #e5534b;
 }
 
 /* Staged files carry a rail on the left: the same "this is going into the next
@@ -10078,15 +11018,13 @@ body.sbd-dv-resizing {
 	transform-origin: 50% 100%;
 }
 
-/* The reference's caption is one tracked-out mono line ("MOOD · CHIPPER").
- * The name and the mood are its two halves, laid out on one row with the
- * reference's own separator between them. */
+/* The reference's caption is one tracked-out mono line naming the mood
+ * ("MOOD · CHIPPER"), at the top of the card. */
 .sbd-pet-caption {
 	display: flex;
 	align-items: baseline;
 	justify-content: center;
-	flex-wrap: wrap;
-	gap: 0 6px;
+	flex: none;
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
 	letter-spacing: var(--sbd-label-tracking);
@@ -10095,17 +11033,20 @@ body.sbd-dv-resizing {
 	line-height: 1.2;
 }
 
+/* The name closes the card, under the sprite. */
+.sbd-pet-foot {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	flex: none;
+}
+
 .sbd-pet-name {
-	font-weight: 600;
-	color: rgba(255, 255, 255, 0.72);
-}
-
-.sbd-pet-name:not(:empty) + .sbd-pet-mood::before {
-	content: "· ";
-}
-
-.sbd-pet-mood {
-	color: rgba(255, 255, 255, 0.6);
+	font-size: 1.1875rem;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.96);
+	line-height: 1.2;
 }
 
 .sbd-pet-activity {
@@ -10704,8 +11645,10 @@ body.sbd-dv-resizing {
 .sbd-card-picker-modal {
 	display: flex;
 	flex-direction: column;
-	width: min(860px, 94vw);
-	max-width: min(860px, 94vw);
+	/* 920px in Canvas.dc.html. At that width the results column fits the
+	 * reference's two tile columns beside the 220px rail. */
+	width: min(920px, 94vw);
+	max-width: min(920px, 94vw);
 }
 
 .sbd-card-picker.sbd-card-picker {
@@ -10897,14 +11840,18 @@ body.sbd-dv-resizing {
  * card's own translucent surface. */
 /* Canvas.dc.html's card tiles, from the --sbd-tile-* tokens: a translucent
  * chip that brightens on hover and presses in on click. */
+/* Canvas.dc.html stacks the tile: the glyph on its own line, the card's name
+ * under it, the sentence under that. Side by side the glyph took a column out
+ * of an already narrow tile and pushed the description into three lines. */
 .sbd-card-tile {
 	display: flex;
+	flex-direction: column;
 	align-items: flex-start;
 	justify-content: flex-start;
-	gap: 10px;
+	gap: 8px;
 	width: 100%;
 	height: auto;
-	padding: 12px 14px;
+	padding: 14px 16px;
 	border: 1px solid var(--sbd-tile-border);
 	border-radius: var(--sbd-radius-l);
 	background: var(--sbd-tile-fill);
@@ -10932,20 +11879,26 @@ body.sbd-dv-resizing {
 .sbd-card-tile-icon {
 	display: inline-flex;
 	flex: none;
-	margin-top: 1px;
 	color: var(--text-accent);
+}
+
+.sbd-card-tile-icon .svg-icon {
+	width: 17px;
+	height: 17px;
 }
 
 .sbd-card-tile-text {
 	min-width: 0;
+	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
 }
 
 .sbd-card-tile-name {
-	font-weight: 600;
-	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: 700;
+	color: var(--sbd-ink);
 	line-height: 1.3;
 }
 

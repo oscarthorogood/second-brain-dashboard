@@ -2298,6 +2298,8 @@ export const en = {
 			moodBored: "A little bored",
 			moodSleepy: "Fast asleep",
 			moodNight: "Asleep for the night",
+			// The card's top caption, uppercased by CSS: "MOOD · CHIPPER".
+			moodCaption: (mood: string) => `Mood · ${mood}`,
 			petHint: "Click to pet",
 			todayCount: (count: number, metric: "modified" | "created") =>
 				metric === "created"
@@ -2323,6 +2325,8 @@ export const en = {
 		},
 		text: {
 			placeholder: "Jot something down…",
+			// The mono caption drawn inside an untitled jot pad.
+			eyebrow: "Jot",
 		},
 		calculator: {
 			placeholder: "2 + 2, 10 km to miles, 10 € to USD…",
@@ -2420,6 +2424,8 @@ export const en = {
 				history: "Open history",
 			},
 			refresh: "Re-read the repository",
+			/** Eyebrow over the commit message the card's commit button will use. */
+			messageLabel: "Message",
 			noBranch: "No branch",
 			noUpstream: "No upstream branch",
 			staged: "staged",
@@ -2454,6 +2460,13 @@ export const en = {
 		heatmap: {
 			less: "Less",
 			more: "More",
+			// The card's headline names what the squares count; the range says
+			// how far back the grid reaches.
+			metrics: {
+				modified: "Files modified",
+				created: "Files created",
+			},
+			weeksLabel: (n: number) => `${n} weeks`,
 		},
 		calendar: {
 			// Head of the week-number gutter. One letter: the column is 24px
@@ -2511,9 +2524,16 @@ export const en = {
 		web: {
 			openInBrowser: "Open in browser",
 			mayRefuse: "This site may refuse to be embedded.",
+			reloadNow: "Reload the page",
+			/** The auto-refresh interval, shown beside the reload glyph. */
+			everySeconds: (n: number) => `${n} sec`,
+			everyMinutes: (n: number) => `${n} min`,
+			everyHours: (n: number) => `${n} hr`,
 		},
 		bookmarks: {
 			untitled: "Untitled",
+			// The card's own headline, drawn inside it beside a bookmark glyph.
+			heading: "Bookmarks",
 		},
 		tasks: {
 			createNewTask: "Create new task",

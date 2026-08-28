@@ -876,7 +876,9 @@ export function updateFrostLayers(gridEl: HTMLElement): void {
 		// saturate(120%) rides along with the blur, matching the reference's
 		// backdrop-filter exactly (blur(18px) saturate(120%)); the layer used to
 		// blur without it, leaving card interiors a shade flatter than the
-		// artboard's.
+		// artboard's. Nothing else: rendering the reference over the wallpaper
+		// it is drawn on shows the card is exactly this blur under a white
+		// 10% tint, with no darkening of any kind.
 		const filter = `blur(${blur}px) saturate(120%)`;
 		layer.style.setProperty("backdrop-filter", filter);
 		layer.style.setProperty("-webkit-backdrop-filter", filter);

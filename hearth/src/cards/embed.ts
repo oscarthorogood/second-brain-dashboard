@@ -1,4 +1,4 @@
-import { Component, MarkdownRenderer, Setting, TFile } from "obsidian";
+import { Component, MarkdownRenderer, setIcon, Setting, TFile } from "obsidian";
 import { isBaseTarget, isEmbeddableBaseViewName, listBaseViews } from "../bases";
 import {
 	activeEmbedIndex,
@@ -107,6 +107,17 @@ export function renderEmbed(
 		if (active.livePreview && renderLivePreviewEmbed(view, file, body, component)) return;
 		renderEditableEmbed(view, file, body, component);
 		return;
+	}
+
+	// Reference (Widget Set → EMBED): the note's path heads the card, glyph
+	// first, over the sheet holding the note itself. A card whose title is off
+	// otherwise gives no clue which note is on the board. Only for a rendered
+	// note — a picture, canvas or Bases view is drawn edge to edge and a row
+	// above it would crop the thing the card exists to show.
+	if (isMarkdown && !excalidraw && !framesEmbedImage(embedImageFit(active))) {
+		const row = body.createDiv("sbd-embed-path");
+		setIcon(row.createDiv("sbd-embed-path-icon"), "file-text");
+		row.createDiv({ cls: "sbd-embed-path-text", text: file.path });
 	}
 
 	const host = body.createDiv("sbd-embed markdown-rendered");
