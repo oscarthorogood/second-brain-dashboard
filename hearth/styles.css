@@ -1856,18 +1856,9 @@ body.theme-dark {
 /* Monospace, not the UI face: in the reference every surface is named by a
  * tracked-out mono caption, and the even advance width is most of what makes
  * a three-word label read as a caption rather than a small heading. */
-.sbd-card-title {
-	font-family: var(--sbd-font-mono);
-	font-weight: 600;
-	font-size: var(--sbd-label-size);
-	/* An in-card caption: 1.4px at 12px, and the reference's own 60% white.
-	 * (Was full-strength --text-normal under a text-shadow, which read as a
-	 * small heading rather than the caption the reference draws.) */
-	letter-spacing: var(--sbd-label-tracking-inner);
-	text-transform: uppercase;
-	color: rgba(255, 255, 255, 0.6);
-	text-shadow: none;
-}
+/* (.sbd-card-title is gone: nothing in src/ has emitted that element since
+ * the header stopped carrying a title field. The live in-card caption is
+ * .sbd-card-eyebrow, further down.) */
 
 /* Hidden via the .is-untitled class (set in dashboard.ts) instead of :has, which
  * can be costly due to broad selector invalidation. */
@@ -7783,41 +7774,27 @@ body.theme-dark {
 	z-index: 7;
 	gap: 8px;
 	padding: 6px 10px;
-	/* Canvas.dc.html draws this header as the near-opaque WHITE sheet
-	 * (rgba(255,255,255,0.9)) that its 32px ink action circles are specified
-	 * against — not the board's translucent grey. Painting it grey is what
-	 * forced the action buttons below to invert to a white fill, which then
-	 * matched nothing in the reference. Restoring the sheet lets every piece
-	 * of this header take its reference value directly. */
-	background: var(--sbd-sheet-fill);
-	backdrop-filter: blur(6px);
-	border-bottom: 1px solid var(--background-modifier-border);
+	/* No surface of its own. This strip holds ONLY the two round action
+	 * buttons (renderCardControls builds nothing else — there is no title
+	 * field), and neither reference draws a header band across a card: in
+	 * Canvas.dc.html's MOVE HANDLE panel the round controls float directly
+	 * on the card, and in CARD HEADER · HOVER they float on a card that
+	 * happens to be a white sheet in its own right.
+	 *
+	 * Two earlier passes both got this wrong in opposite directions — first
+	 * a translucent grey band, then (reading the CARD HEADER artboard as if
+	 * the sheet were the header rather than the card) an opaque white one.
+	 * Painting nothing is what the reference actually shows. */
+	background: none;
+	border-bottom: none;
 	border-radius: var(--sbd-card-radius, 42px)
 		var(--sbd-card-radius, 42px) 0 0;
+	pointer-events: none;
 }
 
-/* A field resting on the header's white sheet, so it carries the sheet's dark
- * ink ladder rather than the board's white-on-glass one. */
-.sbd-card-title-input {
-	flex: 1;
-	min-width: 0;
-	padding: 4px 8px;
-	border-radius: 9px;
-	border: 1px solid var(--sbd-sheet-rule);
-	background: rgba(0, 0, 0, 0.04);
-	color: var(--sbd-sheet-ink);
-	font-weight: 600;
-	font-size: 0.9rem;
-	text-shadow: none;
-}
-
-.sbd-card-title-input::placeholder {
-	color: var(--sbd-sheet-ink-faint);
-}
-
-.sbd-card-title-input:focus {
-	outline: none;
-	border-color: var(--sbd-sheet-ink-faint);
+/* …but the buttons inside it must still be clickable. */
+.sbd-grid.is-arranging .sbd-card-head.is-editing > * {
+	pointer-events: auto;
 }
 
 .sbd-card-actions {
@@ -7830,9 +7807,16 @@ body.theme-dark {
 	margin-left: auto;
 }
 
-/* Canvas.dc.html → CARD HEADER · HOVER, taken literally now that the header
- * it sits on is the reference's white sheet: a 32px circle tinted with INK
- * (black at 6%) rather than white, carrying a #5d646b glyph. */
+/* These are round controls floating on a card's GLASS — a settings gear and
+ * a delete, the same pair and the same habitat as Canvas.dc.html's MOVE
+ * HANDLE. So they take that panel's material (a rimless white-34% chip with
+ * a shallow blur, the one shadow the reference gives a round button, and a
+ * white glyph) at the 32px size the CARD HEADER · HOVER panel gives a header
+ * action.
+ *
+ * NOT the ink fill (black at 6%) from that second panel: there the circles
+ * sit on a card that is itself a near-white sheet, and black-on-glass here
+ * would be all but invisible against the board. */
 .sbd-card-action {
 	display: flex;
 	align-items: center;
@@ -7842,19 +7826,22 @@ body.theme-dark {
 	padding: 0;
 	border-radius: 50%;
 	border: none;
-	background: var(--sbd-icon-btn-ink-fill);
-	color: var(--sbd-ink-icon);
+	background: var(--sbd-handle-fill);
+	backdrop-filter: var(--sbd-handle-blur);
+	-webkit-backdrop-filter: var(--sbd-handle-blur);
+	box-shadow: var(--sbd-handle-shadow);
+	color: #ffffff;
 	cursor: pointer;
 	text-shadow: none;
 	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-card-action:hover {
-	background: var(--sbd-icon-btn-ink-fill-hover);
+	background: var(--sbd-handle-fill-hover);
 }
 
 .sbd-card-action:active {
-	background: var(--sbd-icon-btn-ink-fill-active);
+	background: var(--sbd-handle-fill-active);
 	transform: var(--sbd-press-icon);
 }
 
@@ -10637,8 +10624,6 @@ body.sbd-dv-resizing {
 .sbd-text:focus-visible,
 .sbd-calc-input:focus,
 .sbd-calc-input:focus-visible,
-.sbd-card-title-input:focus,
-.sbd-card-title-input:focus-visible,
 .sbd-taskdetail-title-edit:focus,
 .sbd-taskdetail-title-edit:focus-visible {
 	outline: none !important;
@@ -11195,6 +11180,10 @@ body.sbd-dv-resizing {
 
 /* The reference's caption is one tracked-out mono line naming the mood
  * ("MOOD · CHIPPER"), at the top of the card. */
+/* This is the element that actually carries Widget Set → PET's
+ * "MOOD · CHIPPER" — .sbd-pet-mood inside it has no rule of its own and
+ * inherits from here. 13px at 1.4px tracking in white 60%: it is an in-card
+ * caption, so it takes the inner 1.4px, not the artboard label's 1.6px. */
 .sbd-pet-caption {
 	display: flex;
 	align-items: baseline;
@@ -11202,7 +11191,7 @@ body.sbd-dv-resizing {
 	flex: none;
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
-	letter-spacing: var(--sbd-label-tracking);
+	letter-spacing: 0.1077em;
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	line-height: 1.2;
@@ -11225,14 +11214,15 @@ body.sbd-dv-resizing {
 	line-height: 1.2;
 }
 
-/* Widget Set → PET writes "MOOD · CHIPPER" at 13px / 1.4px tracking in white
- * 60% — the in-card caption, not the small faint one this had become (11px,
- * 0.6px, 45%). */
+/* The activity line ("12 notes today") is the plugin's own addition — the
+ * reference's PET card is mood caption, sprite, name and nothing else. So it
+ * stays a quieter sibling of the caption rather than a second one at the
+ * same weight, which would have given the card two competing captions. */
 .sbd-pet-activity {
 	font-family: var(--sbd-font-mono);
-	font-size: 0.8125rem;
+	font-size: 0.6875rem;
 	letter-spacing: 0.1077em;
-	color: rgba(255, 255, 255, 0.6);
+	color: rgba(255, 255, 255, 0.45);
 	line-height: 1.2;
 }
 
