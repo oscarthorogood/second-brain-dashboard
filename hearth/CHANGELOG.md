@@ -15,6 +15,26 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Widgets, buttons and menus rebuilt on the reference values, declaration by
+  declaration.** A card is now the reference's tint and nothing else — the
+  highlight gradient, corner sheen, inset bevels, drop shadow, hover lift and
+  descendant text-shadow it had grown are all gone, and they were most of why
+  the glass read as a slab. Hover states move *fill* only: nine controls had
+  also been tinting their rim or label to the board's accent, which is pure
+  white here, so each flashed a hard outline or flipped to dark-on-white under
+  the pointer. The clock's analogue face is redrawn from the reference's own
+  geometry (its dial was a third as bright inside a weaker rim, and its hour
+  hand thinner than its minute hand); the in-card tab switchers take the
+  smaller, quieter track the reference gives them rather than the settings
+  sheet's; the Git and Jira controls no longer get *brighter* when pressed; and
+  the sheet ink ladder is corrected, which had left every sheet on the board
+  except the jot pad a shade too dark. Bookmarks, the tasks list, Jira's rows,
+  RSS items, the Templater path, the leaf sheet, the picker's rail and the card
+  settings sheet's section headings all take their own reference values.
+
+- **Fixed:** a card rendered outside the dashboard's own render path resolved to
+  fully opaque white and swallowed its white text.
+
 - **Every widget, menu and button measured against the design reference.**
   The card body's padding was `8px 10px` everywhere; the reference gives each
   widget its own inset (20-28px), so a 238px card was handing its content 28px
