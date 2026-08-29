@@ -211,7 +211,15 @@
 	 * from the reference's sheet-hosted widgets (embed body, jot, leaf,
 	 * dataview, datacore, query results, RSS items, task cards). */
 	--sbd-sheet-ink: #23272b;
-	--sbd-sheet-ink-body: #3b4147;
+	/* The reference sets sheet body copy at #4b5157 — the embed's bullet
+	 * lines, the web card's status rows and a Dataview cell all take it. Two
+	 * surfaces have their own, a shade either side, and get it locally: the
+	 * jot pad (#3b4147, --sbd-sheet-ink-jot) and the leaf's link names
+	 * (#3f454b, --sbd-sheet-ink-leaf). This token used to carry the jot's
+	 * value, so every OTHER sheet on the board was drawn a shade too dark. */
+	--sbd-sheet-ink-body: #4b5157;
+	--sbd-sheet-ink-jot: #3b4147;
+	--sbd-sheet-ink-leaf: #3f454b;
 	--sbd-sheet-ink-muted: #7b8188;
 	--sbd-sheet-ink-faint: #a5abb1;
 	/* The mono caption on a sheet ("JOT"). The reference's own value; the
@@ -819,7 +827,8 @@ body.theme-dark {
 	padding-block: 20px;
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
-	color: var(--sbd-sheet-ink-body);
+	/* The jot pad's own ink — see --sbd-sheet-ink-jot. */
+	color: var(--sbd-sheet-ink-jot);
 	text-shadow: none;
 	caret-color: var(--sbd-sheet-link);
 }
@@ -1039,8 +1048,10 @@ body.theme-dark {
 .sbd-view .sbd-leaf-host {
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
-	color: var(--sbd-sheet-ink-body);
+	/* The leaf's own ink — see --sbd-sheet-ink-leaf. */
+	color: var(--sbd-sheet-ink-leaf);
 	text-shadow: none;
+	padding: 16px 18px;
 }
 
 /* Dataview's table and Datacore's result area (→ DATAVIEW / DATACORE): 22px
@@ -3149,6 +3160,33 @@ body.theme-dark {
 	color: var(--sbd-ink-faint);
 }
 
+/* Canvas.dc.html → CARD SETTINGS closes with titled section blocks: a
+ * 16px/700 #20242a heading over a 13px/1.45 #8b9198 line, inset 14px above
+ * and 16px below its rule. Obsidian's `setHeading()` rows had no styling of
+ * their own inside the glass panel, so they were taking the app's default
+ * heading treatment and the ordinary row's 15px/#23272b name. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item.setting-item-heading {
+	padding-top: 14px;
+	padding-bottom: 16px;
+	gap: 10px;
+}
+
+.sbd-glass-modal
+	.sbd-modal-tabbody
+	.setting-item.setting-item-heading
+	.setting-item-name {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--sbd-ink-strong);
+}
+
+.sbd-glass-modal
+	.sbd-modal-tabbody
+	.setting-item.setting-item-heading
+	.setting-item-description {
+	line-height: 1.45;
+}
+
 /* The control column must not stretch to the row's full height now that the
  * row is top-aligned — a dropdown would grow with the description beside
  * it. The 2px nudge is the reference's own optical alignment of a control
@@ -3225,6 +3263,8 @@ body.theme-dark {
  * with no chip behind them and no icon badge in front. The 12px rhythm and
  * baseline alignment are the reference's, so a filename and its age sit on
  * one line rather than being centred against each other. */
+/* These shared values are RECENT's, which the reference draws as a 12px
+ * column of baseline-aligned rows 8px apart. */
 .sbd-list.is-bare {
 	gap: 12px;
 }
@@ -3234,6 +3274,19 @@ body.theme-dark {
 	gap: 8px;
 	padding: 0;
 	border-radius: 0;
+}
+
+/* BOOKMARKS shares the bare list but not its measurements: the reference
+ * sets that column at 10px with 10px, centre-aligned rows, because each row
+ * leads with a glyph that has to sit on the name's optical centre rather
+ * than on its baseline. */
+.sbd-card.is-bookmarks-card .sbd-list.is-bare {
+	gap: 10px;
+}
+
+.sbd-card.is-bookmarks-card .sbd-list.is-bare .sbd-list-item {
+	align-items: center;
+	gap: 10px;
 }
 
 .sbd-list.is-bare .sbd-list-item:hover,
@@ -3314,6 +3367,48 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-muted);
 }
 
+/* TASKS in list mode shares the sheet list with SEARCH's results but not its
+ * measurements: Widget Set → TASKS draws a 10px column of rows inset
+ * 12px 16px with a 12px gutter, and titles them at 15px/500 rather than the
+ * 14px/600 a search result takes. */
+.sbd-list.is-sheet.sbd-tasks {
+	gap: 10px;
+}
+
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item {
+	align-items: center;
+	padding: 12px 16px;
+	gap: 12px;
+}
+
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-list-label,
+.sbd-list.is-sheet.sbd-tasks .sbd-task-main .sbd-list-label {
+	font-size: 0.9375rem;
+	font-weight: 500;
+}
+
+/* The reference's checkbox is an 18px square at 6px behind a 1.6px #b3b9bf
+ * rule. Only the resting (unchecked) box is drawn there, so the checked
+ * state is left to Obsidian rather than reinvented. */
+.sbd-list.is-sheet.sbd-tasks .sbd-task-check {
+	/* appearance:none is required for border-radius to apply at all — a
+	 * native checkbox ignores it. Obsidian's own stylesheet happens to set
+	 * this, but relying on that made the corner silently depend on the host;
+	 * saying it here keeps the box the reference's shape either way. The
+	 * CHECKED state is deliberately left to Obsidian, which paints its own
+	 * fill and tick — the reference only draws the resting box. */
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 6px;
+}
+
+.sbd-list.is-sheet.sbd-tasks .sbd-task-check:not(:checked) {
+	border: 1.6px solid #b3b9bf;
+	background: transparent;
+}
+
 /* The trailing "2m" / "3h" / "Tue" column. flex:none so a long filename
  * ellipsises instead of squeezing the age out of the row. */
 .sbd-list-age {
@@ -3381,6 +3476,13 @@ body.theme-dark {
 /* The same caption, but on the white sheet rather than the glass — the
  * reference sets it in the sheet's own faint grey there ("JOT", "6 LINKS"),
  * since white on white would vanish. */
+/* GIT's "MESSAGE" caption is the one eyebrow the reference sets smaller and
+ * tighter than the rest: 11px at 1px, against the shared 12px at 1.4px. */
+.sbd-card.is-git-card .sbd-card-eyebrow {
+	font-size: 0.6875rem;
+	letter-spacing: 0.0909em;
+}
+
 .sbd-card-eyebrow.is-on-sheet {
 	color: var(--sbd-sheet-ink-caption);
 	text-shadow: none;
@@ -4487,7 +4589,9 @@ body.theme-dark {
 .sbd-tile-sub {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.75rem;
-	color: var(--sbd-sheet-ink-label);
+	/* #7b8188 — the reference's muted ink for this path, not the lighter
+	 * #8c9299 it reserves for column and field labels. */
+	color: var(--sbd-sheet-ink-muted);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -4762,7 +4866,9 @@ body.theme-dark {
  * card's own edge does in the reference. */
 .sbd-rss-item {
 	display: flex;
-	gap: 10px;
+	/* 5px: the reference stacks title, excerpt and timestamp tightly inside
+	 * the row's 13px 16px inset. 10px pushed the timestamp out of the box. */
+	gap: 5px;
 	padding: 13px 16px;
 	border-radius: 18px;
 	cursor: pointer;
@@ -10468,12 +10574,13 @@ body.sbd-dv-resizing {
 .sbd-jira-issue {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	/* 13px and a 16px corner, the reference's own; --sbd-radius-l is 18. */
+	gap: 13px;
 	width: 100%;
 	padding: 12px 16px;
 	border: 0;
 	border-bottom: none;
-	border-radius: var(--sbd-radius-l);
+	border-radius: 16px;
 	background: var(--sbd-sheet-fill);
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
@@ -10497,21 +10604,23 @@ body.sbd-dv-resizing {
 /* The reference marks the issue type with a small tinted SQUARE, not a
  * round badge — round is the board's glyph-on-glass shape, and on a white
  * sheet it read as a hole. */
+/* The reference leads a Jira row with a 22px tinted square at 6px — a colour
+ * swatch for the issue type, not a 28px icon chip. */
 .sbd-jira-type {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
-	width: 28px;
-	height: 28px;
-	border-radius: 8px;
+	width: 22px;
+	height: 22px;
+	border-radius: 6px;
 	background: rgba(0, 0, 0, 0.05);
 	color: var(--text-normal);
 }
 
 .sbd-jira-type svg {
-	width: 15px;
-	height: 15px;
+	width: 13px;
+	height: 13px;
 }
 
 .sbd-jira-main {
@@ -10530,7 +10639,10 @@ body.sbd-dv-resizing {
  * reference number rather than as a link. */
 .sbd-jira-key {
 	font-family: var(--sbd-font-mono);
-	color: var(--sbd-sheet-ink-muted);
+	/* #8c9299 at 11px — the reference's label ink, a step lighter than the
+	 * #7b8188 body ink this took. */
+	color: var(--sbd-sheet-ink-label);
+	font-size: 0.6875rem;
 	font-weight: 400;
 }
 
@@ -10539,8 +10651,9 @@ body.sbd-dv-resizing {
 	margin-bottom: 2px;
 	overflow: hidden;
 	color: var(--sbd-sheet-ink);
-	font-size: 0.9375rem;
-	font-weight: 700;
+	/* 14px at 600 — the reference's row title. */
+	font-size: 0.875rem;
+	font-weight: 600;
 	line-height: 1.25;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -10548,17 +10661,20 @@ body.sbd-dv-resizing {
 
 /* The reference's status chip: a pale tinted pill carrying tracked-out dark
  * mono caps, sitting on the white row rather than on the glass. */
+/* The reference's status chip is a flat pale-grey tag: #eef1f4 behind
+ * #5d666f at 7px, tracked 0.5px. It was an ink wash at 8px carrying the
+ * body ink and the shared 0.6px tracking. */
 .sbd-jira-status {
 	flex: 0 0 auto;
 	max-width: 130px;
 	padding: 4px 9px;
 	overflow: hidden;
-	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.06);
-	color: var(--sbd-sheet-ink-muted);
+	border-radius: 7px;
+	background: #eef1f4;
+	color: #5d666f;
 	font-family: var(--sbd-font-mono);
 	font-weight: 700;
-	letter-spacing: var(--sbd-label-tracking-tight);
+	letter-spacing: 0.0455em;
 	text-transform: uppercase;
 	font-size: 0.6875rem;
 	text-overflow: ellipsis;
@@ -11903,7 +12019,11 @@ body.sbd-dv-resizing {
 	flex-direction: column;
 	gap: 2px;
 	overflow-y: auto;
-	padding-right: 4px;
+	/* 18px 12px, the reference's own inset. It was a bare 4px right padding,
+	 * so the rail's rows started hard against the sheet's edge and the top
+	 * row sat level with the catalogue's first section head instead of
+	 * dropping below it. */
+	padding: 18px 12px;
 	border-right: 1px solid var(--sbd-panel-divider);
 }
 
