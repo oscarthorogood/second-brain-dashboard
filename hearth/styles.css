@@ -1505,6 +1505,32 @@ body.theme-dark {
 	display: flex;
 }
 
+/* Widget Set → SEARCHBAR is ONE surface: the artboard draws a single
+ * 34px-round glass panel with the icon, the query, the chips and the button
+ * sitting directly inside it. As a card, the plugin was painting the card's
+ * glass AND the bar's glass inside it — two nested pills, each with its own
+ * rim and blur, which is nothing the reference contains. The card is the bar,
+ * so the inner bar stops painting and stops insetting (the card already
+ * carries the reference's 26px through --sbd-card-pad-x). */
+.sbd-card.is-searchbar-card {
+	border-radius: var(--sbd-radius-searchbar);
+}
+
+.sbd-card.is-searchbar-card .sbd-search-bar {
+	background: none;
+	border: none;
+	border-radius: 0;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	padding: 0;
+}
+
+/* Nothing to focus-ring either — the rim it would tint no longer exists. */
+.sbd-card.is-searchbar-card .sbd-search-bar:focus-within {
+	border-color: transparent;
+	box-shadow: none;
+}
+
 /* The bar's row takes whatever height is left after the (optional) chip row,
    between a floor that keeps it tappable at the board's smallest card (56px
    tall, less the body's padding) and a ceiling that stops an accidentally huge
@@ -2045,9 +2071,17 @@ body.theme-dark {
  * would silently re-anchor any popover that escapes to the viewport (the Jira
  * card's filter menu on a narrow pane, for one). */
 .sbd-card.is-daily-card,
-.sbd-card.is-clock-card,
 .sbd-card.is-calculator-card {
 	container-type: inline-size;
+}
+
+/* The clock needs BOTH axes, not just the inline one: its dial is sized to
+ * whichever of the card's width and height runs out first (see .sbd-analog).
+ * `size` containment is safe on this card specifically — its dimensions come
+ * from the grid, not from its contents, and it hosts no popover that could be
+ * re-anchored by the `contain: layout` that comes with it. */
+.sbd-card.is-clock-card {
+	container-type: size;
 }
 
 /* The search bar is `padding: 0 26px` in the reference: the bar row IS the
@@ -2680,6 +2714,15 @@ body.theme-dark {
 	align-items: center;
 	justify-content: center;
 	padding: 5px;
+	/* A square box, so `border-radius: 50%` draws a CIRCLE. Without this the
+	 * button sized to its glyph plus padding, and any glyph wider than it is
+	 * tall stretched the 50% corner into an ellipse — which is what the
+	 * move handle was rendering as. The reference's handle is a circle. */
+	box-sizing: border-box;
+	width: 34px;
+	height: 34px;
+	flex: none;
+	aspect-ratio: 1;
 	border-radius: 50%;
 	border: none;
 	background: var(--sbd-handle-fill);
@@ -3134,6 +3177,13 @@ body.theme-dark {
 	padding: 20px 0;
 	border-top: none;
 	border-bottom: 1px solid var(--sbd-panel-divider);
+	/* A row whose controls are wider than the space left beside its label
+	 * drops them onto their own line instead of pushing the row wider than
+	 * the sheet. Without this, an editor that stacks several fields in one
+	 * control column (the Links card's label + icon + type + target) made
+	 * the whole tab body overflow horizontally — the sheet then scrolled and
+	 * clipped its own title and every row label off the left edge. */
+	flex-wrap: wrap;
 }
 
 /* The last row in a tab sits directly above the sheet's own edge, so its
@@ -3146,6 +3196,10 @@ body.theme-dark {
  * than running the full width of the sheet and colliding with the control. */
 .sbd-glass-modal .sbd-modal-tabbody .setting-item-info {
 	max-width: 380px;
+	/* Lets the label column actually shrink; a flex item's automatic minimum
+	 * size otherwise holds it at its longest word and forces the overflow. */
+	min-width: 0;
+	flex: 1 1 auto;
 }
 
 .sbd-glass-modal .sbd-modal-tabbody .setting-item-name {
@@ -3192,9 +3246,32 @@ body.theme-dark {
  * it. The 2px nudge is the reference's own optical alignment of a control
  * against the first line of its label. */
 .sbd-glass-modal .sbd-modal-tabbody .setting-item-control {
-	flex: none;
+	/* `flex: none` here was the other half of the overflow: it refused to
+	 * shrink, so a control column wider than the space beside its label grew
+	 * the row instead. It still must not STRETCH (0 grow) — a lone dropdown
+	 * would swell to the row's height — but it may now shrink and wrap. */
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: 100%;
+	flex-wrap: wrap;
+	justify-content: flex-end;
 	align-items: flex-start;
 	margin-top: 2px;
+}
+
+/* Fields inside a control column must be shrinkable too — an <input> carries
+ * an intrinsic ~20-character width that a flex item's automatic minimum size
+ * honours, which is enough on its own to push a row past the sheet. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item-control :is(input, select, textarea) {
+	min-width: 0;
+	max-width: 100%;
+}
+
+/* Backstop: whatever a card editor puts in a row, the sheet never scrolls
+ * sideways and never clips its own chrome. */
+.sbd-glass-modal .sbd-modal-tabbody {
+	min-width: 0;
+	overflow-x: hidden;
 }
 
 /* The footer sits below the scrolling tab body, its actions right-aligned. */
@@ -4695,9 +4772,19 @@ body.theme-dark {
  * reference's size. (At the old r=48 the same 47.7cqw drew a dial ~2% small;
  * changing r without changing this would have shrunk it further.) */
 .sbd-analog {
-	width: 52.1cqw;
+	/* The reference's dial is 124px in a 238x280 card — 52.1% of its WIDTH
+	 * but only 44.3% of its HEIGHT. Sizing off width alone (52.1cqw) is
+	 * correct only while the card keeps the artboard's portrait shape: make
+	 * the card wide and short and the square face is asked for a width the
+	 * height cannot hold, so flex shrinks it — which is why a wide clock card
+	 * drew a tiny dot above the greeting. Taking the smaller of the two keeps
+	 * the dial at exactly the reference's size on a reference-shaped card and
+	 * fits it to whichever axis actually runs out first on any other. */
+	width: min(52.1cqw, 44.3cqh);
 	max-width: 240px;
 	aspect-ratio: 1;
+	/* And it must not be shrunk below that by the column around it. */
+	flex: none;
 	margin-bottom: 4px;
 }
 
@@ -11311,6 +11398,28 @@ body.sbd-dv-resizing {
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	line-height: 1.2;
+	/* The reference's caption is one line ("MOOD · CHIPPER"). A longer mood
+	 * ("FAST ASLEEP") in tracked-out mono overran a narrow card and broke
+	 * onto three centred lines, which reads as a fault rather than a caption.
+	 * Keep it on one line and let it shed the tracking, then ellipsise, so it
+	 * stays the reference's single line at every card width. */
+	max-width: 100%;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: block;
+	text-align: center;
+}
+
+/* The activity line under the name has the same problem and the same answer. */
+.sbd-pet-activity {
+	max-width: 100%;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
 }
 
 /* The name closes the card, under the sprite. */
