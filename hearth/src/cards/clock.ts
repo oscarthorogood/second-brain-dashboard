@@ -80,31 +80,45 @@ function renderAnalogClock(
 	cfg: ClockConfig,
 	lowPower: boolean,
 ): (now: Date) => void {
+	// Geometry is the reference's (design-ref/Widget Set.dc.html → CLOCK)
+	// scaled from its 0 0 120 120 viewBox into this 0 0 100 100 one, i.e.
+	// every length × 5/6. Stroke widths and colours live in styles.css and
+	// are scaled the same way.
 	const svg = svgEl(wrap, "svg", { viewBox: "0 0 100 100" }, "sbd-analog");
-	svgEl(svg, "circle", { cx: "50", cy: "50", r: "48" }, "sbd-analog-face");
+	// r=55 of 120 → 45.833 of 100. (Was 48, a face noticeably larger than the
+	// reference's inside the same card.)
+	svgEl(svg, "circle", { cx: "50", cy: "50", r: "45.833" }, "sbd-analog-face");
 	// The reference's face draws twelve identical ticks — no long quarter
 	// markers. The major/minor split made the face read as a measuring
 	// instrument; the reference's reads as an ornament.
+	//
+	// Its tick is a rect at y=10 h=8 in a 120 box, so it spans radius 50→42
+	// of a 60 half-width: 0.8333→0.7 of the radius, i.e. 41.667→35 here.
 	for (let i = 0; i < 12; i++) {
 		const a = (i / 12) * Math.PI * 2;
 		svgEl(
 			svg,
 			"line",
 			{
-				x1: String(50 + Math.sin(a) * 38),
-				y1: String(50 - Math.cos(a) * 38),
-				x2: String(50 + Math.sin(a) * 45),
-				y2: String(50 - Math.cos(a) * 45),
+				x1: String(50 + Math.sin(a) * 35),
+				y1: String(50 - Math.cos(a) * 35),
+				x2: String(50 + Math.sin(a) * 41.667),
+				y2: String(50 - Math.cos(a) * 41.667),
 			},
 			"sbd-analog-tick",
 		);
 	}
 	const hand = (cls: string, length: number) =>
 		svgEl(svg, "line", { x1: "50", y1: "50", x2: "50", y2: String(50 - length) }, cls);
-	const hourHand = hand("sbd-analog-hour", 25);
-	const minHand = hand("sbd-analog-min", 33);
-	const secHand = cfg.showSeconds && !lowPower ? hand("sbd-analog-sec", 42) : null;
-	svgEl(svg, "circle", { cx: "50", cy: "50", r: "2.5" }, "sbd-analog-pin");
+	// Reference hand lengths: hour 60→32 (28 units) and minute 60→22 (38),
+	// scaled to 23.333 and 31.667.
+	const hourHand = hand("sbd-analog-hour", 23.333);
+	const minHand = hand("sbd-analog-min", 31.667);
+	// The reference draws no second hand; this one keeps the plugin's own,
+	// reaching just inside the tick ring.
+	const secHand = cfg.showSeconds && !lowPower ? hand("sbd-analog-sec", 38) : null;
+	// r=4 of 120 → 3.333.
+	svgEl(svg, "circle", { cx: "50", cy: "50", r: "3.333" }, "sbd-analog-pin");
 
 	const rotate = (el: SVGElement, deg: number) =>
 		el.setAttribute("transform", `rotate(${deg} 50 50)`);

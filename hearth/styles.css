@@ -88,7 +88,14 @@
 	--sbd-font-script: "Yellowtail", "Snell Roundhand", "Segoe Script",
 		cursive, var(--sbd-font-family);
 	--sbd-label-size: 0.75rem;
+	/* 1.6px at the reference's 12px caption — the tracking on the label that
+	 * names a surface from OUTSIDE it (the artboard's "EMBED", "TOOLBAR"). */
 	--sbd-label-tracking: 0.13em;
+	/* 1.4px at 12px — the caption drawn INSIDE a card ("JOT", "6 LINKS",
+	 * "ATTACHMENTS/TRIPS"). The reference tracks these one notch tighter than
+	 * the outside label, and mixing the two is visible at a glance across a
+	 * board where most captions are the in-card kind. */
+	--sbd-label-tracking-inner: 0.1167em;
 	/* Dense in-grid labels (a day-of-week column head) keep the family but
 	 * not the tracking — 0.13em on a three-letter head blows the column
 	 * open. */
@@ -126,6 +133,12 @@
 	--sbd-btn-light-fill-active: #eceef0;
 	--sbd-btn-light-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 	--sbd-btn-light-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.16);
+	/* The light pill's own label and icon inks. The reference writes the
+	 * label #2a2e33 and the leading glyph #3b4148 — a shade apart, and both
+	 * distinct from --sbd-ink-strong (#20242a), which is the modal-title
+	 * ink. */
+	--sbd-btn-light-ink: #2a2e33;
+	--sbd-btn-light-icon: #3b4148;
 
 	/* The circular icon button, in its two habitats: floating on glass
 	 * (white fill) and sitting on a near-white panel (ink fill). */
@@ -135,6 +148,17 @@
 	--sbd-icon-btn-ink-fill: rgba(0, 0, 0, 0.06);
 	--sbd-icon-btn-ink-fill-hover: rgba(0, 0, 0, 0.12);
 	--sbd-icon-btn-ink-fill-active: rgba(0, 0, 0, 0.18);
+	/* The third habitat: a round control floating directly ON a card's glass
+	 * rather than on a panel — Canvas.dc.html's MOVE HANDLE. Rimless, a
+	 * touch denser than the panel variant, with its own shallow blur and the
+	 * only shadow the reference gives any round button. Its glyph is white,
+	 * because it sits on the board's glass rather than on a light sheet. */
+	--sbd-handle-fill: rgba(255, 255, 255, 0.34);
+	--sbd-handle-fill-hover: rgba(255, 255, 255, 0.5);
+	--sbd-handle-fill-active: rgba(255, 255, 255, 0.24);
+	--sbd-handle-blur: blur(8px);
+	--sbd-handle-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+	--sbd-press-handle: scale(0.92);
 
 	/* Small controls on a panel: dropdown pills, text fields, toggle
 	 * tracks, the card picker's search box. */
@@ -146,6 +170,11 @@
 	 * recessed next to an actionable dropdown of the same size. */
 	--sbd-control-fill-quiet: rgba(255, 255, 255, 0.35);
 	--sbd-control-border-quiet: rgba(255, 255, 255, 0.5);
+	/* The picker's search box sits one notch under a dropdown pill in the
+	 * reference (0.5 against 0.55) — it is a place to type, not a control to
+	 * press, and it spans the full width of the sheet where a pill does
+	 * not. */
+	--sbd-control-fill-search: rgba(255, 255, 255, 0.5);
 
 	/* The track a tab switcher's pills sit inside, and the pill itself. */
 	/* The middle tier the reference stacks on a card: a glass panel that is
@@ -156,6 +185,11 @@
 	--sbd-panel-tier-fill: rgba(255, 255, 255, 0.2);
 	--sbd-panel-tier-fill-hover: rgba(255, 255, 255, 0.3);
 	--sbd-panel-tier-fill-active: rgba(255, 255, 255, 0.38);
+	/* A shade under the main tier. 0.20 is the reference's dominant inner
+	 * fill (17 uses) and stays the default, but a handful of surfaces are
+	 * drawn at 0.18 — the STATS tiles among them — and this names that
+	 * value rather than rounding them up to the common one. */
+	--sbd-panel-tier-fill-quiet: rgba(255, 255, 255, 0.18);
 	/* The reference's favourite star. A fixed amber rather than the accent:
 	 * the accent is white on this board, and a white star on a white-tinted
 	 * row would vanish. */
@@ -177,9 +211,20 @@
 	 * from the reference's sheet-hosted widgets (embed body, jot, leaf,
 	 * dataview, datacore, query results, RSS items, task cards). */
 	--sbd-sheet-ink: #23272b;
-	--sbd-sheet-ink-body: #3b4147;
+	/* The reference sets sheet body copy at #4b5157 — the embed's bullet
+	 * lines, the web card's status rows and a Dataview cell all take it. Two
+	 * surfaces have their own, a shade either side, and get it locally: the
+	 * jot pad (#3b4147, --sbd-sheet-ink-jot) and the leaf's link names
+	 * (#3f454b, --sbd-sheet-ink-leaf). This token used to carry the jot's
+	 * value, so every OTHER sheet on the board was drawn a shade too dark. */
+	--sbd-sheet-ink-body: #4b5157;
+	--sbd-sheet-ink-jot: #3b4147;
+	--sbd-sheet-ink-leaf: #3f454b;
 	--sbd-sheet-ink-muted: #7b8188;
 	--sbd-sheet-ink-faint: #a5abb1;
+	/* The mono caption on a sheet ("JOT"). The reference's own value; the
+	 * faint tier above is a shade lighter and reads as washed out here. */
+	--sbd-sheet-ink-caption: #9aa1a8;
 	--sbd-sheet-ink-label: #8c9299;
 	--sbd-sheet-rule: #e4e8ec;
 	--sbd-sheet-link: #2f8ff0;
@@ -187,6 +232,26 @@
 
 	--sbd-track-fill: rgba(255, 255, 255, 0.28);
 	--sbd-track-pill-fill: rgba(255, 255, 255, 0.9);
+	/* An UNSELECTED tab reacting inside the track. Lighter than the panel's
+	 * general control hover (0.8): the pill is brightening against the
+	 * track's own 0.28, not against the sheet, so the reference keeps the
+	 * step small — at 0.8 an unselected tab under the pointer read as the
+	 * selected one. */
+	--sbd-track-tab-fill-hover: rgba(255, 255, 255, 0.5);
+	--sbd-track-tab-fill-active: rgba(255, 255, 255, 0.7);
+	/* The SAME control drawn inside a card rather than on a light panel
+	 * (Widget Set → SCHEDULE's month/week/day/list switcher, DATAVIEW's
+	 * language switcher) is a smaller, quieter thing in the reference: a
+	 * 0.18 track at 12px instead of 0.28 at 16px, and it reacts against the
+	 * card's glass, so its hover/press steps are the wider 0.4/0.2 rather
+	 * than the panel's 0.5/0.7. Its active pill keeps the 0.9 white but
+	 * takes its own #33383d ink. */
+	--sbd-track-fill-card: rgba(255, 255, 255, 0.18);
+	--sbd-radius-track-card: 12px;
+	--sbd-track-tab-card-hover: rgba(255, 255, 255, 0.4);
+	--sbd-track-tab-card-active: rgba(255, 255, 255, 0.2);
+	--sbd-track-pill-ink: #33383d;
+	--sbd-track-tab-card-ink: rgba(255, 255, 255, 0.78);
 
 	/* Catalogue tiles (the add-card picker's card chips). */
 	--sbd-tile-fill: rgba(255, 255, 255, 0.3);
@@ -350,14 +415,15 @@ body.theme-dark {
 	--sbd-shadow-m: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.22);
 	--sbd-shadow-l: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.34);
 
-	/* Cards get their OWN, far softer shadow rather than the shared scale
-	 * above. Scanning outward from a reference card finds essentially no
-	 * darkening at all — the backdrop is flat right up to the rim, and the
-	 * rim alone is what separates the card. Borrowing --sbd-shadow-s here
-	 * dropped the wallpaper ~23/255 at the edge, which is what made cards sit
-	 * on the board like opaque panels instead of lying flush in it. */
-	--sbd-card-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-	--sbd-card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.09);
+	/* Cards cast NO shadow. Scanning outward from a reference card finds no
+	 * darkening whatsoever — the backdrop is flat right up to the rim, and
+	 * the 1px white rim alone is what separates the card from the board.
+	 * Even the very soft shadow this used to carry dropped the wallpaper at
+	 * the edge, which is what made cards sit ON the board rather than lying
+	 * flush in it. Kept as named tokens so a card's box-shadow still reads
+	 * from one place. */
+	--sbd-card-shadow: none;
+	--sbd-card-shadow-hover: none;
 }
 
 .sbd-view {
@@ -761,7 +827,8 @@ body.theme-dark {
 	padding-block: 20px;
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
-	color: var(--sbd-sheet-ink-body);
+	/* The jot pad's own ink — see --sbd-sheet-ink-jot. */
+	color: var(--sbd-sheet-ink-jot);
 	text-shadow: none;
 	caret-color: var(--sbd-sheet-link);
 }
@@ -840,18 +907,21 @@ body.theme-dark {
  * dim caps-free treatment. A rendered `## Log` at Obsidian's h2 is 1.6rem —
  * taller than the whole panel the reference draws, and it pushed the note off
  * the bottom of the card. */
+/* The reference draws the note's heading ("## Log") at 12px in white 70%,
+ * over a 14px/1.3 body in white 95% — a caption above the line, not a second
+ * body size. */
 .sbd-view .sbd-embed.sbd-daily-note :is(h1, h2, h3, h4, h5, h6) {
 	margin: 0 0 4px;
-	font-size: 0.875rem;
+	font-size: 0.75rem;
 	font-weight: 700;
 	line-height: 1.3;
-	color: rgba(255, 255, 255, 0.72);
+	color: rgba(255, 255, 255, 0.7);
 }
 
 .sbd-view .sbd-embed.sbd-daily-note p {
 	margin: 0 0 6px;
 	font-size: 0.875rem;
-	line-height: 1.35;
+	line-height: 1.3;
 }
 
 .sbd-view .sbd-embed.sbd-daily-note > :last-child {
@@ -920,10 +990,12 @@ body.theme-dark {
 	text-shadow: none;
 }
 
+/* The padlock is stroked #586067 in the reference — a shade off the #4d565e
+ * the address text beside it takes. */
 .sbd-web-url-icon {
 	display: flex;
 	flex: none;
-	color: var(--sbd-badge-ink);
+	color: #586067;
 }
 
 .sbd-web-url-icon .svg-icon {
@@ -976,8 +1048,10 @@ body.theme-dark {
 .sbd-view .sbd-leaf-host {
 	background: var(--sbd-sheet-fill);
 	border-radius: 24px;
-	color: var(--sbd-sheet-ink-body);
+	/* The leaf's own ink — see --sbd-sheet-ink-leaf. */
+	color: var(--sbd-sheet-ink-leaf);
 	text-shadow: none;
+	padding: 16px 18px;
 }
 
 /* Dataview's table and Datacore's result area (→ DATAVIEW / DATACORE): 22px
@@ -1147,8 +1221,10 @@ body.theme-dark {
 	padding: 0;
 	border-radius: var(--sbd-radius-field);
 	border: none;
-	background: var(--sbd-btn-light-fill);
-	color: var(--sbd-ink-strong);
+	/* The reference's square is the 0.9 sheet with a #33383d glyph — not the
+	 * 0.94 toolbar-pill white, and not the #20242a modal-title ink. */
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-track-pill-ink);
 	cursor: pointer;
 	transition: var(--sbd-transition-interactive);
 }
@@ -1441,6 +1517,29 @@ body.theme-dark {
 	flex: 1 1 auto;
 	min-height: 36px;
 	max-height: 120px;
+	/* A query container so the field and its glyph can be sized against the
+	 * bar's own height (see below). Safe here: the results dropdown is
+	 * absolutely positioned against .sbd-searchbar-card, the row's ancestor,
+	 * so the containment this introduces never becomes its containing
+	 * block. */
+	container-type: size;
+}
+
+/* Widget Set → SEARCHBAR sets a 22px query behind a 24px glyph in a 108px
+ * bar. The header's bar is a fixed 52px and keeps its own flat sizing, but
+ * this bar is dragged to whatever height the card is given — so both scale
+ * with it and land exactly on the reference's pair at the reference's
+ * height (22/108 = 20.4cqh, 24/108 = 22.2cqh). The floors keep a bar
+ * dragged down to 36px readable; the ceilings stop a tall card from
+ * inflating past the artboard. */
+/* .sbd-view … to outrank the header bar's own three-class font-size rule. */
+.sbd-view .sbd-searchbar-row .sbd-search-input {
+	font-size: clamp(0.95rem, 20.4cqh, 1.375rem);
+}
+
+.sbd-searchbar-row .sbd-search-icon .svg-icon {
+	width: clamp(18px, 22.2cqh, 24px);
+	height: clamp(18px, 22.2cqh, 24px);
 }
 
 /* The bar stretches to the row's height instead of the fixed 52px it carries
@@ -1529,9 +1628,12 @@ body.theme-dark {
 	transition: all 120ms ease;
 }
 
+/* Fill only. --interactive-accent is #ffffff on the board, so tinting the rim
+ * on hover drew a hard white outline that appears nowhere in either
+ * reference; the glass vocabulary moves the panel tier instead. */
 .sbd-type-filter-chip:hover {
 	color: var(--text-normal);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-panel-tier-fill-hover);
 }
 
 .sbd-type-filter-chip.is-active {
@@ -1626,59 +1728,46 @@ body.theme-dark {
 	 * own surface (a Bases table's sticky header, say) can reuse the exact same
 	 * colour. It resolves here, against the card's real --background-primary, so
 	 * it stays correct even where a descendant neutralises that variable. */
+	/* The 0.1 fallback is the reference's own card opacity, and it matters:
+	 * --card-opacity is set on the grid by renderDashboard, so anywhere a
+	 * card is rendered outside that path (or before it runs) the old
+	 * fallback of 1 resolved this to FULLY OPAQUE WHITE — a solid slab that
+	 * swallowed the card's white text entirely. Falling back to the design
+	 * value fails soft instead. */
 	--sbd-card-surface: color-mix(
 		in srgb,
 		var(--sbd-glass-tint, var(--background-primary))
-			calc(var(--card-opacity, 1) * 100%),
+			calc(var(--card-opacity, 0.1) * 100%),
 		transparent
 	);
 	/* The tint plus two highlights, exactly as the reference measures them.
-	 * The top highlight matches it directly: sampling straight down from the
-	 * rim shows the surface a good ~20/255 brighter immediately under it,
-	 * falling off to the flat interior over about 12px — the light a pane of
-	 * glass gathers along its lit edge. The diagonal is the softer corner
-	 * sheen over the rest of the face.
+	 * A reference card is the tint and NOTHING else. Every decorative layer
+	 * this used to stack on top — a top-edge highlight gradient, a diagonal
+	 * corner sheen, inset bevels grading the rim, a drop shadow, and a
+	 * text-shadow on every descendant — was invented to make the glass read
+	 * as "lit". The reference draws none of them:
 	 *
-	 * There is deliberately NO darkening here, and none in the blur either.
-	 * Two earlier passes added some — first a dark scrim under the tint,
-	 * then a brightness() multiplier inside the backdrop-filter — on the
-	 * assumption that white text could not hold over a bright wallpaper.
-	 * Rendering the reference artboard over the very wallpaper it is drawn
-	 * on settles it: the card there is this stack and nothing else, and it
-	 * reads as a barely-there pane with a crisp rim. Anything added under
-	 * the tint makes it a slab. */
+	 *     border-radius:42px;
+	 *     background:rgba(255,255,255,0.10);
+	 *     backdrop-filter:blur(18px) saturate(120%);
+	 *     border:1px solid rgba(255,255,255,0.42);
+	 *     overflow:hidden;
+	 *
+	 * That is the whole card. The rim alone separates it from the board;
+	 * anything layered under or over the tint turns a pane of glass into a
+	 * slab, which is exactly how the board read before this pass. */
 	background-color: var(--sbd-card-surface);
-	background-image:
-		linear-gradient(
-			to bottom,
-			rgba(255, 255, 255, 0.2) 0,
-			rgba(255, 255, 255, 0) 12px
-		),
-		linear-gradient(
-			135deg,
-			rgba(255, 255, 255, 0.1) 0%,
-			rgba(255, 255, 255, 0.03) 40%,
-			rgba(255, 255, 255, 0) 65%
-		);
-	/* Every text node in a card inherits this: a soft dark shadow keeps type
-	 * legible over any wallpaper showing through the glass, in place of
-	 * hand-tuning contrast per element. Lighter than it was (was 0.45 alpha
-	 * / 3px blur): now that the card itself is near-clear glass rather than a
-	 * grey panel, a heavy shadow reads as smudged type rather than a crisp
-	 * legibility aid. */
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
-	/* Drop shadow via a variable so merged edges can drop it (see below) and
-	 * hover can lift it without re-declaring the whole shadow. A brighter inset
-	 * top highlight rides along on every card (merged edges zero it via
-	 * --sbd-card-lift the same as the drop shadow) for the glass bevel seen
-	 * where the frosted surface catches light along its top edge. */
-	/* The rim is graded on a reference card — white at ~55% along the top edge
-	 * but only ~34% along the bottom, the way a pane of glass gathers light
-	 * from above. The border paints the bright top value uniformly; these two
-	 * insets put the grade back, lifting the top edge and settling the bottom. */
-	--sbd-card-lift: var(--sbd-card-shadow),
-		inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
-		inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
+	background-image: none;
+	/* No text-shadow: the reference sets white type straight onto the glass.
+	 * The `text-shadow: none` resets further down this file (on sheet-hosted
+	 * content, which carries dark type) are now redundant rather than wrong,
+	 * and are left in place so a sheet stays correct if a card ever
+	 * reintroduces one. */
+	text-shadow: none;
+	/* Kept as a variable because merged edges and the hover state both
+	 * address it, but it resolves to the reference's own answer: no shadow,
+	 * no bevel. */
+	--sbd-card-lift: none;
 	box-shadow: var(--sbd-card-lift);
 	overflow: hidden;
 	transition:
@@ -1747,10 +1836,12 @@ body.theme-dark {
 	transform: translateY(-0.5px);
 }
 
+/* The reference draws every card at rest and gives none of them a hover
+ * state, so a card no longer grows a shadow or a bevel under the pointer.
+ * The affordances the board actually needs on hover — the move handle, the
+ * header actions — are their own elements and appear as before. */
 .sbd-card:hover {
-	--sbd-card-lift: var(--sbd-card-shadow-hover),
-		inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
-		inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
+	--sbd-card-lift: none;
 }
 
 .sbd-card-head {
@@ -1776,15 +1867,9 @@ body.theme-dark {
 /* Monospace, not the UI face: in the reference every surface is named by a
  * tracked-out mono caption, and the even advance width is most of what makes
  * a three-word label read as a caption rather than a small heading. */
-.sbd-card-title {
-	font-family: var(--sbd-font-mono);
-	font-weight: 600;
-	font-size: var(--sbd-label-size);
-	letter-spacing: var(--sbd-label-tracking);
-	text-transform: uppercase;
-	color: var(--text-normal);
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-}
+/* (.sbd-card-title is gone: nothing in src/ has emitted that element since
+ * the header stopped carrying a title field. The live in-card caption is
+ * .sbd-card-eyebrow, further down.) */
 
 /* Hidden via the .is-untitled class (set in dashboard.ts) instead of :has, which
  * can be costly due to broad selector invalidation. */
@@ -1895,7 +1980,8 @@ body.theme-dark {
 	margin-bottom: 14px;
 	padding: 11px 14px;
 	border-radius: 14px;
-	background: var(--sbd-panel-tier-fill);
+	/* 0.18 — the reference's quieter inner tier for this panel. */
+	background: var(--sbd-panel-tier-fill-quiet);
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
 	line-height: 1.5;
@@ -1919,12 +2005,14 @@ body.theme-dark {
 	min-width: 0;
 }
 
+/* DATACORE's language pill — the 0.9 sheet with the #33383d ink every
+ * active-pill-on-a-card takes, not the sheet's #23272b body ink. */
 .sbd-query-lang {
 	flex: none;
 	padding: 5px 11px;
 	border-radius: 8px;
 	background: var(--sbd-sheet-fill);
-	color: var(--sbd-sheet-ink);
+	color: var(--sbd-track-pill-ink);
 	font-size: 0.75rem;
 	font-weight: 600;
 	text-shadow: none;
@@ -2551,16 +2639,16 @@ body.theme-dark {
 		transform 80ms ease;
 }
 
+/* The panel-tier ladder, as everywhere else a control rests on a card's
+ * glass — not an accent-tinted rim and a full white flood on press, which
+ * inverted the button to dark-on-white for the duration of a click. */
 .sbd-daily-create:hover {
-	border-color: var(--interactive-accent);
-	background: color-mix(in srgb, var(--interactive-accent) 14%, var(--sbd-card-surface, var(--background-secondary)));
+	background: var(--sbd-panel-tier-fill-hover);
 }
 
 .sbd-daily-create:active {
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	transform: scale(0.96);
+	background: var(--sbd-panel-tier-fill-active);
+	transform: var(--sbd-press);
 }
 
 /* A floating action button (e.g. the daily-note "open" button) pinned to the
@@ -2577,36 +2665,39 @@ body.theme-dark {
 	pointer-events: none;
 }
 
-/* A small glass chip rather than a flat opaque square. Badge tier (white
- * ~30%), the same material as every other round icon chip on the board — the
- * card's own surface is near-clear glass and would leave this invisible. */
+/* Canvas.dc.html → MOVE HANDLE: a rimless glass circle floating on a card,
+ * with a white glyph. The reference draws it at 52px to show the material at
+ * a legible size; here it keeps the card-corner footprint the board needs and
+ * takes the material exactly — fill, shallow blur, the one shadow the
+ * reference gives a round button, and a 0.92 press.
+ *
+ * It carries NO border and does not recolour on hover: the reference moves
+ * only the fill. The accent-tinted rim this used to grow was invented, and
+ * it was the only white outline on the board. */
 .sbd-open-btn {
 	pointer-events: auto;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: 5px;
-	border-radius: 999px;
-	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
-	background: var(--sbd-badge-fill);
-	color: var(--text-muted);
+	border-radius: 50%;
+	border: none;
+	background: var(--sbd-handle-fill);
+	backdrop-filter: var(--sbd-handle-blur);
+	-webkit-backdrop-filter: var(--sbd-handle-blur);
+	box-shadow: var(--sbd-handle-shadow);
+	color: #ffffff;
 	cursor: pointer;
-	opacity: 0.85;
-	transition:
-		opacity 120ms ease,
-		color 120ms ease,
-		border-color 120ms ease,
-		transform 80ms ease;
+	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-open-btn:hover {
-	opacity: 1;
-	color: var(--interactive-accent);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-handle-fill-hover);
 }
 
 .sbd-open-btn:active {
-	transform: scale(0.9);
+	background: var(--sbd-handle-fill-active);
+	transform: var(--sbd-press-handle);
 }
 
 .sbd-open-btn .svg-icon {
@@ -2885,7 +2976,8 @@ body.theme-dark {
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--sbd-ink-muted);
-	font-size: var(--font-ui-small);
+	/* 14px, the reference's tab label. */
+	font-size: 0.875rem;
 	font-weight: 600;
 	cursor: pointer;
 	white-space: nowrap;
@@ -2894,13 +2986,15 @@ body.theme-dark {
 	transition: var(--sbd-transition-interactive);
 }
 
+/* Fill only, and only as far as the track's own hover step — see
+ * --sbd-track-tab-fill-hover. Darkening the label to the active tab's ink as
+ * well is what made a hovered tab indistinguishable from the selected one. */
 .sbd-ribbon-tab:hover {
-	background: var(--sbd-control-fill-hover);
-	color: var(--sbd-ink);
+	background: var(--sbd-track-tab-fill-hover);
 }
 
 .sbd-ribbon-tab:active {
-	background: var(--sbd-tile-fill-active);
+	background: var(--sbd-track-tab-fill-active);
 	transform: var(--sbd-press);
 }
 
@@ -3066,6 +3160,33 @@ body.theme-dark {
 	color: var(--sbd-ink-faint);
 }
 
+/* Canvas.dc.html → CARD SETTINGS closes with titled section blocks: a
+ * 16px/700 #20242a heading over a 13px/1.45 #8b9198 line, inset 14px above
+ * and 16px below its rule. Obsidian's `setHeading()` rows had no styling of
+ * their own inside the glass panel, so they were taking the app's default
+ * heading treatment and the ordinary row's 15px/#23272b name. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item.setting-item-heading {
+	padding-top: 14px;
+	padding-bottom: 16px;
+	gap: 10px;
+}
+
+.sbd-glass-modal
+	.sbd-modal-tabbody
+	.setting-item.setting-item-heading
+	.setting-item-name {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--sbd-ink-strong);
+}
+
+.sbd-glass-modal
+	.sbd-modal-tabbody
+	.setting-item.setting-item-heading
+	.setting-item-description {
+	line-height: 1.45;
+}
+
 /* The control column must not stretch to the row's full height now that the
  * row is top-aligned — a dropdown would grow with the description beside
  * it. The 2px nudge is the reference's own optical alignment of a control
@@ -3142,6 +3263,8 @@ body.theme-dark {
  * with no chip behind them and no icon badge in front. The 12px rhythm and
  * baseline alignment are the reference's, so a filename and its age sit on
  * one line rather than being centred against each other. */
+/* These shared values are RECENT's, which the reference draws as a 12px
+ * column of baseline-aligned rows 8px apart. */
 .sbd-list.is-bare {
 	gap: 12px;
 }
@@ -3151,6 +3274,19 @@ body.theme-dark {
 	gap: 8px;
 	padding: 0;
 	border-radius: 0;
+}
+
+/* BOOKMARKS shares the bare list but not its measurements: the reference
+ * sets that column at 10px with 10px, centre-aligned rows, because each row
+ * leads with a glyph that has to sit on the name's optical centre rather
+ * than on its baseline. */
+.sbd-card.is-bookmarks-card .sbd-list.is-bare {
+	gap: 10px;
+}
+
+.sbd-card.is-bookmarks-card .sbd-list.is-bare .sbd-list-item {
+	align-items: center;
+	gap: 10px;
 }
 
 .sbd-list.is-bare .sbd-list-item:hover,
@@ -3231,6 +3367,48 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-muted);
 }
 
+/* TASKS in list mode shares the sheet list with SEARCH's results but not its
+ * measurements: Widget Set → TASKS draws a 10px column of rows inset
+ * 12px 16px with a 12px gutter, and titles them at 15px/500 rather than the
+ * 14px/600 a search result takes. */
+.sbd-list.is-sheet.sbd-tasks {
+	gap: 10px;
+}
+
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item {
+	align-items: center;
+	padding: 12px 16px;
+	gap: 12px;
+}
+
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-list-label,
+.sbd-list.is-sheet.sbd-tasks .sbd-task-main .sbd-list-label {
+	font-size: 0.9375rem;
+	font-weight: 500;
+}
+
+/* The reference's checkbox is an 18px square at 6px behind a 1.6px #b3b9bf
+ * rule. Only the resting (unchecked) box is drawn there, so the checked
+ * state is left to Obsidian rather than reinvented. */
+.sbd-list.is-sheet.sbd-tasks .sbd-task-check {
+	/* appearance:none is required for border-radius to apply at all — a
+	 * native checkbox ignores it. Obsidian's own stylesheet happens to set
+	 * this, but relying on that made the corner silently depend on the host;
+	 * saying it here keeps the box the reference's shape either way. The
+	 * CHECKED state is deliberately left to Obsidian, which paints its own
+	 * fill and tick — the reference only draws the resting box. */
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 6px;
+}
+
+.sbd-list.is-sheet.sbd-tasks .sbd-task-check:not(:checked) {
+	border: 1.6px solid #b3b9bf;
+	background: transparent;
+}
+
 /* The trailing "2m" / "3h" / "Tue" column. flex:none so a long filename
  * ellipsises instead of squeezing the age out of the row. */
 .sbd-list-age {
@@ -3289,7 +3467,7 @@ body.theme-dark {
 .sbd-card-eyebrow {
 	font-family: var(--sbd-font-mono);
 	font-size: var(--sbd-label-size);
-	letter-spacing: var(--sbd-label-tracking);
+	letter-spacing: var(--sbd-label-tracking-inner);
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	margin-bottom: 13px;
@@ -3298,8 +3476,15 @@ body.theme-dark {
 /* The same caption, but on the white sheet rather than the glass — the
  * reference sets it in the sheet's own faint grey there ("JOT", "6 LINKS"),
  * since white on white would vanish. */
+/* GIT's "MESSAGE" caption is the one eyebrow the reference sets smaller and
+ * tighter than the rest: 11px at 1px, against the shared 12px at 1.4px. */
+.sbd-card.is-git-card .sbd-card-eyebrow {
+	font-size: 0.6875rem;
+	letter-spacing: 0.0909em;
+}
+
 .sbd-card-eyebrow.is-on-sheet {
-	color: var(--sbd-sheet-ink-faint);
+	color: var(--sbd-sheet-ink-caption);
 	text-shadow: none;
 	margin-bottom: 12px;
 }
@@ -3836,11 +4021,13 @@ body.theme-dark {
 }
 
 /* Calculator */
+/* 16px between the readout and the pad, as the reference sets it — 8px ran
+ * the two blocks together. */
 .sbd-calc {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 16px;
 	overflow: hidden;
 }
 
@@ -3935,8 +4122,10 @@ body.theme-dark {
 	background: rgba(255, 255, 255, 0.34);
 }
 
+/* The reference presses a key to 0.94 — a deeper dip than the board's
+ * general 0.96, because a keypad key is small and pressed repeatedly. */
 .sbd-calc-key:active {
-	transform: var(--sbd-press);
+	transform: scale(0.94);
 }
 
 .sbd-calc-key.is-op {
@@ -3949,20 +4138,25 @@ body.theme-dark {
 	background: var(--sbd-sheet-fill-hover);
 }
 
+/* A function key differs from a digit ONLY in its fill (0.14 against 0.24).
+ * The reference keeps every key on the pad at one size and one ink, so the
+ * smaller 15px type and dimmed 85% white here made C / ( ) / % / rad read as
+ * disabled rather than as secondary. */
 .sbd-calc-key.is-fn {
 	background: rgba(255, 255, 255, 0.14);
-	font-size: 0.9375rem;
-	color: rgba(255, 255, 255, 0.85);
+	color: rgba(255, 255, 255, 0.95);
 }
 
 .sbd-calc-key.is-fn:hover {
 	background: rgba(255, 255, 255, 0.24);
 }
 
+/* The reference treats "=" as one more operator — same fill, same ink, same
+ * 600. The 700 here made it the only heavier glyph on the pad. */
 .sbd-calc-key.is-eq {
 	background: var(--sbd-sheet-fill);
 	color: var(--sbd-ink);
-	font-weight: 700;
+	font-weight: 600;
 }
 
 .sbd-calc-key.is-eq:hover {
@@ -4395,7 +4589,9 @@ body.theme-dark {
 .sbd-tile-sub {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.75rem;
-	color: var(--sbd-sheet-ink-label);
+	/* #7b8188 — the reference's muted ink for this path, not the lighter
+	 * #8c9299 it reserves for column and field labels. */
+	color: var(--sbd-sheet-ink-muted);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -4492,34 +4688,54 @@ body.theme-dark {
  * to reference (--text-normal, --interactive-accent) resolve against the
  * app's chrome, so on glass the hands came out grey-on-cream and the pin came
  * out accent-purple — three colours the reference's face does not contain. */
+/* The reference's drawn dial is 113.7px across (r=55 of a 120 viewBox on a
+ * 124px svg) inside a 238px card — 47.8% of the card. With the face circle
+ * now at r=45.833 of 100, it fills 91.667% of this element, so the element
+ * has to be 47.8 / 0.91667 = 52.1cqw for the CIRCLE to land at the
+ * reference's size. (At the old r=48 the same 47.7cqw drew a dial ~2% small;
+ * changing r without changing this would have shrunk it further.) */
 .sbd-analog {
-	width: 47.7cqw;
-	max-width: 220px;
+	width: 52.1cqw;
+	max-width: 240px;
 	aspect-ratio: 1;
 	margin-bottom: 4px;
 }
 
+/* The reference draws the face in a 0 0 120 120 viewBox; this one is
+ * 0 0 100 100, so every length below is the reference's value × 5/6. The
+ * alphas are taken as-is. */
+
+/* Reference: fill rgba(255,255,255,0.16), stroke rgba(255,255,255,0.55) at
+ * stroke-width 1.5. The face was three times too faint (0.05) inside a rim
+ * a third too weak, which is why the dial all but disappeared on a light
+ * wallpaper. */
 .sbd-analog-face {
-	fill: rgba(255, 255, 255, 0.05);
-	stroke: rgba(255, 255, 255, 0.42);
-	stroke-width: 1;
+	fill: rgba(255, 255, 255, 0.16);
+	stroke: rgba(255, 255, 255, 0.55);
+	stroke-width: 1.25;
 }
 
+/* Reference: a 2×8 rounded rect filled rgba(255,255,255,0.7) — as a stroked
+ * line that is stroke-width 1.667 at 0.7, not 2.2 at 0.85. */
 .sbd-analog-tick {
-	stroke: rgba(255, 255, 255, 0.85);
-	stroke-width: 2.2;
+	stroke: rgba(255, 255, 255, 0.7);
+	stroke-width: 1.667;
 	stroke-linecap: round;
 }
 
+/* Both hands are pure #ffffff in the reference — the 0.98 they carried let
+ * the wallpaper bleed through the one element on the face that has to read
+ * as solid. Widths are 4 and 2.6 scaled: the hour hand is the THICKER of the
+ * two, which the old 3.6/3 pair had nearly levelled out. */
 .sbd-analog-hour {
-	stroke: rgba(255, 255, 255, 0.98);
-	stroke-width: 3.6;
+	stroke: #ffffff;
+	stroke-width: 3.333;
 	stroke-linecap: round;
 }
 
 .sbd-analog-min {
-	stroke: rgba(255, 255, 255, 0.98);
-	stroke-width: 3;
+	stroke: #ffffff;
+	stroke-width: 2.167;
 	stroke-linecap: round;
 }
 
@@ -4530,7 +4746,7 @@ body.theme-dark {
 }
 
 .sbd-analog-pin {
-	fill: rgba(255, 255, 255, 0.98);
+	fill: #ffffff;
 }
 
 /* RSS feed card */
@@ -4574,7 +4790,7 @@ body.theme-dark {
 	border: none;
 	border-radius: 11px;
 	background: var(--sbd-panel-tier-fill);
-	color: rgba(255, 255, 255, 0.85);
+	color: rgba(255, 255, 255, 0.9);
 	font-weight: 600;
 	font-size: 0.8125rem;
 	white-space: nowrap;
@@ -4584,14 +4800,21 @@ body.theme-dark {
 	transition: background 120ms ease, color 120ms ease;
 }
 
+/* An in-card tab reacting on the card's glass: the reference's 0.4 hover and
+ * 0.2 press, fill only. */
 .sbd-rss-tab:hover:not(.is-active) {
-	background: var(--background-modifier-active-hover, var(--background-modifier-hover));
-	color: var(--text-normal);
+	background: var(--sbd-track-tab-card-hover);
+}
+
+.sbd-rss-tab:active:not(.is-active) {
+	background: var(--sbd-track-tab-card-active);
 }
 
 .sbd-rss-tab.is-active {
 	background: var(--sbd-sheet-fill);
-	color: var(--sbd-sheet-ink);
+	/* #33383d — the ink the reference gives an active pill sitting on a
+	 * card, one step lighter than the sheet's own #23272b body ink. */
+	color: var(--sbd-track-pill-ink);
 }
 
 .sbd-rss-tab.is-active:hover {
@@ -4643,7 +4866,9 @@ body.theme-dark {
  * card's own edge does in the reference. */
 .sbd-rss-item {
 	display: flex;
-	gap: 10px;
+	/* 5px: the reference stacks title, excerpt and timestamp tightly inside
+	 * the row's 13px 16px inset. 10px pushed the timestamp out of the box. */
+	gap: 5px;
 	padding: 13px 16px;
 	border-radius: 18px;
 	cursor: pointer;
@@ -5253,12 +5478,14 @@ body.theme-dark {
 	background: var(--sbd-sheet-fill-hover);
 }
 
+/* #3b4148, not the sheet's #3b4147 body ink — a one-unit difference, but it
+ * is the value the reference sets on this label. */
 .sbd-weather.is-forecast .sbd-weather-day-label {
 	flex: none;
 	font-size: 0.875rem;
 	font-weight: 600;
 	text-transform: uppercase;
-	color: var(--sbd-sheet-ink-body);
+	color: #3b4148;
 }
 
 .sbd-weather.is-forecast .sbd-weather-day-icon {
@@ -6587,8 +6814,8 @@ body.theme-dark {
 	gap: 6px;
 	padding: 4px;
 	border: none;
-	border-radius: var(--sbd-radius-track);
-	background: var(--sbd-track-fill);
+	border-radius: var(--sbd-radius-track-card);
+	background: var(--sbd-track-fill-card);
 	overflow: hidden;
 }
 
@@ -6598,7 +6825,7 @@ body.theme-dark {
 	border: none;
 	border-radius: 9px;
 	background: transparent;
-	color: rgba(255, 255, 255, 0.72);
+	color: var(--sbd-track-tab-card-ink);
 	font-size: 0.8125rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -6606,14 +6833,18 @@ body.theme-dark {
 	transition: var(--sbd-transition-interactive);
 }
 
+/* Fill only, and at the in-card track's own 0.4 step. */
 .sbd-sched-view:hover:not(.is-active) {
-	background: var(--sbd-panel-tier-fill-hover);
-	color: #ffffff;
+	background: var(--sbd-track-tab-card-hover);
+}
+
+.sbd-sched-view:active:not(.is-active) {
+	background: var(--sbd-track-tab-card-active);
 }
 
 .sbd-sched-view.is-active {
 	background: var(--sbd-track-pill-fill);
-	color: var(--sbd-ink);
+	color: var(--sbd-track-pill-ink);
 }
 
 /* The per-view toggles read as one list under their shared description. */
@@ -6872,16 +7103,21 @@ body.theme-dark {
 	background: var(--background-modifier-hover);
 }
 
+/* Widget Set → SCHEDULE's day-column head: 11px mono at 1px tracking in
+ * white 60%, over a 15px/600 day number. --text-faint (46%) left the weekday
+ * noticeably fainter than the reference draws it, and the number was both
+ * too small and unweighted. */
 .sbd-sched-headdow {
 	font-family: var(--sbd-font-mono);
-	font-size: 0.68rem;
-	color: var(--text-faint);
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.6);
 	text-transform: uppercase;
-	letter-spacing: var(--sbd-label-tracking-tight);
+	letter-spacing: 0.0909em;
 }
 
 .sbd-sched-headnum {
-	font-size: 0.86rem;
+	font-size: 0.9375rem;
+	font-weight: 600;
 	color: var(--text-normal);
 }
 
@@ -7200,7 +7436,8 @@ body.theme-dark {
 	text-align: left;
 	padding: 16px;
 	border-radius: var(--sbd-radius-tile);
-	background: var(--sbd-panel-tier-fill);
+	/* 0.18, the value the reference gives a STATS tile specifically. */
+	background: var(--sbd-panel-tier-fill-quiet);
 }
 
 /* The reference's stat tile carries no glyph at all — the figure is the
@@ -7297,9 +7534,12 @@ body.theme-dark {
 	transition: var(--sbd-transition-interactive);
 }
 
+/* Fill only. The reference's hover is `background:rgba(255,255,255,0.44);`
+ * and nothing else — brightening the rim to full white on hover as well was
+ * invented here, and it made the pill flash a hard white outline that no
+ * other control on the board draws. */
 .sbd-tool-btn:hover {
 	background: var(--sbd-btn-glass-fill-hover);
-	border-color: var(--interactive-accent);
 }
 
 .sbd-tool-btn:active {
@@ -7312,11 +7552,21 @@ body.theme-dark {
 .sbd-tool-btn.is-active {
 	/* Dark ink, as the reference writes it (#2a2e33) — not --text-on-accent,
 	 * which is white in Obsidian's own themes and put a white label on a white
-	 * pill. */
-	color: var(--sbd-ink-strong);
+	 * pill, and not --sbd-ink-strong, which is the modal-title ink. */
+	color: var(--sbd-btn-light-ink);
+	/* Symmetric, unlike the glass pill above. The reference gives the confirm
+	 * action `padding:11px 18px` — its check glyph is optically centred and
+	 * does not want the 16px lead-in that the "+" pill takes. */
+	padding: 11px 18px;
 	background: var(--sbd-btn-light-fill);
 	border-color: var(--sbd-btn-light-fill);
 	box-shadow: var(--sbd-btn-light-shadow);
+}
+
+/* The leading glyph is a shade darker than the label — the reference strokes
+ * it #3b4148 against a #2a2e33 word. */
+.sbd-tool-btn.is-active .sbd-tool-icon {
+	color: var(--sbd-btn-light-icon);
 }
 
 .sbd-tool-btn.is-active:hover {
@@ -7438,8 +7688,7 @@ body.theme-dark {
 }
 
 .sbd-mobile-action:hover {
-	background: var(--background-modifier-hover);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-panel-tier-fill-hover);
 }
 
 .sbd-mobile-action-icon {
@@ -7631,53 +7880,49 @@ body.theme-dark {
 	z-index: 7;
 	gap: 8px;
 	padding: 6px 10px;
-	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
-	backdrop-filter: blur(6px);
-	border-bottom: 1px solid var(--background-modifier-border);
+	/* No surface of its own. This strip holds ONLY the two round action
+	 * buttons (renderCardControls builds nothing else — there is no title
+	 * field), and neither reference draws a header band across a card: in
+	 * Canvas.dc.html's MOVE HANDLE panel the round controls float directly
+	 * on the card, and in CARD HEADER · HOVER they float on a card that
+	 * happens to be a white sheet in its own right.
+	 *
+	 * Two earlier passes both got this wrong in opposite directions — first
+	 * a translucent grey band, then (reading the CARD HEADER artboard as if
+	 * the sheet were the header rather than the card) an opaque white one.
+	 * Painting nothing is what the reference actually shows. */
+	background: none;
+	border-bottom: none;
 	border-radius: var(--sbd-card-radius, 42px)
 		var(--sbd-card-radius, 42px) 0 0;
+	pointer-events: none;
 }
 
-/* Sits inside the arrange-mode header, which is already a glass panel — a
- * solid grey field inside it read as a hole. The quiet control tier is the
- * reference's own answer for a field resting on a panel. */
-.sbd-card-title-input {
-	flex: 1;
-	min-width: 0;
-	padding: 4px 8px;
-	border-radius: 9px;
-	border: 1px solid var(--sbd-control-border-quiet);
-	background: var(--sbd-control-fill-quiet);
-	color: var(--text-normal);
-	font-weight: 600;
-	font-size: 0.9rem;
-}
-
-.sbd-card-title-input:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
+/* …but the buttons inside it must still be clickable. */
+.sbd-grid.is-arranging .sbd-card-head.is-editing > * {
+	pointer-events: auto;
 }
 
 .sbd-card-actions {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	/* 8px in the reference, not 4px — at 32px circles the tighter gap reads
+	 * as one segmented control rather than two buttons. */
+	gap: 8px;
 	flex-shrink: 0;
 	margin-left: auto;
 }
 
-/* Sits inside the floating editable header bar (.sbd-card-head.is-editing),
- * which is already a translucent glass panel — a fully solid background here
- * would paint an opaque cutout on top of it. */
-/* The reference's card-header action buttons (Canvas.dc.html) are dark icons
- * on a near-white circle — rgba(0,0,0,0.06) — but that value assumes it sits
- * on top of an already-white/near-white card surface (that section's example
- * card body is background:rgba(255,255,255,0.9)). The real arrange-mode
- * header bar is the board's own translucent GREY panel
- * (.sbd-card-head.is-editing), not white, so a black-tinted fill on top of it
- * would still read as grey-on-grey. Giving the circle its own explicit white
- * fill instead reproduces the reference's actual *result* — a light chip
- * with a dark icon — regardless of what it's sitting on. */
+/* These are round controls floating on a card's GLASS — a settings gear and
+ * a delete, the same pair and the same habitat as Canvas.dc.html's MOVE
+ * HANDLE. So they take that panel's material (a rimless white-34% chip with
+ * a shallow blur, the one shadow the reference gives a round button, and a
+ * white glyph) at the 32px size the CARD HEADER · HOVER panel gives a header
+ * action.
+ *
+ * NOT the ink fill (black at 6%) from that second panel: there the circles
+ * sit on a card that is itself a near-white sheet, and black-on-glass here
+ * would be all but invisible against the board. */
 .sbd-card-action {
 	display: flex;
 	align-items: center;
@@ -7687,19 +7932,22 @@ body.theme-dark {
 	padding: 0;
 	border-radius: 50%;
 	border: none;
-	background: var(--sbd-icon-btn-fill-hover);
-	color: var(--sbd-ink-icon);
+	background: var(--sbd-handle-fill);
+	backdrop-filter: var(--sbd-handle-blur);
+	-webkit-backdrop-filter: var(--sbd-handle-blur);
+	box-shadow: var(--sbd-handle-shadow);
+	color: #ffffff;
 	cursor: pointer;
+	text-shadow: none;
 	transition: var(--sbd-transition-interactive);
 }
 
 .sbd-card-action:hover {
-	background: #ffffff;
-	color: #33383d;
+	background: var(--sbd-handle-fill-hover);
 }
 
 .sbd-card-action:active {
-	background: var(--sbd-tile-fill-active);
+	background: var(--sbd-handle-fill-active);
 	transform: var(--sbd-press-icon);
 }
 
@@ -7895,10 +8143,10 @@ body.theme-dark {
 	opacity: 1;
 }
 
+/* Brightens its glass rather than flooding white and flipping to dark ink —
+ * the same fill-only move every other on-card control makes. */
 .sbd-task-add:hover {
-	color: var(--text-on-accent);
-	background: var(--interactive-accent);
-	border-color: var(--interactive-accent);
+	background: var(--sbd-panel-tier-fill-hover);
 	opacity: 1;
 }
 
@@ -7956,7 +8204,9 @@ body.theme-dark {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.75rem;
 	font-weight: 700;
-	letter-spacing: var(--sbd-label-tracking-tight);
+	/* 0.8px at 12px — the reference tracks a column head one step wider than
+	 * the shared 0.6px tight label. */
+	letter-spacing: 0.0667em;
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.82);
 	border-bottom: none;
@@ -8931,9 +9181,12 @@ body.sbd-dv-resizing {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	padding: 22px 26px 18px;
+	/* Even 22px, as the reference sets it — the 18px bottom pulled the block
+	 * off the picture's lower edge. No text-shadow either: the gradient below
+	 * is the reference's own answer to legibility over a photo, and stacking
+	 * a shadow on top of it smears the title. */
+	padding: 22px 26px;
 	color: #ffffff;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 	background: linear-gradient(
 		to top,
 		rgba(30, 36, 42, 0.62),
@@ -8945,7 +9198,8 @@ body.sbd-dv-resizing {
 .sbd-slide-caption-folder {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.75rem;
-	letter-spacing: var(--sbd-label-tracking);
+	/* An in-card caption at 1.4px, not the artboard label's 1.6px. */
+	letter-spacing: var(--sbd-label-tracking-inner);
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.72);
 	overflow: hidden;
@@ -10171,26 +10425,35 @@ body.sbd-dv-resizing {
 
 /* A chip on the card's glass, so it takes the panel tier rather than the
  * board's opaque grey — the same treatment as the search filter chips. */
+/* Widget Set → JIRA's filter chips: a 10px-round pill at 6px 12px in
+ * 12px/600, white 90% on the 0.20 tier. It was a fully-round 4px 9px capsule
+ * at 85% with no weight, which read as a status tag rather than a control. */
 .sbd-jira-filter > summary {
 	list-style: none;
-	padding: 4px 9px;
+	padding: 6px 12px;
 	border: none;
-	border-radius: 999px;
-	color: rgba(255, 255, 255, 0.85);
+	border-radius: 10px;
+	color: rgba(255, 255, 255, 0.9);
 	background: var(--sbd-panel-tier-fill);
 	font-size: 0.75rem;
+	font-weight: 600;
 	cursor: pointer;
 	user-select: none;
+	transition: background 120ms ease;
 }
 
 .sbd-jira-filter > summary::-webkit-details-marker {
 	display: none;
 }
 
+/* The reference's own steps for these chips: 0.34 hovered, 0.16 pressed. */
 .sbd-jira-filter[open] > summary,
 .sbd-jira-filter > summary:hover {
-	border-color: var(--interactive-accent);
-	color: var(--text-normal);
+	background: rgba(255, 255, 255, 0.34);
+}
+
+.sbd-jira-filter > summary:active {
+	background: rgba(255, 255, 255, 0.16);
 }
 
 .sbd-jira-filter > summary:focus-visible,
@@ -10311,12 +10574,13 @@ body.sbd-dv-resizing {
 .sbd-jira-issue {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	/* 13px and a 16px corner, the reference's own; --sbd-radius-l is 18. */
+	gap: 13px;
 	width: 100%;
 	padding: 12px 16px;
 	border: 0;
 	border-bottom: none;
-	border-radius: var(--sbd-radius-l);
+	border-radius: 16px;
 	background: var(--sbd-sheet-fill);
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
@@ -10340,21 +10604,23 @@ body.sbd-dv-resizing {
 /* The reference marks the issue type with a small tinted SQUARE, not a
  * round badge — round is the board's glyph-on-glass shape, and on a white
  * sheet it read as a hole. */
+/* The reference leads a Jira row with a 22px tinted square at 6px — a colour
+ * swatch for the issue type, not a 28px icon chip. */
 .sbd-jira-type {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
-	width: 28px;
-	height: 28px;
-	border-radius: 8px;
+	width: 22px;
+	height: 22px;
+	border-radius: 6px;
 	background: rgba(0, 0, 0, 0.05);
 	color: var(--text-normal);
 }
 
 .sbd-jira-type svg {
-	width: 15px;
-	height: 15px;
+	width: 13px;
+	height: 13px;
 }
 
 .sbd-jira-main {
@@ -10373,7 +10639,10 @@ body.sbd-dv-resizing {
  * reference number rather than as a link. */
 .sbd-jira-key {
 	font-family: var(--sbd-font-mono);
-	color: var(--sbd-sheet-ink-muted);
+	/* #8c9299 at 11px — the reference's label ink, a step lighter than the
+	 * #7b8188 body ink this took. */
+	color: var(--sbd-sheet-ink-label);
+	font-size: 0.6875rem;
 	font-weight: 400;
 }
 
@@ -10382,8 +10651,9 @@ body.sbd-dv-resizing {
 	margin-bottom: 2px;
 	overflow: hidden;
 	color: var(--sbd-sheet-ink);
-	font-size: 0.9375rem;
-	font-weight: 700;
+	/* 14px at 600 — the reference's row title. */
+	font-size: 0.875rem;
+	font-weight: 600;
 	line-height: 1.25;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -10391,17 +10661,20 @@ body.sbd-dv-resizing {
 
 /* The reference's status chip: a pale tinted pill carrying tracked-out dark
  * mono caps, sitting on the white row rather than on the glass. */
+/* The reference's status chip is a flat pale-grey tag: #eef1f4 behind
+ * #5d666f at 7px, tracked 0.5px. It was an ink wash at 8px carrying the
+ * body ink and the shared 0.6px tracking. */
 .sbd-jira-status {
 	flex: 0 0 auto;
 	max-width: 130px;
 	padding: 4px 9px;
 	overflow: hidden;
-	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.06);
-	color: var(--sbd-sheet-ink-muted);
+	border-radius: 7px;
+	background: #eef1f4;
+	color: #5d666f;
 	font-family: var(--sbd-font-mono);
 	font-weight: 700;
-	letter-spacing: var(--sbd-label-tracking-tight);
+	letter-spacing: 0.0455em;
 	text-transform: uppercase;
 	font-size: 0.6875rem;
 	text-overflow: ellipsis;
@@ -10467,8 +10740,6 @@ body.sbd-dv-resizing {
 .sbd-text:focus-visible,
 .sbd-calc-input:focus,
 .sbd-calc-input:focus-visible,
-.sbd-card-title-input:focus,
-.sbd-card-title-input:focus-visible,
 .sbd-taskdetail-title-edit:focus,
 .sbd-taskdetail-title-edit:focus-visible {
 	outline: none !important;
@@ -10698,13 +10969,16 @@ body.sbd-dv-resizing {
 	transition: var(--sbd-transition-interactive);
 }
 
+/* The reference's own steps for this button: 0.22 at rest, 0.34 hovered,
+ * 0.16 pressed. The generic panel-tier ladder had it going 0.22 → 0.30 →
+ * 0.38, so pressing the button made it BRIGHTER than hovering it — the one
+ * control on the board whose press read as a release. */
 .sbd-git-action:hover:not(:disabled) {
-	background: var(--sbd-panel-tier-fill-hover);
-	color: #ffffff;
+	background: rgba(255, 255, 255, 0.34);
 }
 
 .sbd-git-action:active:not(:disabled) {
-	background: var(--sbd-panel-tier-fill-active);
+	background: rgba(255, 255, 255, 0.16);
 	transform: var(--sbd-press);
 }
 
@@ -10724,7 +10998,6 @@ body.sbd-dv-resizing {
 .sbd-git-action.is-commitAndSync:hover:not(:disabled),
 .sbd-git-action.is-commit:hover:not(:disabled) {
 	background: var(--sbd-sheet-fill-hover);
-	color: var(--sbd-ink);
 }
 
 .sbd-git-action.is-commitAndSync:active:not(:disabled),
@@ -10832,8 +11105,11 @@ body.sbd-dv-resizing {
  * green for something new, red for something gone. Stated as hues rather than
  * --text-success/--text-error, which resolve against the app's chrome and came
  * out unreadable over a light wallpaper. */
+/* The reference's own three: #f2902a modified, #41bd3f added (the same green
+ * its WEB card uses for an "operational" dot), #e0574f deleted. Renamed has
+ * no counterpart in the reference and keeps the blue. */
 .sbd-git-file.is-modified {
-	--sbd-git-mark: #e8862a;
+	--sbd-git-mark: #f2902a;
 }
 
 .sbd-git-file.is-renamed {
@@ -10842,12 +11118,12 @@ body.sbd-dv-resizing {
 
 .sbd-git-file.is-untracked,
 .sbd-git-file.is-added {
-	--sbd-git-mark: #3fb54a;
+	--sbd-git-mark: #41bd3f;
 }
 
 .sbd-git-file.is-deleted,
 .sbd-git-file.is-conflicted {
-	--sbd-git-mark: #e5534b;
+	--sbd-git-mark: #e0574f;
 }
 
 /* Staged files carry a rail on the left: the same "this is going into the next
@@ -11020,6 +11296,10 @@ body.sbd-dv-resizing {
 
 /* The reference's caption is one tracked-out mono line naming the mood
  * ("MOOD · CHIPPER"), at the top of the card. */
+/* This is the element that actually carries Widget Set → PET's
+ * "MOOD · CHIPPER" — .sbd-pet-mood inside it has no rule of its own and
+ * inherits from here. 13px at 1.4px tracking in white 60%: it is an in-card
+ * caption, so it takes the inner 1.4px, not the artboard label's 1.6px. */
 .sbd-pet-caption {
 	display: flex;
 	align-items: baseline;
@@ -11027,7 +11307,7 @@ body.sbd-dv-resizing {
 	flex: none;
 	font-family: var(--sbd-font-mono);
 	font-size: 0.8125rem;
-	letter-spacing: var(--sbd-label-tracking);
+	letter-spacing: 0.1077em;
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.6);
 	line-height: 1.2;
@@ -11042,17 +11322,22 @@ body.sbd-dv-resizing {
 	flex: none;
 }
 
+/* 19px at 600 — the reference's weight for a card's own name. */
 .sbd-pet-name {
 	font-size: 1.1875rem;
-	font-weight: 700;
+	font-weight: 600;
 	color: rgba(255, 255, 255, 0.96);
 	line-height: 1.2;
 }
 
+/* The activity line ("12 notes today") is the plugin's own addition — the
+ * reference's PET card is mood caption, sprite, name and nothing else. So it
+ * stays a quieter sibling of the caption rather than a second one at the
+ * same weight, which would have given the card two competing captions. */
 .sbd-pet-activity {
 	font-family: var(--sbd-font-mono);
 	font-size: 0.6875rem;
-	letter-spacing: var(--sbd-label-tracking-tight);
+	letter-spacing: 0.1077em;
 	color: rgba(255, 255, 255, 0.45);
 	line-height: 1.2;
 }
@@ -11431,7 +11716,9 @@ body.sbd-dv-resizing {
    Obsidian's default modal title, which is the main thing that makes the
    panel read as a sheet rather than a dialog box. */
 .sbd-glass-modal.sbd-glass-modal .modal-title {
-	font-size: 1.6rem;
+	/* 26px exactly, as both reference sheets set it ("Add a card", "Card
+	 * settings") — 1.6rem landed at 25.6px. */
+	font-size: 1.625rem;
 	font-weight: 700;
 	line-height: 1.2;
 	color: var(--sbd-ink-strong);
@@ -11452,9 +11739,10 @@ body.sbd-dv-resizing {
 	transition: var(--sbd-transition-interactive);
 }
 
+/* Fill only — the reference's close button darkens its chip on hover and
+ * leaves the glyph alone. */
 .sbd-glass-modal.sbd-glass-modal .modal-close-button:hover {
 	background: var(--sbd-icon-btn-fill-hover);
-	color: var(--sbd-ink);
 }
 
 .sbd-glass-modal.sbd-glass-modal .modal-close-button:active {
@@ -11484,7 +11772,9 @@ body.sbd-dv-resizing {
 	background-size: 12px 12px;
 	box-shadow: none;
 	color: var(--sbd-ink);
-	font-size: var(--font-ui-small);
+	/* 14px, the reference's control size. --font-ui-small is Obsidian's 13px
+	 * and left every pill a step small next to the 15px row label. */
+	font-size: 0.875rem;
 	cursor: pointer;
 	transition: var(--sbd-transition-interactive);
 }
@@ -11515,6 +11805,7 @@ body.sbd-dv-resizing {
 	background: var(--sbd-control-fill-quiet);
 	box-shadow: none;
 	color: var(--sbd-ink);
+	font-size: 0.875rem;
 	transition: var(--sbd-transition-interactive);
 }
 
@@ -11679,7 +11970,7 @@ body.sbd-dv-resizing {
 	margin-bottom: 12px;
 	border: 1px solid var(--sbd-control-border);
 	border-radius: var(--sbd-radius-field);
-	background: var(--sbd-control-fill);
+	background: var(--sbd-control-fill-search);
 	transition: var(--sbd-transition-interactive);
 }
 
@@ -11687,9 +11978,12 @@ body.sbd-dv-resizing {
 	border-color: var(--interactive-accent);
 }
 
+/* The reference strokes the magnifier #8b9198 — the faint tier, a step
+ * lighter than the --text-muted this used to take, which read as a second
+ * piece of content rather than a field's affordance. */
 .sbd-picker-search-icon {
 	display: inline-flex;
-	color: var(--text-muted);
+	color: var(--sbd-ink-faint);
 	flex: none;
 }
 
@@ -11725,7 +12019,11 @@ body.sbd-dv-resizing {
 	flex-direction: column;
 	gap: 2px;
 	overflow-y: auto;
-	padding-right: 4px;
+	/* 18px 12px, the reference's own inset. It was a bare 4px right padding,
+	 * so the rail's rows started hard against the sheet's edge and the top
+	 * row sat level with the catalogue's first section head instead of
+	 * dropping below it. */
+	padding: 18px 12px;
 	border-right: 1px solid var(--sbd-panel-divider);
 }
 
@@ -11745,7 +12043,8 @@ body.sbd-dv-resizing {
 	/* Darker than the panel's --text-muted: in the reference an unselected
 	 * rail row is still a live destination, not secondary text. */
 	color: var(--sbd-ink-rail);
-	font-size: var(--font-ui-small);
+	/* 14px in the reference, not Obsidian's 13px --font-ui-small. */
+	font-size: 0.875rem;
 	font-weight: 500;
 	text-align: left;
 	cursor: pointer;
@@ -11755,9 +12054,11 @@ body.sbd-dv-resizing {
 /* Literal reference values (Canvas.dc.html's rail nav items): the one place
  * in the reference that breaks from the translucent-white vocabulary for a
  * flat pale grey — kept literal rather than folded into the glass pattern. */
+/* Fill only: the reference's rail rows change background on hover and keep
+ * their ink. Darkening the label as well made a hovered row read as though
+ * it had been selected. */
 .sbd-picker-rail-btn:hover {
 	background: var(--sbd-rail-fill-hover);
-	color: var(--text-normal);
 }
 
 .sbd-picker-rail-btn.is-active {
@@ -11808,11 +12109,16 @@ body.sbd-dv-resizing {
 	padding-right: 6px;
 }
 
+/* Canvas.dc.html writes the catalogue's group heads in the SANS body face —
+ * `font-size:12px; letter-spacing:1.2px; font-weight:700; color:#9199a0` with
+ * no font-family of their own. They are the one tracked-out label in either
+ * reference that is not monospace, and setting them in mono here (with the
+ * mono caption's wider 1.6px tracking) made the picker's spine read in a
+ * different voice from the sheet around it. */
 .sbd-picker-section {
-	font-family: var(--sbd-font-mono);
 	font-size: var(--sbd-label-size);
 	font-weight: 700;
-	letter-spacing: var(--sbd-label-tracking);
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--sbd-ink-label);
 	margin: 0 0 12px;
@@ -11887,24 +12193,32 @@ body.sbd-dv-resizing {
 	height: 17px;
 }
 
+/* The reference tile is ONE flex column at gap:8px — glyph, name, sentence,
+ * evenly spaced. This wrapper exists for text truncation, so it carries the
+ * same 8px rather than closing the name and its sentence up to 3px. */
 .sbd-card-tile-text {
 	min-width: 0;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 8px;
 }
 
 .sbd-card-tile-name {
 	font-size: var(--font-ui-medium);
 	font-weight: 700;
-	color: var(--sbd-ink);
+	/* #20242a — the reference's strong ink, as on the sheet's own title. */
+	color: var(--sbd-ink-strong);
 	line-height: 1.3;
 }
 
 .sbd-card-tile-desc {
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
+	/* 13px. --font-ui-smaller is Obsidian's 12px and left the sentence a
+	 * step under the reference. */
+	font-size: 0.8125rem;
+	/* #8b9198. --text-muted resolves to #565d64 inside the panel, which is
+	 * the ink for a live label rather than for a tile's explanatory line. */
+	color: var(--sbd-ink-faint);
 	line-height: 1.35;
 	white-space: normal;
 }
