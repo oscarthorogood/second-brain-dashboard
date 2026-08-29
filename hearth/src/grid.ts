@@ -814,10 +814,17 @@ function cardSilhouettePath(el: HTMLElement, radius: number): string {
 	const w = el.offsetWidth;
 	const h = el.offsetHeight;
 	const cl = el.classList;
-	const tl = cl.contains("merge-tl") ? 0 : radius;
-	const tr = cl.contains("merge-tr") ? 0 : radius;
-	const br = cl.contains("merge-br") ? 0 : radius;
-	const bl = cl.contains("merge-bl") ? 0 : radius;
+	// Prefer the card's OWN corner over the board default. Most cards take the
+	// board's radius, but a kind may set its own — the searchbar card is the
+	// reference's 34px against every other card's 42px — and masking that card
+	// with the board's larger corner would reveal a crescent of blurred
+	// wallpaper just outside its rim at each corner.
+	const own = parseFloat(getComputedStyle(el).borderTopLeftRadius);
+	const r = Number.isFinite(own) && own >= 0 ? own : radius;
+	const tl = cl.contains("merge-tl") ? 0 : r;
+	const tr = cl.contains("merge-tr") ? 0 : r;
+	const br = cl.contains("merge-br") ? 0 : r;
+	const bl = cl.contains("merge-bl") ? 0 : r;
 	return (
 		`M${x + tl},${y}` +
 		`L${x + w - tr},${y}A${tr},${tr} 0 0 1 ${x + w},${y + tr}` +

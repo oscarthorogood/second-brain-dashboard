@@ -15,6 +15,18 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Fixed four things the artboards could not show.** The search bar was
+  drawing two nested glass pills — the card's surface and the bar's own
+  inside it — where the reference draws a single 34px panel with the query,
+  chips and button sitting directly in it; the card is now the bar. The
+  analogue clock sized its dial off the card's WIDTH alone, so a wide, short
+  card asked for a face the height could not hold and flex shrank it to a
+  dot; it now takes the smaller of the two axes and lands on the reference's
+  size at the reference's card shape. The floating card button had no fixed
+  box, so `border-radius: 50%` stretched into an ellipse around a wide glyph
+  — it is a circle again. And the pet card's mood caption broke onto three
+  centred lines on a narrow card; it stays the reference's single line.
+
 - **Widgets, buttons and menus rebuilt on the reference values, declaration by
   declaration.** A card is now the reference's tint and nothing else — the
   highlight gradient, corner sheen, inset bevels, drop shadow, hover lift and
