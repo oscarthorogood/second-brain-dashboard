@@ -1001,10 +1001,10 @@ export const scheduleCard: CardDefinition<"schedule"> = {
 	kind: "schedule",
 	templates: [
 		{
-			id: "schedule",
+			id: "schedule", defaultSize: "xlarge",
 			name: "Calendar",
 			icon: "calendar-range",
-			build: () => ({ kind: "schedule", title: "Calendar", schedule: {}, w: 8, h: 6 }),
+			build: () => ({ kind: "schedule", title: "Calendar", schedule: {} }),
 		},
 	],
 	render: (view, card, body, component) => renderSchedule(view, card, body, component),

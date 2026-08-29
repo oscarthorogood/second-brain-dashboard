@@ -127,7 +127,7 @@ export function dailyEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const dailyCard: CardDefinition<"daily"> = {
 	kind: "daily",
 	templates: [
-		{ id: "daily", name: "Daily note (today)", icon: "calendar", build: () => ({ kind: "daily", w: 6, h: 4 }) },
+		{ id: "daily", defaultSize: "large", name: "Daily note (today)", icon: "calendar", build: () => ({ kind: "daily" }) },
 	],
 	render: (view, card, body, component) => renderDaily(view, card, body, component),
 	renderEditor: (container, ctx) => dailyEditor(ctx, container),

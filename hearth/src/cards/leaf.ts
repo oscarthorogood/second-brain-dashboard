@@ -182,10 +182,10 @@ export const leafCard: CardDefinition<"leaf"> = {
 	kind: "leaf",
 	templates: [
 		{
-			id: "leaf",
+			id: "leaf", defaultSize: "large",
 			name: "Plugin view (beta)",
 			icon: "layout-panel-left",
-			build: () => ({ kind: "leaf", title: "Plugin view", leafView: {}, w: 5, h: 4 }),
+			build: () => ({ kind: "leaf", title: "Plugin view", leafView: {} }),
 			// Not a plugin dependency: the card needs Obsidian's view registry,
 			// which a future version could move out of reach. No pluginId, so the
 			// picker badges it without offering an install link.

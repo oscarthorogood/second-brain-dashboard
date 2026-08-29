@@ -240,7 +240,7 @@ export function calculatorEditor(ctx: CardEditorContext, containerEl: HTMLElemen
 export const calculatorCard: CardDefinition<"calculator"> = {
 	kind: "calculator",
 	templates: [
-		{ id: "calculator", name: "Calculator", icon: "calculator", build: () => ({ kind: "calculator", title: "Calculator", calculator: {}, w: 4, h: 3 }) },
+		{ id: "calculator", defaultSize: "large", name: "Calculator", icon: "calculator", build: () => ({ kind: "calculator", title: "Calculator", calculator: {} }) },
 	],
 	render: (view, card, body) => renderCalculator(view, card, body),
 	renderEditor: (container, ctx) => calculatorEditor(ctx, container),

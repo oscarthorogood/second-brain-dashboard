@@ -742,10 +742,10 @@ export const slideshowCard: CardDefinition<"slideshow"> = {
 	kind: "slideshow",
 	templates: [
 		{
-			id: "slideshow",
+			id: "slideshow", defaultSize: "large",
 			name: "Slideshow",
 			icon: "images",
-			build: () => ({ kind: "slideshow", title: "Slideshow", slideshow: { slides: [] }, w: 4, h: 3 }),
+			build: () => ({ kind: "slideshow", title: "Slideshow", slideshow: { slides: [] } }),
 		},
 	],
 	render: (view, card, body, component) => renderSlideshow(view, card, body, component),

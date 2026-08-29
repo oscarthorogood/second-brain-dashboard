@@ -2,6 +2,7 @@ import { Setting, type App } from "obsidian";
 import { CARD_KINDS, cardDefinition } from "./cards";
 import { type CardEditorContext } from "./cards/definition";
 import { t } from "./i18n";
+import { sizeSpec } from "./widgetsize";
 import { SbdTabbedModal, type SbdModalTab } from "./tabbedmodal";
 import { type CardKind, type DashboardCard, type HomeSettings } from "./types";
 import { confirmAction } from "./ui";
@@ -27,13 +28,13 @@ export interface CardSettingsOptions {
 
 
 /**
- * The single place to configure a card — opened from the card itself in arrange
- * mode. Covers kind, title, kind-specific content and size so nothing has to
- * be hunted for in the plugin settings tab.
+ * The single place to configure a widget — opened from the widget itself in
+ * arrange mode. Covers kind, title and the kind's own content settings.
  *
- * Laid out as a tabbed modal (Content / Layout) with a persistent
- * Remove/Done footer, so a card with a dense editor (tasks, RSS) stays as
- * navigable as a plain one.
+ * It used to carry a second "Layout" tab holding a width and a height field,
+ * which is exactly the free-form geometry the fixed grid replaced: a widget is
+ * one of four sizes, chosen when it is added, so there is nothing left to tune
+ * here. The tab is gone and the size is stated rather than edited.
  */
 export class CardSettingsModal extends SbdTabbedModal {
 	private card: DashboardCard;
@@ -78,20 +79,15 @@ export class CardSettingsModal extends SbdTabbedModal {
 
 	protected sbdTabs(): SbdModalTab[] {
 		const tabs = t().editors.tabs;
-		return [
-			{ id: "content", label: tabs.content, icon: "square-pen" },
-			{ id: "layout", label: tabs.layout, icon: "layout-dashboard" },
-		];
+		return [{ id: "content", label: tabs.content, icon: "square-pen" }];
 	}
 
 	protected sbdRenderBody(body: HTMLElement, tabId: string): void {
 		switch (tabId) {
 			case "content":
 				this.identitySection(body);
-				this.contentSection(body);
-				break;
-			case "layout":
 				this.sizeSection(body);
+				this.contentSection(body);
 				break;
 		}
 	}
@@ -164,43 +160,24 @@ export class CardSettingsModal extends SbdTabbedModal {
 		cardDefinition(this.card).renderEditor?.(containerEl, this.editorContext());
 	}
 
+	/** State the widget's fixed size. Not a control: sizes are chosen in the
+	 * picker and can't be changed afterwards, so this only answers "which one
+	 * is this?" and says where the answer is changed. */
 	private sizeSection(containerEl: HTMLElement): void {
-		const card = this.card;
-		const row = new Setting(containerEl)
+		const spec = sizeSpec(this.card.kind, this.card.size);
+		const strings = t().cardPicker.size;
+		new Setting(containerEl)
 			.setName(t().editors.size.heading)
-			.setDesc(t().editors.size.headingDesc);
-
-		row.addText((txt) => {
-			txt
-				.setValue(String(Math.round((card.fw ?? 0.25) * 100)))
-				.onChange((v) => {
-					const n = parseInt(v, 10);
-					if (Number.isNaN(n)) return;
-					const fw = Math.max(2, Math.min(n, 100)) / 100;
-					card.fw = fw;
-					// Keep the card inside the board when it grows past the right edge.
-					card.fx = Math.max(0, Math.min(card.fx ?? 0, 1 - fw));
-					this.opts.save();
-				});
-			txt.inputEl.type = "number";
-			txt.inputEl.addClass("sbd-count-input");
-			txt.inputEl.setAttribute("aria-label", t().editors.size.widthAria);
-		});
-		row.addText((txt) => {
-			txt.setValue(String(Math.round(card.fh ?? 184))).onChange((v) => {
-				const n = parseInt(v, 10);
-				if (Number.isNaN(n)) return;
-				card.fh = Math.max(56, n);
-				this.opts.save();
+			.setDesc(strings.note)
+			.addExtraButton((b) => {
+				b.setIcon("info");
+				b.setDisabled(true);
+				b.extraSettingsEl.addClass("sbd-size-readout-icon");
+			})
+			.controlEl.createSpan({
+				cls: "sbd-size-readout",
+				text: `${strings.names[this.card.size]} · ${strings.cells(spec.cols, spec.rows)}`,
 			});
-			txt.inputEl.type = "number";
-			txt.inputEl.addClass("sbd-count-input");
-			txt.inputEl.setAttribute("aria-label", t().editors.size.heightAria);
-		});
-		addResetButton(this.editorContext(), row, t().editors.resetSize, () => {
-			card.fw = undefined;
-			card.fh = undefined;
-		});
 	}
 
 	onClose(): void {

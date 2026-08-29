@@ -5805,7 +5805,7 @@ export function tasksEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const tasksCard: CardDefinition<"tasks"> = {
 	kind: "tasks",
 	templates: [
-		{ id: "tasks", name: "Tasks", icon: "list-todo", build: () => ({ kind: "tasks", title: "Tasks", tasks: {}, w: 4, h: 4 }) },
+		{ id: "tasks", defaultSize: "large", name: "Tasks", icon: "list-todo", build: () => ({ kind: "tasks", title: "Tasks", tasks: {} }) },
 	],
 	render: (view, card, body) => renderTasks(view, card, body),
 	renderEditor: (container, ctx) => tasksEditor(ctx, container),

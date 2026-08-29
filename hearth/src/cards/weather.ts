@@ -923,10 +923,10 @@ export const weatherCard: CardDefinition<"weather"> = {
 	kind: "weather",
 	templates: [
 		{
-			id: "weather",
+			id: "weather", defaultSize: "medium",
 			name: "Weather",
 			icon: "cloud-sun",
-			build: () => ({ kind: "weather", title: "Weather", weather: {}, w: 4, h: 3 }),
+			build: () => ({ kind: "weather", title: "Weather", weather: {} }),
 		},
 	],
 	render: (view, card, body, component) => renderWeather(view, card, body, component),

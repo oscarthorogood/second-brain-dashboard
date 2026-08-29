@@ -460,7 +460,7 @@ export function calendarEditor(ctx: CardEditorContext, containerEl: HTMLElement)
 export const calendarCard: CardDefinition<"calendar"> = {
 	kind: "calendar",
 	templates: [
-		{ id: "calendar", name: "Mini calendar", icon: "calendar-days", build: () => ({ kind: "calendar", title: "Calendar", w: 4, h: 4 }) },
+		{ id: "calendar", defaultSize: "large", name: "Mini calendar", icon: "calendar-days", build: () => ({ kind: "calendar", title: "Calendar" }) },
 	],
 	render: (view, card, body, component) => renderCalendar(view, card, body, component),
 	renderEditor: (container, ctx) => calendarEditor(ctx, container),

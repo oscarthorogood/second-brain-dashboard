@@ -201,10 +201,10 @@ export const datacoreCard: CardDefinition<"datacore"> = {
 	kind: "datacore",
 	templates: [
 		{
-			id: "datacore",
+			id: "datacore", defaultSize: "large",
 			name: "Datacore query",
 			icon: "database-zap",
-			build: () => ({ kind: "datacore", title: "Datacore", datacore: {}, w: 6, h: 4 }),
+			build: () => ({ kind: "datacore", title: "Datacore", datacore: {} }),
 			requires: {
 				name: "Datacore",
 				pluginId: DATACORE_PLUGIN_ID,

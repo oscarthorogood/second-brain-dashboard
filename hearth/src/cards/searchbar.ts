@@ -151,12 +151,16 @@ export const searchbarCard: CardDefinition<"searchbar"> = {
 			id: "searchbar",
 			name: "Search bar",
 			icon: "text-cursor-input",
-			// One row tall: the bar fills the card, so this is what sets its
-			// starting thickness — a little more generous than the header's fixed
-			// 52px, and made thicker or slimmer by resizing the card. Untitled,
-			// because the field explains itself and a title row above a bare bar is
-			// exactly what the seamless option exists to avoid.
-			build: () => ({ kind: "searchbar", title: "", searchBar: {}, w: 6, h: 1 }),
+			// The reference's one documented exception to the four sizes: a search
+			// field with file-type filter chips under it reads at 4×2 and 8×2 and
+			// has nothing to put in a four-row tile, so it offers the two wide
+			// footprints only (Widget Set → SEARCH). `sizeSpec` gives the wide one
+			// its two rows; here we only say which two are offered.
+			sizes: ["medium", "xlarge"],
+			defaultSize: "medium",
+			// Untitled, because the field explains itself and a title row above a
+			// bare bar is exactly what the seamless option exists to avoid.
+			build: () => ({ kind: "searchbar", title: "", searchBar: {} }),
 		},
 	],
 	render: (view, card, body, component) => renderSearchBar(view, card, body, component),

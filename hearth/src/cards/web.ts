@@ -172,7 +172,7 @@ function refreshLabel(seconds: number): string {
 export const webCard: CardDefinition<"web"> = {
 	kind: "web",
 	templates: [
-		{ id: "web", name: "Web page (iframe)", icon: "globe", build: () => ({ kind: "web", title: "Web", url: "", w: 6, h: 4 }) },
+		{ id: "web", defaultSize: "large", name: "Web page (iframe)", icon: "globe", build: () => ({ kind: "web", title: "Web", url: "" }) },
 	],
 	render: (_view, card, body, component) => renderWeb(card, body, component),
 	renderEditor: (container, ctx) => webEditor(ctx, container),

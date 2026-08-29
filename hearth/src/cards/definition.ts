@@ -1,6 +1,7 @@
 import type { App, Component } from "obsidian";
 import type { HomeView } from "../view";
 import type { CardKind, DashboardCard, HomeSettings } from "../types";
+import { WIDGET_SIZES, type WidgetSize } from "../widgetsize";
 import type { VaultEvent } from "../cardevents";
 import type { CardSettingsOptions } from "../editors";
 
@@ -63,11 +64,35 @@ export interface CardTemplateDef {
 	name: string;
 	/** Lucide icon id shown in the picker menu. */
 	icon: string;
-	/** Builds the card content/size (id and coordinates are assigned later). */
-	build: () => Omit<DashboardCard, "id" | "x" | "y">;
+	/** Builds the card's content. The id is assigned when it is added and the
+	 * size comes from the picker, so a template never states either. */
+	build: () => Omit<DashboardCard, "id" | "size">;
+	/**
+	 * Which of the four sizes this template offers, smallest first.
+	 *
+	 * Omitted means all four. A template narrows the list when a size can't
+	 * carry the widget: the search widget is the reference's one such case
+	 * (medium and extra large only, both two rows tall — see
+	 * `SIZE_OVERRIDES` in `widgetsize.ts`).
+	 */
+	sizes?: readonly WidgetSize[];
+	/** The size the picker preselects. Defaults to the first offered size. */
+	defaultSize?: WidgetSize;
 	/** What the card depends on, when it depends on anything. The template is
 	 * offered either way; the picker badges it while unmet. */
 	requires?: CardRequirement;
+}
+
+/** The sizes a template offers, smallest first. */
+export function templateSizes(template: CardTemplateDef): readonly WidgetSize[] {
+	return template.sizes ?? WIDGET_SIZES;
+}
+
+/** The size a template starts on in the picker. */
+export function templateDefaultSize(template: CardTemplateDef): WidgetSize {
+	const offered = templateSizes(template);
+	const preferred = template.defaultSize;
+	return preferred && offered.includes(preferred) ? preferred : offered[0];
 }
 
 /**

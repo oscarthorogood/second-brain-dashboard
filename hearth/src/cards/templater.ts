@@ -428,15 +428,13 @@ export const templaterCard: CardDefinition<"templater"> = {
 	kind: "templater",
 	templates: [
 		{
-			id: "templater",
+			id: "templater", defaultSize: "medium",
 			name: "Templater",
 			icon: "file-plus-2",
 			build: () => ({
 				kind: "templater",
 				title: "New note",
 				templater: { items: [] },
-				w: 6,
-				h: 2,
 			}),
 			requires: {
 				name: "Templater",

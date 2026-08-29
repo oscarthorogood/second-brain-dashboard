@@ -99,7 +99,7 @@ export function favoritesEditor(ctx: CardEditorContext, containerEl: HTMLElement
 export const favoritesCard: CardDefinition<"favorites"> = {
 	kind: "favorites",
 	templates: [
-		{ id: "favorites", name: "Favorites", icon: "star", build: () => ({ kind: "favorites", title: "Favorites", w: 4, h: 3 }) },
+		{ id: "favorites", defaultSize: "medium", name: "Favorites", icon: "star", build: () => ({ kind: "favorites", title: "Favorites" }) },
 	],
 	render: (view, _card, body) => renderFavorites(view, body),
 	renderEditor: (container, ctx) => favoritesEditor(ctx, container),

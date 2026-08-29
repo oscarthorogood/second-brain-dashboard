@@ -747,10 +747,10 @@ export const gitCard: CardDefinition<"git"> = {
 	kind: "git",
 	templates: [
 		{
-			id: "git",
+			id: "git", defaultSize: "large",
 			name: "Git",
 			icon: "git-branch",
-			build: () => ({ kind: "git", title: "Git", git: {}, w: 4, h: 4 }),
+			build: () => ({ kind: "git", title: "Git", git: {} }),
 			requires: {
 				name: "Git",
 				pluginId: GIT_PLUGIN_ID,

@@ -330,7 +330,7 @@ export function statsEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const statsCard: CardDefinition<"stats"> = {
 	kind: "stats",
 	templates: [
-		{ id: "stats", name: "Vault statistics", icon: "bar-chart-3", build: () => ({ kind: "stats", title: "Stats", w: 4, h: 2 }) },
+		{ id: "stats", defaultSize: "medium", name: "Vault statistics", icon: "bar-chart-3", build: () => ({ kind: "stats", title: "Stats" }) },
 	],
 	render: (view, card, body) => renderStats(view, card, body),
 	renderEditor: (container, ctx) => statsEditor(ctx, container),

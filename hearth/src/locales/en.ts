@@ -1010,10 +1010,10 @@ export const en = {
 		dashboard: {
 			heading: "Dashboard",
 			headingDesc:
-				"Sizing and transparency of the card grid. Cards themselves are added and configured on the board.",
-			fitToPage: "Fit to page",
-			fitToPageDesc:
-				"Keep the dashboard to one screen instead of allowing scroll.",
+				"Size and transparency of the widget grid. Widgets themselves are added and configured on the board.",
+			widgetScale: "Widget size",
+			widgetScaleDesc:
+				"How large widgets are drawn. The board keeps widgets a constant size and fits more of them across as the pane widens, so this scales the whole grid rather than changing how many columns it has.",
 			arrangeButtonVisibility: "Arrange button visibility",
 			arrangeButtonVisibilityDesc:
 				"Choose whether the arrange/edit button is always visible or revealed when hovering its area.",
@@ -2812,6 +2812,22 @@ export const en = {
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
 		noMatches: "No card matches that.",
+		/** The second step: which of the four fixed sizes the widget is added at. */
+		size: {
+			heading: "Choose a size",
+			/** Sizes can't be changed later, so the step says so once, here. */
+			note: "A widget's size is fixed. To change it, remove the widget and add it again.",
+			back: "Back to all cards",
+			add: "Add widget",
+			names: {
+				small: "Small",
+				medium: "Medium",
+				large: "Large",
+				xlarge: "Extra large",
+			},
+			/** Caption under each option, e.g. "2 × 2". */
+			cells: (cols: number, rows: number) => `${cols} × ${rows}`,
+		},
 		/** Badge on a card whose plugin (or other dependency) is missing. */
 		requires: (name: string) => `Needs ${name}`,
 		missingNotice: (name: string) =>
@@ -2869,6 +2885,9 @@ export const en = {
 		notAnObject: "Layout must be a JSON object.",
 		noValidDashboards: "Layout contained no valid dashboards.",
 		noValidCards: "Layout contained no valid cards.",
+		/** A layout exported before widgets became four fixed sizes on a grid. */
+		preGridLayout:
+			"That layout was exported before widgets moved to fixed sizes, so its cards have no size to import. Add the widgets you want at the size you want them.",
 		notASbdLayout:
 			'Not a Second Brain Dashboard layout — no "dashboards" or "cards" array found.',
 		notSbdSettings:

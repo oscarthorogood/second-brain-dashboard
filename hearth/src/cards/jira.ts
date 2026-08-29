@@ -194,7 +194,7 @@ export const jiraCard: CardDefinition<"jira"> = {
 	kind: "jira",
 	templates: [
 		{
-			id: "jira",
+			id: "jira", defaultSize: "large",
 			name: "Jira filter",
 			icon: "ticket",
 			build: () => ({
@@ -207,8 +207,6 @@ export const jiraCard: CardDefinition<"jira"> = {
 					refreshMin: 0,
 					cacheMin: 5,
 				},
-				w: 6,
-				h: 5,
 			}),
 		},
 	],

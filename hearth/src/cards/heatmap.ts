@@ -127,7 +127,7 @@ export function heatmapEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 export const heatmapCard: CardDefinition<"heatmap"> = {
 	kind: "heatmap",
 	templates: [
-		{ id: "heatmap", name: "Activity heatmap", icon: "activity", build: () => ({ kind: "heatmap", title: "Activity", heatmap: {}, w: 6, h: 3 }) },
+		{ id: "heatmap", defaultSize: "medium", name: "Activity heatmap", icon: "activity", build: () => ({ kind: "heatmap", title: "Activity", heatmap: {} }) },
 	],
 	render: (view, card, body) => renderHeatmap(view, card, body),
 	renderEditor: (container, ctx) => heatmapEditor(ctx, container),

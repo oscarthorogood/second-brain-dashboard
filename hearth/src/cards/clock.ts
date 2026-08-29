@@ -315,7 +315,7 @@ export function clockEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const clockCard: CardDefinition<"clock"> = {
 	kind: "clock",
 	templates: [
-		{ id: "clock", name: "Clock & greeting", icon: "clock", build: () => ({ kind: "clock", title: "", w: 4, h: 2 }) },
+		{ id: "clock", defaultSize: "small", name: "Clock & greeting", icon: "clock", build: () => ({ kind: "clock", title: "" }) },
 	],
 	render: (view, card, body, component) => renderClock(view, card, body, component),
 	renderEditor: (container, ctx) => clockEditor(ctx, container),

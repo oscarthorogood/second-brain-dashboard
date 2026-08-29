@@ -182,7 +182,7 @@ export function savedSearchEditor(ctx: CardEditorContext, containerEl: HTMLEleme
 export const searchCard: CardDefinition<"search"> = {
 	kind: "search",
 	templates: [
-		{ id: "search", name: "Query", icon: "search", build: () => ({ kind: "search", title: "Query", savedSearch: { query: "" }, w: 4, h: 4 }) },
+		{ id: "search", defaultSize: "large", name: "Query", icon: "search", build: () => ({ kind: "search", title: "Query", savedSearch: { query: "" } }) },
 	],
 	render: (view, card, body) => renderSavedSearch(view, card, body),
 	renderEditor: (container, ctx) => savedSearchEditor(ctx, container),

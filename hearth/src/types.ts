@@ -1,5 +1,6 @@
 import type { DatacoreLanguage } from "./datacore";
 import type { EventNoteConfig } from "./eventnote";
+import type { WidgetSize } from "./widgetsize";
 import type {
 	GitAction,
 	GitActionStyle,
@@ -1339,24 +1340,17 @@ export interface DashboardCard {
 	 * dashboard / global). 0 removes the visible border and the header rule. */
 	cardBorderWidth?: number;
 
-	// ---- Layout (legacy grid cell units) ----
-	// Kept as the seed for the free-form coordinates below: older layouts (and
-	// freshly added cards, which are packed on a reference grid) store their
-	// placement here, and it is converted to fx/fy/fw/fh once on first render.
-	x: number;
-	y: number;
-	w: number;
-	h: number;
-
-	// ---- Layout (free-form) ----
-	// The live layout is continuous, not grid-locked. Horizontal position/size
-	// are fractions of the board width (0..1) so the board stays responsive when
-	// the pane is resized; vertical position/size are absolute pixels. Undefined
-	// until derived from the grid units above.
-	fx?: number;
-	fy?: number;
-	fw?: number;
-	fh?: number;
+	// ---- Layout ----
+	/**
+	 * Which of the four fixed sizes this widget occupies.
+	 *
+	 * This is the whole of a widget's geometry. The board is an invisible grid
+	 * that widgets pack into in array order, so a widget has no stored
+	 * coordinates: where it sits is its index in `HomeSettings.cards`, and
+	 * moving one is a reorder of that array. Nothing here is resizable — the
+	 * size is chosen in the picker when the widget is added.
+	 */
+	size: WidgetSize;
 }
 
 /** Background mode for the home view. "default" uses Second Brain Dashboard's bundled
@@ -1404,6 +1398,19 @@ export const BANNER_HEIGHT_MAX = 600;
 export function clampBannerHeight(h: number | undefined): number {
 	if (typeof h !== "number" || Number.isNaN(h)) return BANNER_HEIGHT_DEFAULT;
 	return Math.max(BANNER_HEIGHT_MIN, Math.min(BANNER_HEIGHT_MAX, Math.round(h)));
+}
+
+/** Widget scale bounds. The floor keeps a small widget legible (a 2×2 tile at
+ * 0.6 is barely 95px square); the ceiling keeps an extra-large one from being
+ * wider than any realistic pane. */
+export const WIDGET_SCALE_MIN = 0.6;
+export const WIDGET_SCALE_MAX = 2;
+
+/** Clamp a widget scale to {@link WIDGET_SCALE_MIN}..{@link WIDGET_SCALE_MAX},
+ * falling back to 1 (the reference cell size) for anything non-numeric. */
+export function clampWidgetScale(scale: number | undefined): number {
+	if (typeof scale !== "number" || !Number.isFinite(scale)) return 1;
+	return Math.max(WIDGET_SCALE_MIN, Math.min(WIDGET_SCALE_MAX, scale));
 }
 
 /** A self-contained background configuration (the global default). This is
@@ -1621,15 +1628,20 @@ export interface HomeSettings {
 	hiddenFilters: string[];
 
 	// ---- Dashboard ----
-	/** The dashboard's cards. */
+	/** The dashboard's cards, in the order they pack onto the board. */
 	cards: DashboardCard[];
-	gridColumns: number;
-	/** Height of one grid row in pixels. Lower = finer vertical sizing. */
-	rowHeight: number;
+	/**
+	 * How large a grid cell is drawn, as a multiple of the reference 68px.
+	 *
+	 * The board keeps widgets at a constant size and gains columns as the pane
+	 * widens, the way a home screen does, so this is the one knob over the
+	 * board's geometry — it replaces the old column count, row height and
+	 * fit-to-page switch, none of which mean anything once every widget is one
+	 * of four fixed footprints.
+	 */
+	widgetScale: number;
 	/** Curated note paths shown by "favorites" cards. */
 	favorites: string[];
-	/** Fit the dashboard to one screen (no scroll) vs. allow scrolling. */
-	fitToPage: boolean;
 
 	// ---- Tasks / TaskNotes ----
 	/** Frontmatter property names read by "tasks" cards in TaskNotes mode.
@@ -1758,10 +1770,8 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	// Built by migration from STARTER_CARDS (fresh install) or from whatever
 	// the previous version had (upgrade). Left empty here so migration always runs.
 	cards: [],
-	gridColumns: 12,
-	rowHeight: 92,
+	widgetScale: 1,
 	favorites: [],
-	fitToPage: true,
 
 	taskNotesStatusField: "status",
 	taskNotesDueField: "due",
@@ -1790,57 +1800,11 @@ export const DEFAULT_SETTINGS: HomeSettings = {
  * first render without depending on the grid conversion. */
 function starterCards(): DashboardCard[] {
 	return [
-		{
-			id: "card-clock",
-			kind: "clock",
-			title: "",
-			x: 0, y: 0, w: 12, h: 3,
-			fx: 0,
-			fw: 0.2845744680851064,
-			fy: 0,
-			fh: 145,
-		},
-		{
-			id: "card-daily",
-			kind: "daily",
-			title: "Today",
-			x: 0, y: 3, w: 7, h: 6,
-			fx: 0.6309840425531915,
-			fw: 0.3690159574468085,
-			fy: 0,
-			fh: 512,
-		},
-		{
-			id: "card-calendar",
-			kind: "calendar",
-			title: "Calendar",
-			x: 7, y: 3, w: 5, h: 6,
-			fx: 0,
-			fw: 0.2845744680851064,
-			fy: 159,
-			fh: 353,
-		},
-		{
-			id: "card-recent",
-			kind: "recent",
-			title: "Recent",
-			x: 0, y: 9, w: 7, h: 4,
-			count: 8,
-			fx: 0.29521276595744683,
-			fw: 0.32513297872340424,
-			fy: 143,
-			fh: 369,
-		},
-		{
-			id: "card-stats",
-			kind: "stats",
-			title: "Vault",
-			x: 7, y: 9, w: 5, h: 4,
-			fx: 0.29521276595744683,
-			fw: 0.32513297872340424,
-			fy: 0,
-			fh: 133,
-		},
+		{ id: "card-clock", kind: "clock", title: "", size: "small" },
+		{ id: "card-calendar", kind: "calendar", title: "Calendar", size: "large" },
+		{ id: "card-daily", kind: "daily", title: "Today", size: "large" },
+		{ id: "card-recent", kind: "recent", title: "Recent", size: "medium", count: 8 },
+		{ id: "card-stats", kind: "stats", title: "Vault", size: "medium" },
 	];
 }
 
@@ -1861,24 +1825,26 @@ export function activeCards(s: HomeSettings): DashboardCard[] {
 	return s.cards;
 }
 
+/**
+ * Whether a stored widget carries a valid fixed size.
+ *
+ * The one thing that tells a board saved on the fixed grid apart from one
+ * saved on the old free-form board, which stored coordinates instead.
+ */
+export function isWidgetSized(card: unknown): boolean {
+	if (!card || typeof card !== "object") return false;
+	const size = (card as { size?: unknown }).size;
+	return size === "small" || size === "medium" || size === "large" || size === "xlarge";
+}
+
 /** Cards to render on the board. */
 export function renderCards(s: HomeSettings): DashboardCard[] {
 	return s.cards;
 }
 
-/** Grid columns the board renders with. */
-export function effectiveColumns(s: HomeSettings): number {
-	return s.gridColumns;
-}
-
-/** Row height the board renders with. */
-export function effectiveRowHeight(s: HomeSettings): number {
-	return s.rowHeight;
-}
-
-/** Whether the board fits to one page (vs. scrolling). */
-export function effectiveFitToPage(s: HomeSettings): boolean {
-	return s.fitToPage;
+/** How large a grid cell is drawn, as a multiple of the reference 68px. */
+export function effectiveWidgetScale(s: HomeSettings): number {
+	return clampWidgetScale(s.widgetScale);
 }
 
 /** Whether the board should show the search/command section. */
@@ -2147,7 +2113,16 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 		// array is already carried over by Object.assign in loadSettings).
 		s.cards = starterCards();
 	}
-	if (typeof s.rowHeight !== "number" || s.rowHeight <= 0) s.rowHeight = 92;
+	// Boards saved before the fixed grid carry free-form geometry (x/y/w/h and
+	// fx/fy/fw/fh) and no size at all. There is no honest conversion: a widget
+	// dragged to 37% of the board width and 512px tall is not any of the four
+	// footprints, and guessing one for every widget would rearrange the board
+	// into something nobody chose. Such a board is therefore dropped and the
+	// user starts fresh — which is what the four sizes are for.
+	if (Array.isArray(s.cards) && s.cards.some((card) => !isWidgetSized(card))) {
+		s.cards = [];
+	}
+	s.widgetScale = clampWidgetScale(s.widgetScale);
 	if (typeof s.cardOpacity !== "number") s.cardOpacity = 0.5;
 	if (typeof s.cardBlur !== "number") s.cardBlur = 7;
 	if (typeof s.cardRadius !== "number") s.cardRadius = CARD_RADIUS_MAX;
@@ -2170,9 +2145,6 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	s.bannerHeight = clampBannerHeight(s.bannerHeight);
 	if (typeof s.bannerFade !== "boolean") s.bannerFade = true;
 	if (typeof s.bannerFullWidth !== "boolean") s.bannerFullWidth = false;
-	// Fit-to-page is the default for fresh installs; existing users keep their
-	// choice (only backfill when the field is missing entirely).
-	if (typeof raw.fitToPage !== "boolean") s.fitToPage = true;
 	// Migrate pre-1.4.1 "none" defaults to "default" so existing users see the
 	// bundled background unless they explicitly turned it off (kept as "none").
 	// Only kick in when the field is missing (very old installs); otherwise

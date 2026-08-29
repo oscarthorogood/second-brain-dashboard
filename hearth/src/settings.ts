@@ -6,7 +6,7 @@ import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
 import { addIconPicker } from "./lucide";
 import { CommandPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule } from "./types";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
 import { isOmnisearchAvailable, OMNISEARCH_PLUGIN_ID } from "./omnisearch";
@@ -1562,14 +1562,22 @@ export class HomeSettingTab extends PluginSettingTab {
 	private gridSection(containerEl: HTMLElement): void {
 		const s = this.plugin.settings;
 
+		// The board's one geometry control. Widgets are four fixed footprints on
+		// an invisible grid that gains columns as the pane widens, so what is
+		// left to choose is how big a cell is drawn — not how many there are,
+		// how tall a row is, or whether the whole board is squeezed to fit.
 		new Setting(containerEl)
-			.setName(t().settings.dashboard.fitToPage)
-			.setDesc(t().settings.dashboard.fitToPageDesc)
-			.addToggle((t) =>
-				t.setValue(s.fitToPage).onChange(async (v) => {
-					s.fitToPage = v;
-					await this.save();
-				}),
+			.setName(t().settings.dashboard.widgetScale)
+			.setDesc(t().settings.dashboard.widgetScaleDesc)
+			.addSlider((sl) =>
+				sl
+					.setLimits(WIDGET_SCALE_MIN, WIDGET_SCALE_MAX, 0.05)
+					.setValue(clampWidgetScale(s.widgetScale))
+					.setDynamicTooltip()
+					.onChange(async (v) => {
+						s.widgetScale = clampWidgetScale(v);
+						await this.save();
+					}),
 			);
 	}
 

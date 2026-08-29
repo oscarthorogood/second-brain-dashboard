@@ -99,7 +99,7 @@ export function renderText(
 export const textCard: CardDefinition<"text"> = {
 	kind: "text",
 	templates: [
-		{ id: "text", name: "Text / jot-down", icon: "pencil", build: () => ({ kind: "text", title: "Notes", text: "", w: 4, h: 2 }) },
+		{ id: "text", defaultSize: "medium", name: "Text / jot-down", icon: "pencil", build: () => ({ kind: "text", title: "Notes", text: "" }) },
 	],
 	render: (view, card, body, component) => renderText(view, card, body, component),
 	liveness: { mode: "static" },

@@ -125,7 +125,7 @@ export function recentTypesEditor(ctx: CardEditorContext, containerEl: HTMLEleme
 export const recentCard: CardDefinition<"recent"> = {
 	kind: "recent",
 	templates: [
-		{ id: "recent", name: "Recent files", icon: "history", build: () => ({ kind: "recent", title: "Recent", count: 8, w: 4, h: 3 }) },
+		{ id: "recent", defaultSize: "medium", name: "Recent files", icon: "history", build: () => ({ kind: "recent", title: "Recent", count: 8 }) },
 	],
 	render: (view, card, body) => renderRecent(view, card, body),
 	renderEditor: (container, ctx) => recentEditor(ctx, container),

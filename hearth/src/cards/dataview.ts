@@ -253,10 +253,10 @@ export const dataviewCard: CardDefinition<"dataview"> = {
 	kind: "dataview",
 	templates: [
 		{
-			id: "dataview",
+			id: "dataview", defaultSize: "large",
 			name: "Dataview query",
 			icon: "database",
-			build: () => ({ kind: "dataview", title: "Dataview", dataview: {}, w: 6, h: 4 }),
+			build: () => ({ kind: "dataview", title: "Dataview", dataview: {} }),
 			requires: {
 				name: "Dataview",
 				pluginId: DATAVIEW_PLUGIN_ID,

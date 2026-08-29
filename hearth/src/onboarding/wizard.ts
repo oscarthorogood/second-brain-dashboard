@@ -40,6 +40,7 @@ import {
 	type SetupBackground,
 	type SetupPurpose,
 } from "./plan";
+import { packCards, packedRows } from "../grid";
 
 /** The wizard's steps, in order. `integrations` is dropped when the vault has
  * none to offer, so nobody is walked through an empty page. */
@@ -63,9 +64,11 @@ const STEP_ICONS: Record<SetupStepId, string> = {
 	finish: "check",
 };
 
-/** Grid columns the finish step's board preview is drawn against — the same
- * width `planCards` lays out to. */
-const PREVIEW_COLUMNS = 12;
+/** Grid columns the finish step's board preview is drawn against.
+ *
+ * Eight is the width of an extra-large widget, so every planned widget fits at
+ * its true footprint and the drawing needs no clamping of its own. */
+const PREVIEW_COLUMNS = 8;
 
 export class SetupWizardModal extends Modal {
 	private readonly plugin: SbdPlugin;
@@ -591,15 +594,24 @@ export class SetupWizardModal extends Modal {
 	 * information as boxes says it immediately.
 	 */
 	private renderBoardPreview(body: HTMLElement, planned: PlannedCard[]): void {
-		const rows = planned.reduce((max, p) => Math.max(max, p.card.y + p.card.h), 0);
+		// Run the board's own packer, so the drawing is the layout rather than an
+		// approximation of it.
+		const placements = packCards(
+			planned.map((p) => p.card),
+			PREVIEW_COLUMNS,
+		);
+		const names = new Map(planned.map((p) => [p.card, plannedName(p)]));
 		const preview = body.createDiv("sbd-setup-preview");
 		preview.style.gridTemplateColumns = `repeat(${PREVIEW_COLUMNS}, 1fr)`;
-		preview.style.gridTemplateRows = `repeat(${Math.max(1, rows)}, 1fr)`;
-		for (const entry of planned) {
+		preview.style.gridTemplateRows = `repeat(${Math.max(1, packedRows(placements))}, 1fr)`;
+		for (const p of placements) {
 			const cell = preview.createDiv("sbd-setup-preview-card");
-			cell.style.gridColumn = `${entry.card.x + 1} / span ${entry.card.w}`;
-			cell.style.gridRow = `${entry.card.y + 1} / span ${entry.card.h}`;
-			cell.createSpan({ cls: "sbd-setup-preview-label", text: plannedName(entry) });
+			cell.style.gridColumn = `${p.col + 1} / span ${p.cols}`;
+			cell.style.gridRow = `${p.row + 1} / span ${p.rows}`;
+			cell.createSpan({
+				cls: "sbd-setup-preview-label",
+				text: names.get(p.card) ?? "",
+			});
 		}
 	}
 

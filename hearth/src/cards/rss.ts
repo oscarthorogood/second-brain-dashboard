@@ -526,7 +526,7 @@ export function githubFeedAdder(ctx: CardEditorContext, containerEl: HTMLElement
 export const rssCard: CardDefinition<"rss"> = {
 	kind: "rss",
 	templates: [
-		{ id: "rss", name: "RSS feed", icon: "rss", build: () => ({ kind: "rss", title: "RSS", rss: { sources: [] }, w: 4, h: 5 }) },
+		{ id: "rss", defaultSize: "large", name: "RSS feed", icon: "rss", build: () => ({ kind: "rss", title: "RSS", rss: { sources: [] } }) },
 	],
 	render: (view, card, body, component) => renderRss(view, card, body, component),
 	renderEditor: (container, ctx) => rssEditor(ctx, container),
