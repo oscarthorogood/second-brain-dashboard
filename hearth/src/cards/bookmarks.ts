@@ -208,7 +208,7 @@ function openBookmark(view: HomeView, item: BookmarkItem): void {
 export const bookmarksCard: CardDefinition<"bookmarks"> = {
 	kind: "bookmarks",
 	templates: [
-		{ id: "bookmarks", name: "Bookmarks", icon: "bookmark", build: () => ({ kind: "bookmarks", title: "Bookmarks", w: 4, h: 3 }) },
+		{ id: "bookmarks", defaultSize: "large", name: "Bookmarks", icon: "bookmark", build: () => ({ kind: "bookmarks", title: "Bookmarks" }) },
 	],
 	render: (view, card, body) => renderBookmarks(view, card, body),
 	liveness: { mode: "static" },

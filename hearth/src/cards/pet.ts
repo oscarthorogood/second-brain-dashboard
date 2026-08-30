@@ -1114,7 +1114,7 @@ export function petEditor(container: HTMLElement, ctx: CardEditorContext): void 
 export const petCard: CardDefinition<"pet"> = {
 	kind: "pet",
 	templates: [
-		{ id: "pet", name: "Pet", icon: "cat", build: () => ({ kind: "pet", title: "Pet", pet: {}, w: 3, h: 4 }) },
+		{ id: "pet", defaultSize: "small", name: "Pet", icon: "cat", build: () => ({ kind: "pet", title: "Pet", pet: {} }) },
 	],
 	render: (view, card, body, component) => renderPet(view, card, body, component),
 	renderEditor: (container, ctx) => petEditor(container, ctx),

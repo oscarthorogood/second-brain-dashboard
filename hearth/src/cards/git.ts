@@ -1,5 +1,5 @@
 import { Component, Menu, Notice, setIcon, Setting, TFile } from "obsidian";
-import { emptyState, moment } from "../cardbodies";
+import { emptyState, moment, summaryTile } from "../cardbodies";
 import { addResetButton, moveItem } from "../editors";
 import {
 	GIT_ACTION_DEFS,
@@ -36,6 +36,7 @@ import { openFile } from "../opener";
 import { effectiveAutoRefreshMinutes, type DashboardCard } from "../types";
 import { confirmAction, makeClickable } from "../ui";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -72,7 +73,10 @@ export function renderGit(
 	const cfg = card.git ?? {};
 	const sections = gitSections(cfg.sections);
 	const wantsLog = sections.includes("log");
-	const logLimit = wantsLog ? Math.max(1, cfg.logLimit ?? 5) : 0;
+	// Reference (Widget Set → GIT): two rows at medium, four at large and extra
+	// large.
+	const fits = bySize(card.size, [1, 2, 4, 4]);
+	const logLimit = wantsLog ? Math.min(Math.max(1, cfg.logLimit ?? 5), fits) : 0;
 	// The ahead-count and last-commit time are only drawn by the status line, and
 	// both cost a git call, so a card without it doesn't pay for them.
 	const includeSync = sections.includes("status");
@@ -163,6 +167,23 @@ export function renderGit(
 				text: t().cards.git.openSourceControl,
 			});
 			button.addEventListener("click", () => void openGitView(view.app, "sourceControl"));
+			return;
+		}
+
+		// The small tile is the branch and how far it is from its upstream, with
+		// no sections at all (Widget Set → GIT: a branch glyph over "main" over
+		// "↑2 ↓0"). A 158×158 tile has no room for a status line, an action row
+		// and a change list, and the branch is the answer the widget exists for.
+		if (card.size === "small") {
+			const counts = gitChangeCounts(snapshot.status);
+			const ahead = snapshot.unpushed ?? 0;
+			const wrapper = wrap.createDiv("sbd-summary-host");
+			summaryTile(wrapper, {
+				icon: "git-branch",
+				value: snapshot.branch?.current || t().cards.git.noBranch,
+				label: t().cards.git.aheadBehind(ahead, counts.total),
+			});
+			wrapper.firstElementChild?.addClass("is-name");
 			return;
 		}
 
@@ -747,10 +768,10 @@ export const gitCard: CardDefinition<"git"> = {
 	kind: "git",
 	templates: [
 		{
-			id: "git",
+			id: "git", defaultSize: "large",
 			name: "Git",
 			icon: "git-branch",
-			build: () => ({ kind: "git", title: "Git", git: {}, w: 4, h: 4 }),
+			build: () => ({ kind: "git", title: "Git", git: {} }),
 			requires: {
 				name: "Git",
 				pluginId: GIT_PLUGIN_ID,

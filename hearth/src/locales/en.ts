@@ -335,7 +335,7 @@ export const en = {
 				"do for you.",
 			calloutBody:
 				"But Second Brain Dashboard is built above all to be heavily customizable, and this wizard " +
-				"only touches a fraction of it. Every card can be moved, resized, retitled, " +
+				"only touches a fraction of it. Every widget can be moved, retitled, " +
 				"recoloured, reconfigured or thrown out, and there is a great deal more in " +
 				"the settings than was asked about here. Dig around in there and edit " +
 				"everything to your liking — that is what Second Brain Dashboard is for.",
@@ -419,7 +419,7 @@ export const en = {
 		hideCardHeaders: "Hide card headers",
 		doneArranging: "Done arranging",
 		finishArranging: "Finish arranging cards",
-		moveResize: "Move & resize cards",
+		moveResize: "Rearrange widgets",
 		cardSettings: "Card settings",
 		removeCard: "Remove card",
 		removeCardTitle: "Remove card?",
@@ -1010,10 +1010,10 @@ export const en = {
 		dashboard: {
 			heading: "Dashboard",
 			headingDesc:
-				"Sizing and transparency of the card grid. Cards themselves are added and configured on the board.",
-			fitToPage: "Fit to page",
-			fitToPageDesc:
-				"Keep the dashboard to one screen instead of allowing scroll.",
+				"Size and transparency of the widget grid. Widgets themselves are added and configured on the board.",
+			widgetScale: "Widget size",
+			widgetScaleDesc:
+				"How large widgets are drawn. The board keeps widgets a constant size and fits more of them across as the pane widens, so this scales the whole grid rather than changing how many columns it has.",
 			arrangeButtonVisibility: "Arrange button visibility",
 			arrangeButtonVisibilityDesc:
 				"Choose whether the arrange/edit button is always visible or revealed when hovering its area.",
@@ -1546,8 +1546,8 @@ export const en = {
 				"Drop the card frame — no border, background or title row — so this " +
 				"reads as a standalone search bar on the board.",
 			sizeNote:
-				"The field is as thick as the card is tall — drag the card's edge in " +
-				"Arrange to make the bar chunkier or slimmer.",
+				"The field is as thick as the widget is tall. Widgets aren't resized — " +
+				"to change it, remove this one and add it again at the other size.",
 		},
 		links: {
 			heading: "Links",
@@ -2332,6 +2332,8 @@ export const en = {
 			placeholder: "2 + 2, 10 km to miles, 10 € to USD…",
 		},
 		rss: {
+			/** The small widget's summary line under the unread count. */
+			unreadSummary: "unread",
 			allTab: "All",
 			untitled: "(untitled)",
 			loading: "Loading feed…",
@@ -2383,6 +2385,8 @@ export const en = {
 			},
 		},
 		jira: {
+			/** The small widget's summary line under the open-issue count. */
+			openSummary: "open issues",
 			controls: {
 				status: "Status",
 				assignee: "Assignee",
@@ -2404,6 +2408,9 @@ export const en = {
 			notConfigured: "Configure a Jira host, token, and saved filter in card settings",
 		},
 		git: {
+			/** The small widget's line under the branch name: how far it is from
+			 * its upstream, and how much is uncommitted. */
+			aheadBehind: (ahead: number, changes: number) => `↑${ahead} ✎${changes}`,
 			sections: {
 				status: "Repository status",
 				actions: "Buttons",
@@ -2458,6 +2465,8 @@ export const en = {
 			noNoteYet: "No note for today yet",
 		},
 		heatmap: {
+			/** The small widget's line under this week's count. */
+			thisWeek: "this week",
 			less: "Less",
 			more: "More",
 			// The card's headline names what the squares count; the range says
@@ -2530,12 +2539,18 @@ export const en = {
 			everyMinutes: (n: number) => `${n} min`,
 			everyHours: (n: number) => `${n} hr`,
 		},
+		leaf: {
+			/** The small widget's line under the hosted view's name. */
+			hosted: "hosted view",
+		},
 		bookmarks: {
 			untitled: "Untitled",
 			// The card's own headline, drawn inside it beside a bookmark glyph.
 			heading: "Bookmarks",
 		},
 		tasks: {
+			/** The small widget's summary line under the outstanding count. */
+			openSummary: "open tasks",
 			createNewTask: "Create new task",
 			toDo: "To do",
 			done: "Done",
@@ -2812,6 +2827,22 @@ export const en = {
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
 		noMatches: "No card matches that.",
+		/** The second step: which of the four fixed sizes the widget is added at. */
+		size: {
+			heading: "Choose a size",
+			/** Sizes can't be changed later, so the step says so once, here. */
+			note: "A widget's size is fixed. To change it, remove the widget and add it again.",
+			back: "Back to all cards",
+			add: "Add widget",
+			names: {
+				small: "Small",
+				medium: "Medium",
+				large: "Large",
+				xlarge: "Extra large",
+			},
+			/** Caption under each option, e.g. "2 × 2". */
+			cells: (cols: number, rows: number) => `${cols} × ${rows}`,
+		},
 		/** Badge on a card whose plugin (or other dependency) is missing. */
 		requires: (name: string) => `Needs ${name}`,
 		missingNotice: (name: string) =>
@@ -2869,6 +2900,9 @@ export const en = {
 		notAnObject: "Layout must be a JSON object.",
 		noValidDashboards: "Layout contained no valid dashboards.",
 		noValidCards: "Layout contained no valid cards.",
+		/** A layout exported before widgets became four fixed sizes on a grid. */
+		preGridLayout:
+			"That layout was exported before widgets moved to fixed sizes, so its cards have no size to import. Add the widgets you want at the size you want them.",
 		notASbdLayout:
 			'Not a Second Brain Dashboard layout — no "dashboards" or "cards" array found.',
 		notSbdSettings:

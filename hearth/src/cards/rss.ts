@@ -1,5 +1,5 @@
 import { Component, moment as createMoment, Notice, setIcon, Setting } from "obsidian";
-import { emptyState, feedHost } from "../cardbodies";
+import { emptyState, feedHost, summaryTile } from "../cardbodies";
 import { moveItem } from "../editors";
 import { t } from "../i18n";
 import { cachedFeed, loadFeed, type RssItem } from "../rss";
@@ -11,6 +11,7 @@ import {
 } from "../types";
 import { makeClickable } from "../ui";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -42,7 +43,11 @@ export function renderRss(
 	}
 
 	const layout: RssLayout = cfg.layout ?? "list";
-	const limit = cfg.itemLimit && cfg.itemLimit > 0 ? cfg.itemLimit : 15;
+	// Reference (Widget Set → RSS): one headline at medium, four at large and
+	// six at extra large. A configured item limit still applies, capped by what
+	// the tile can actually show.
+	const fits = bySize(card.size, [1, 1, 4, 6]);
+	const limit = cfg.itemLimit && cfg.itemLimit > 0 ? Math.min(cfg.itemLimit, fits) : fits;
 	const refreshMin = cfg.refreshMin ?? 30;
 	const disabled = view.plugin.settings.disableExternalCalls;
 	// Freshness window for the cache: at least a minute so re-renders don't spam.
@@ -149,6 +154,16 @@ export function renderRss(
 		if (merged) {
 			rows.sort((a, b) => (b.item.published ?? 0) - (a.item.published ?? 0));
 		}
+		// The small tile answers "how much is waiting" rather than showing one
+		// arbitrary headline (Widget Set → RSS).
+		if (card.size === "small" && rows.length > 0) {
+			summaryTile(content, {
+				value: String(rows.length),
+				label: t().cards.rss.unreadSummary,
+			});
+			return;
+		}
+
 		const items = rows.slice(0, limit);
 
 		if (items.length === 0) {
@@ -526,7 +541,7 @@ export function githubFeedAdder(ctx: CardEditorContext, containerEl: HTMLElement
 export const rssCard: CardDefinition<"rss"> = {
 	kind: "rss",
 	templates: [
-		{ id: "rss", name: "RSS feed", icon: "rss", build: () => ({ kind: "rss", title: "RSS", rss: { sources: [] }, w: 4, h: 5 }) },
+		{ id: "rss", defaultSize: "large", name: "RSS feed", icon: "rss", build: () => ({ kind: "rss", title: "RSS", rss: { sources: [] } }) },
 	],
 	render: (view, card, body, component) => renderRss(view, card, body, component),
 	renderEditor: (container, ctx) => rssEditor(ctx, container),

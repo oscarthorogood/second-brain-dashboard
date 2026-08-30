@@ -1,5 +1,5 @@
 import { Setting } from "obsidian";
-import { activityByDay, createDailyNoteAt, dailyNotesOptions, heatLevel, moment } from "../cardbodies";
+import { activityByDay, createDailyNoteAt, dailyNotesOptions, heatLevel, moment, summaryTile } from "../cardbodies";
 import { t } from "../i18n";
 import { openFile } from "../opener";
 import { type DashboardCard } from "../types";
@@ -19,9 +19,27 @@ export function renderHeatmap(view: HomeView, card: DashboardCard, body: HTMLEle
 	const activity = activityByDay(view.app, metric);
 	const options = dailyNotesOptions(view);
 
-	const wrap = body.createDiv("sbd-heatmap");
 	const startOfWeek = moment.localeData().firstDayOfWeek();
 	const today = moment().startOf("day");
+
+	// Widget Set → HEATMAP's small tile is this week's activity, not the year:
+	// 26 weeks of squares in 158px are each under two pixels wide.
+	if (card.size === "small") {
+		const weekStart = today
+			.clone()
+			.subtract((today.day() - startOfWeek + 7) % 7, "days");
+		let thisWeek = 0;
+		for (let i = 0; i < 7; i++) {
+			thisWeek += activity.get(weekStart.clone().add(i, "days").format("YYYY-MM-DD")) ?? 0;
+		}
+		summaryTile(body, {
+			value: String(thisWeek),
+			label: t().cards.heatmap.thisWeek,
+		});
+		return;
+	}
+
+	const wrap = body.createDiv("sbd-heatmap");
 	const todayKey: string = today.format("YYYY-MM-DD");
 	// Start `weeks - 1` weeks back, aligned to the start of that week, so the
 	// last column is the current (partial) week.
@@ -127,7 +145,7 @@ export function heatmapEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 export const heatmapCard: CardDefinition<"heatmap"> = {
 	kind: "heatmap",
 	templates: [
-		{ id: "heatmap", name: "Activity heatmap", icon: "activity", build: () => ({ kind: "heatmap", title: "Activity", heatmap: {}, w: 6, h: 3 }) },
+		{ id: "heatmap", defaultSize: "medium", name: "Activity heatmap", icon: "activity", build: () => ({ kind: "heatmap", title: "Activity", heatmap: {} }) },
 	],
 	render: (view, card, body) => renderHeatmap(view, card, body),
 	renderEditor: (container, ctx) => heatmapEditor(ctx, container),

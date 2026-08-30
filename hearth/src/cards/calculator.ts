@@ -77,7 +77,11 @@ export function renderCalculator(view: HomeView, card: DashboardCard, body: HTML
 
 	const resultEl = wrap.createDiv("sbd-calc-result");
 	const noteEl = wrap.createDiv("sbd-calc-note");
+	// Widget Set → CALCULATOR's small tile is the expression and its result,
+	// with no keypad: sixteen keys in 158x158 are under 30px each, which is
+	// below any usable touch target.
 	const keysEl = wrap.createDiv("sbd-calc-keys");
+	if (card.size === "small") keysEl.addClass("is-hidden");
 
 	// Currency conversions need exchange rates. To stay local-first, rates are
 	// only fetched lazily — the first time a query actually needs them (see the
@@ -240,7 +244,7 @@ export function calculatorEditor(ctx: CardEditorContext, containerEl: HTMLElemen
 export const calculatorCard: CardDefinition<"calculator"> = {
 	kind: "calculator",
 	templates: [
-		{ id: "calculator", name: "Calculator", icon: "calculator", build: () => ({ kind: "calculator", title: "Calculator", calculator: {}, w: 4, h: 3 }) },
+		{ id: "calculator", defaultSize: "large", name: "Calculator", icon: "calculator", build: () => ({ kind: "calculator", title: "Calculator", calculator: {} }) },
 	],
 	render: (view, card, body) => renderCalculator(view, card, body),
 	renderEditor: (container, ctx) => calculatorEditor(ctx, container),

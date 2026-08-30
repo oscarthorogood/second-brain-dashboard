@@ -46,7 +46,7 @@ function event(kind: VaultEvent["kind"], path: string, oldPath?: string): VaultE
 }
 
 function card(slideshow: SlideshowConfig): DashboardCard {
-	return { id: "c", kind: "slideshow", x: 0, y: 0, w: 4, h: 3, slideshow };
+	return { id: "c", kind: "slideshow", size: "large", slideshow };
 }
 
 describe("slideshow config resolution", () => {
@@ -236,6 +236,6 @@ describe("slideshowReactsTo", () => {
 
 	it("stays quiet for a card with nothing configured", () => {
 		expect(slideshowReactsTo(card({}), event("create", "Photos/a.png"))).toBe(false);
-		expect(slideshowReactsTo({ id: "c", kind: "slideshow", x: 0, y: 0, w: 4, h: 3 }, event("create", "a.png"))).toBe(false);
+		expect(slideshowReactsTo({ id: "c", kind: "slideshow", size: "large" }, event("create", "a.png"))).toBe(false);
 	});
 });

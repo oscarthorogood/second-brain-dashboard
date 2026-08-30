@@ -1,5 +1,5 @@
 import { Component, Setting } from "obsidian";
-import { emptyState, wireMarkdownLinks } from "../cardbodies";
+import { emptyState, summaryTile, wireMarkdownLinks } from "../cardbodies";
 import { DATAVIEW_PLUGIN_ID, getDataviewApi, isDataviewAvailable } from "../dataview";
 import { t } from "../i18n";
 import { type DashboardCard } from "../types";
@@ -33,6 +33,15 @@ export function renderDataview(
 	const query = (cfg.query ?? "").trim();
 	if (!query) {
 		emptyState(body, "code", t().cards.empty.dataviewNoQuery);
+		return;
+	}
+
+	// Widget Set → DATAVIEW's small tile is what the query is about, not its
+	// rows: the query panel plus a table does not fit in 158x158, and a table
+	// clipped to one column of one row says nothing.
+	if (card.size === "small") {
+		summaryTile(body, { icon: "database", value: card.title?.trim() || query });
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 
@@ -253,10 +262,10 @@ export const dataviewCard: CardDefinition<"dataview"> = {
 	kind: "dataview",
 	templates: [
 		{
-			id: "dataview",
+			id: "dataview", defaultSize: "large",
 			name: "Dataview query",
 			icon: "database",
-			build: () => ({ kind: "dataview", title: "Dataview", dataview: {}, w: 6, h: 4 }),
+			build: () => ({ kind: "dataview", title: "Dataview", dataview: {} }),
 			requires: {
 				name: "Dataview",
 				pluginId: DATAVIEW_PLUGIN_ID,

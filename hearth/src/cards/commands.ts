@@ -174,7 +174,7 @@ export function commandsEditor(ctx: CardEditorContext, containerEl: HTMLElement)
 export const commandsCard: CardDefinition<"commands"> = {
 	kind: "commands",
 	templates: [
-		{ id: "commands", name: "Commands", icon: "terminal-square", build: () => ({ kind: "commands", title: "Commands", commands: [], w: 6, h: 2 }) },
+		{ id: "commands", defaultSize: "medium", name: "Commands", icon: "terminal-square", build: () => ({ kind: "commands", title: "Commands", commands: [] }) },
 	],
 	render: (view, card, body) => renderCommands(view, card, body),
 	renderEditor: (container, ctx) => commandsEditor(ctx, container),

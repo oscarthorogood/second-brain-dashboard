@@ -217,7 +217,7 @@ export function linksEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const linksCard: CardDefinition<"links"> = {
 	kind: "links",
 	templates: [
-		{ id: "links", name: "Links / launchpad", icon: "layout-grid", build: () => ({ kind: "links", title: "Links", links: [], w: 6, h: 2 }) },
+		{ id: "links", defaultSize: "medium", name: "Links / launchpad", icon: "layout-grid", build: () => ({ kind: "links", title: "Links", links: [] }) },
 	],
 	render: (view, card, body) => renderLinks(view, card, body),
 	renderEditor: (container, ctx) => linksEditor(ctx, container),

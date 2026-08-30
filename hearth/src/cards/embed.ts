@@ -11,6 +11,7 @@ import {
 	renderEditableEmbed,
 	renderLivePreviewEmbed,
 	renderMarkdownFile,
+	summaryTile,
 	watchedCardPath,
 	wireMarkdownLinks,
 } from "../cardbodies";
@@ -60,6 +61,15 @@ export function renderEmbed(
 	const file = view.app.vault.getAbstractFileByPath(target);
 	if (!(file instanceof TFile)) {
 		emptyState(body, "file-x", `Not found: ${target}`);
+		return;
+	}
+
+	// Widget Set → EMBED's small tile is a file glyph over the note's name.
+	// Rendering markdown (or a base, or a canvas) into 158x158 produces a few
+	// clipped words at best, and pays a full markdown render for them.
+	if (card.size === "small") {
+		summaryTile(body, { icon: "file-text", value: file.basename });
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 
@@ -629,11 +639,11 @@ export function setSecondViewTarget(ctx: CardEditorContext, value: string, reren
 export const embedCard: CardDefinition<"embed"> = {
 	kind: "embed",
 	templates: [
-		{ id: "note", name: "Embedded note", icon: "file-text", build: () => ({ kind: "embed", title: "Note", target: "", w: 6, h: 3 }) },
-		{ id: "image", name: "Embedded image", icon: "image", build: () => ({ kind: "embed", title: "Image", target: "", w: 4, h: 3 }) },
-		{ id: "base", name: "Embedded base", icon: "database", build: () => ({ kind: "embed", title: "Base", target: "", w: 6, h: 4 }) },
-		{ id: "excalidraw", name: "Excalidraw drawing", icon: "pen-tool", build: () => ({ kind: "embed", title: "Drawing", target: "", w: 6, h: 4 }) },
-		{ id: "canvas", name: "Embedded canvas", icon: "layout-dashboard", build: () => ({ kind: "embed", title: "Canvas", target: "", w: 6, h: 4 }) },
+		{ id: "note", defaultSize: "large", name: "Embedded note", icon: "file-text", build: () => ({ kind: "embed", title: "Note", target: "" }) },
+		{ id: "image", defaultSize: "medium", name: "Embedded image", icon: "image", build: () => ({ kind: "embed", title: "Image", target: "" }) },
+		{ id: "base", defaultSize: "xlarge", name: "Embedded base", icon: "database", build: () => ({ kind: "embed", title: "Base", target: "" }) },
+		{ id: "excalidraw", defaultSize: "large", name: "Excalidraw drawing", icon: "pen-tool", build: () => ({ kind: "embed", title: "Drawing", target: "" }) },
+		{ id: "canvas", defaultSize: "large", name: "Embedded canvas", icon: "layout-dashboard", build: () => ({ kind: "embed", title: "Canvas", target: "" }) },
 	],
 	render: (view, card, body, component) => renderEmbed(view, card, body, component),
 	renderEditor: (container, ctx) => embedEditor(ctx, container),

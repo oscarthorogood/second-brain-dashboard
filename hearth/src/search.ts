@@ -136,7 +136,7 @@ export class SearchSection {
 		overlayParent: HTMLElement,
 		boundary: HTMLElement,
 		component: Component,
-		opts: { filters?: boolean; hiddenFilters?: string[] } = {},
+		opts: { filters?: boolean; hiddenFilters?: string[]; maxFilters?: number } = {},
 	): void {
 		this.hiddenFilters = opts.hiddenFilters ?? [];
 		this.rootEl = boundary;
@@ -144,7 +144,7 @@ export class SearchSection {
 		this.resultsEl.id = this.resultsId;
 		this.resultsEl.setAttribute("role", "listbox");
 		this.resultsEl.hide();
-		if (opts.filters !== false) this.renderFilters(boundary);
+		if (opts.filters !== false) this.renderFilters(boundary, opts.maxFilters);
 
 		// Close the dropdown when clicking outside the whole search section.
 		// Registered on the per-render component (not the long-lived view) so it's
@@ -206,8 +206,12 @@ export class SearchSection {
 		});
 	}
 
-	private renderFilters(parent: HTMLElement): void {
-		const groups = this.detectGroups();
+	private renderFilters(parent: HTMLElement, max?: number): void {
+		// `max` is how many chips the host has room for — the search widget's
+		// tile is four wide or eight wide (Widget Set → SEARCH), and a row of
+		// twelve squeezed into four columns reads as nothing at all.
+		const detected = this.detectGroups();
+		const groups = max && max > 0 ? detected.slice(0, max) : detected;
 		if (groups.length === 0) return;
 
 		const row = parent.createDiv("sbd-filters");

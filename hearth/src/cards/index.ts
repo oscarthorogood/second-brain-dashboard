@@ -6,6 +6,8 @@ import type {
 	CardRequirement,
 	CardTemplateDef,
 } from "./definition";
+import { templateDefaultSize } from "./definition";
+import type { WidgetSize } from "../widgetsize";
 import { t } from "../i18n";
 
 import { embedCard } from "./embed";
@@ -184,14 +186,18 @@ export function unmetRequirement(
 	}
 }
 
-/** Build a fresh card from a template (id and placeholder coordinates assigned;
- * position is resolved on placement). */
-export function cardFromTemplate(template: CardTemplateDef): DashboardCard {
+/** Build a fresh widget from a template at the size the picker chose.
+ *
+ * There are no coordinates to assign: the board packs widgets in array order,
+ * so where this one lands is decided by where it is pushed into the array. */
+export function cardFromTemplate(
+	template: CardTemplateDef,
+	size: WidgetSize = templateDefaultSize(template),
+): DashboardCard {
 	return {
 		id: `card-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`,
-		x: -1,
-		y: -1,
 		...template.build(),
+		size,
 	};
 }
 

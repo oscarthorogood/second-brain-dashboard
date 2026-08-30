@@ -16,7 +16,7 @@
  *
  * so the review step can show the first without committing the second.
  */
-import { ensureLayout } from "../grid";
+import { MIN_COLUMNS, packCards, packedRows } from "../grid";
 import {
 	type BackgroundLayout,
 	type DashboardCard,
@@ -220,12 +220,9 @@ export interface PlannedCard {
 	card: DashboardCard;
 }
 
-/** A planned card before it has an id or a packed position. */
+/** A planned widget before it has an id. Carries its size and nothing else
+ * about geometry: where it lands is its index in the finished array. */
 type CardDraft = Omit<DashboardCard, "id">;
-
-/** The default grid width a plan lays out against — Second Brain Dashboard's own default, so a
- * board built here lines up with one built by hand. */
-const PLAN_COLUMNS = 12;
 
 /**
  * Decide which cards the board gets, configured and laid out.
@@ -252,16 +249,13 @@ export function planCards(
 	// card that is unambiguously good on a home screen regardless of what the
 	// vault is for, and a full-width strip is what makes the board read as a
 	// home screen rather than a grid of widgets.
-	add("clock", "always", { kind: "clock", title: "", x: -1, y: -1, w: 12, h: 2 });
+	add("clock", "always", { kind: "clock", title: "", size: "small" });
 
 	if (wants(answers, "daily") || accepted(answers, "dailyNotes")) {
 		add("daily", wants(answers, "daily") ? "daily" : "dailyNotes", {
 			kind: "daily",
 			title: "Today",
-			x: -1,
-			y: -1,
-			w: 6,
-			h: 5,
+			size: "large",
 		});
 	}
 
@@ -269,10 +263,7 @@ export function planCards(
 		add("tasks", taskReason(answers), {
 			kind: "tasks",
 			title: "Tasks",
-			x: -1,
-			y: -1,
-			w: 6,
-			h: 5,
+			size: "large",
 			tasks: planTasksConfig(answers, detection),
 		});
 	}
@@ -281,10 +272,7 @@ export function planCards(
 		add("schedule", "planning", {
 			kind: "schedule",
 			title: "Calendar",
-			x: -1,
-			y: -1,
-			w: 8,
-			h: 6,
+			size: "xlarge",
 			schedule: accepted(answers, "tasknotes")
 				? { taskNotes: { enabled: true } }
 				: {},
@@ -295,10 +283,7 @@ export function planCards(
 		add("calendar", "daily", {
 			kind: "calendar",
 			title: "Calendar",
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 4,
+			size: "large",
 		});
 	}
 
@@ -307,18 +292,12 @@ export function planCards(
 			kind: "recent",
 			title: "Recent",
 			count: 8,
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 4,
+			size: "medium",
 		});
 		add("favorites", "browsing", {
 			kind: "favorites",
 			title: "Favorites",
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 3,
+			size: "medium",
 		});
 	}
 
@@ -326,36 +305,27 @@ export function planCards(
 		add("bookmarks", "bookmarks", {
 			kind: "bookmarks",
 			title: "Bookmarks",
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 3,
+			size: "large",
 		});
 	}
 
 	if (wants(answers, "capture")) {
-		add("links", "capture", { kind: "links", title: "Links", links: [], x: -1, y: -1, w: 6, h: 2 });
+		add("links", "capture", { kind: "links", title: "Links", links: [], size: "medium" });
 		add("commands", "capture", {
 			kind: "commands",
 			title: "Commands",
 			commands: [],
-			x: -1,
-			y: -1,
-			w: 6,
-			h: 2,
+			size: "medium",
 		});
 	}
 
 	if (wants(answers, "insights")) {
-		add("stats", "insights", { kind: "stats", title: "Vault", x: -1, y: -1, w: 4, h: 2 });
+		add("stats", "insights", { kind: "stats", title: "Vault", size: "medium" });
 		add("heatmap", "insights", {
 			kind: "heatmap",
 			title: "Activity",
 			heatmap: {},
-			x: -1,
-			y: -1,
-			w: 8,
-			h: 3,
+			size: "medium",
 		});
 	}
 
@@ -364,10 +334,7 @@ export function planCards(
 			kind: "rss",
 			title: "Reading",
 			rss: { sources: [] },
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 5,
+			size: "large",
 		});
 	}
 
@@ -376,12 +343,9 @@ export function planCards(
 			kind: "weather",
 			title: "Weather",
 			weather: {},
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 3,
+			size: "medium",
 		});
-		add("pet", "ambience", { kind: "pet", title: "Pet", pet: {}, x: -1, y: -1, w: 3, h: 4 });
+		add("pet", "ambience", { kind: "pet", title: "Pet", pet: {}, size: "small" });
 	}
 
 	if (accepted(answers, "dataview")) {
@@ -392,10 +356,7 @@ export function planCards(
 			// is indistinguishable from a broken one, and "the notes I touched
 			// most recently" is both obviously useful and obviously editable.
 			dataview: { query: "LIST\nSORT file.mtime DESC\nLIMIT 10", language: "dql" },
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 4,
+			size: "large",
 		});
 	}
 
@@ -404,10 +365,7 @@ export function planCards(
 			kind: "datacore",
 			title: "Datacore",
 			datacore: {},
-			x: -1,
-			y: -1,
-			w: 4,
-			h: 4,
+			size: "large",
 		});
 	}
 
@@ -420,15 +378,12 @@ export function planCards(
 			// destination is the one thing the user still has to fill in — which
 			// they can only do once there is a tile to fill it in on.
 			templater: { items: detection.templaterTemplates.map(templaterTile) },
-			x: -1,
-			y: -1,
-			w: 6,
-			h: 2,
+			size: "large",
 		});
 	}
 
 	if (accepted(answers, "git")) {
-		add("git", "git", { kind: "git", title: "Git", git: {}, x: -1, y: -1, w: 4, h: 4 });
+		add("git", "git", { kind: "git", title: "Git", git: {}, size: "large" });
 	}
 
 	if (accepted(answers, "bases") && detection.basePath) {
@@ -436,17 +391,13 @@ export function planCards(
 			kind: "embed",
 			title: baseTitle(detection.basePath),
 			target: detection.basePath,
-			x: -1,
-			y: -1,
-			w: 6,
-			h: 5,
+			size: "xlarge",
 		});
 	}
 
-	// Pack once, over the whole plan, so the geometry the review step previews
-	// is exactly the geometry the board is saved with.
+	// No packing step: a widget's place on the board is its index in this array,
+	// so the order the plan builds is the layout the board renders.
 	const cards: DashboardCard[] = drafts.map((draft, i) => ({ ...draft.card, id: newId(i) }));
-	ensureLayout(cards, PLAN_COLUMNS);
 	return drafts.map((draft, i) => ({ id: draft.id, reason: draft.reason, card: cards[i] }));
 }
 
@@ -636,22 +587,13 @@ function applyIntegrations(
 	}
 }
 
-/**
- * How many grid rows a board may occupy and still be worth squeezing onto one
- * screen.
+/** How many grid rows a set of widgets occupies once packed.
  *
- * Fit-to-page is Second Brain Dashboard's default and is what makes a board read as a *home
- * screen* rather than a page — but it works by scaling the whole layout down
- * until it fits, so a board twice as tall as the viewport renders every card at
- * half height. The starter board is thirteen rows and squeezes comfortably; a
- * wizard board that picked every purpose can be twice that, and the honest
- * answer for one of those is to let it scroll at its natural size.
- */
-const FIT_TO_PAGE_ROW_LIMIT = 16;
-
-/** How many grid rows a set of cards occupies. */
+ * Measured on the narrowest board the grid ever lays out ({@link MIN_COLUMNS}),
+ * which is the worst case: fewer columns means more rows, so a plan that is
+ * short here is short everywhere. */
 export function boardRows(cards: DashboardCard[]): number {
-	return cards.reduce((max, card) => Math.max(max, card.y + card.h), 0);
+	return packedRows(packCards(cards, MIN_COLUMNS));
 }
 
 /** Install the planned cards as the board. */
@@ -659,11 +601,9 @@ function installBoard(
 	settings: HomeSettings,
 	cards: DashboardCard[],
 ): SetupOutcome {
+	// The order is the layout: the board packs these widgets in the order the
+	// plan built them. Nothing to fit or scale — a tall board simply scrolls.
 	settings.cards = cards;
-	// A tall board scrolls rather than being scaled down to nothing. Only ever
-	// *relaxes* the fit: a board that comfortably fits keeps whatever the user
-	// already had.
-	if (boardRows(cards) > FIT_TO_PAGE_ROW_LIMIT) settings.fitToPage = false;
 	return { cardCount: cards.length };
 }
 

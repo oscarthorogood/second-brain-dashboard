@@ -22,7 +22,7 @@ function settings(): HomeSettings {
 }
 
 function card(overrides: Partial<DashboardCard> = {}): DashboardCard {
-	return { id: "c1", kind: "text", title: "", x: 0, y: 0, w: 2, h: 2, ...overrides };
+	return { id: "c1", kind: "text", title: "", size: "medium", ...overrides };
 }
 
 describe("resolveCardBorderWidth", () => {

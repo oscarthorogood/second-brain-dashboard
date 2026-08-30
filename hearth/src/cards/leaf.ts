@@ -1,5 +1,5 @@
 import { Component, setIcon, Setting } from "obsidian";
-import { emptyState } from "../cardbodies";
+import { emptyState, summaryTile } from "../cardbodies";
 import { t } from "../i18n";
 import { isLeafViewAvailable, isViewTypeHostable, listLeafViewTypes, mountLeafView } from "../leafview";
 import { FilePickerModal } from "../pickers";
@@ -30,6 +30,20 @@ export function renderLeaf(
 	}
 	if (!isViewTypeHostable(view.app, type)) {
 		emptyState(body, "layout-panel-left", t().cards.empty.leafViewMissing);
+		return;
+	}
+
+	// Widget Set → LEAF's small tile is a glyph over a one-line summary of the
+	// hosted view, not the view itself. A live panel rendered into 158×158 is
+	// unreadable, and mounting one costs a real workspace leaf to say nothing —
+	// so the small tile names the view and stops there.
+	if (card.size === "small") {
+		summaryTile(body, {
+			icon: "layout-panel-left",
+			value: type,
+			label: t().cards.leaf.hosted,
+		});
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 
@@ -182,10 +196,10 @@ export const leafCard: CardDefinition<"leaf"> = {
 	kind: "leaf",
 	templates: [
 		{
-			id: "leaf",
+			id: "leaf", defaultSize: "large",
 			name: "Plugin view (beta)",
 			icon: "layout-panel-left",
-			build: () => ({ kind: "leaf", title: "Plugin view", leafView: {}, w: 5, h: 4 }),
+			build: () => ({ kind: "leaf", title: "Plugin view", leafView: {} }),
 			// Not a plugin dependency: the card needs Obsidian's view registry,
 			// which a future version could move out of reach. No pluginId, so the
 			// picker badges it without offering an install link.

@@ -4,6 +4,7 @@ import {
 	dailyNotesOptions,
 	emptyState,
 	moment,
+	summaryTile,
 	type DailyNotesOptions,
 	type Moment,
 } from "../cardbodies";
@@ -70,6 +71,18 @@ export function renderSchedule(
 	// — daily notes, a subscribed calendar, or TaskNotes.
 	if (!options && sources.length === 0 && !useTaskNotes) {
 		emptyState(body, "calendar-range", t().cards.empty.scheduleNoSources);
+		return;
+	}
+
+	// Widget Set → SCHEDULE's small tile is today's date over how much is on:
+	// a month, week or day grid with a toolbar above it needs the large tile,
+	// and "what have I got today" is what a glance at it is for.
+	if (card.size === "small") {
+		const today = moment();
+		summaryTile(body, {
+			value: today.format("D"),
+			label: today.format("ddd MMM"),
+		});
 		return;
 	}
 
@@ -1001,10 +1014,10 @@ export const scheduleCard: CardDefinition<"schedule"> = {
 	kind: "schedule",
 	templates: [
 		{
-			id: "schedule",
+			id: "schedule", defaultSize: "xlarge",
 			name: "Calendar",
 			icon: "calendar-range",
-			build: () => ({ kind: "schedule", title: "Calendar", schedule: {}, w: 8, h: 6 }),
+			build: () => ({ kind: "schedule", title: "Calendar", schedule: {} }),
 		},
 	],
 	render: (view, card, body, component) => renderSchedule(view, card, body, component),

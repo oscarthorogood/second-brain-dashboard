@@ -25,10 +25,8 @@ import {
 	effectiveCardBorderWidth,
 	effectiveCardOpacity,
 	effectiveCardRadius,
-	effectiveColumns,
-	effectiveFitToPage,
 	effectiveMaxWidth,
-	effectiveRowHeight,
+	effectiveWidgetScale,
 	lowPowerActive,
 	removeCard,
 	renderCards,
@@ -36,22 +34,17 @@ import {
 	resolveCardBorderWidth,
 } from "./types";
 import {
-	applyCardPosition,
 	applyEdgeMerging,
-	applyFitLayout,
-	enableDragResize,
-	ensureFreeform,
-	ensureLayout,
+	boardMetrics,
+	enableReorderDrag,
 	type GridLayout,
-	GRID_GAP,
-	layoutHeight,
-	placeFreeform,
-	ROW_HEIGHT,
+	relayout,
 } from "./grid";
+import { sizeSpec } from "./widgetsize";
 
-/** Renders the dashboard toolbar and the positioned grid of cards. In arrange
- * mode cards can be moved, resized, added, removed and re-targeted on the
- * snap-to-grid layout. */
+/** Renders the dashboard toolbar and the grid of widgets. In arrange mode
+ * widgets can be moved, added, removed and re-targeted; they are never resized
+ * — a widget's size is fixed when it is added. */
 export function renderDashboard(
 	view: HomeView,
 	container: HTMLElement,
@@ -59,20 +52,6 @@ export function renderDashboard(
 ): void {
 	const s = view.plugin.settings;
 	const cards = renderCards(s);
-	const columns = effectiveColumns(s);
-	const rowHeight = effectiveRowHeight(s);
-
-	// Seed placement for new/older cards on the reference grid, then convert to
-	// the continuous free-form coordinates the board actually renders with.
-	const seeded = ensureLayout(cards, columns);
-	const freed = ensureFreeform(
-		cards,
-		columns,
-		rowHeight || ROW_HEIGHT,
-		GRID_GAP,
-		effectiveMaxWidth(s),
-	);
-	if (seeded || freed) void view.plugin.saveData(s);
 
 	renderToolbar(view, container);
 
@@ -85,11 +64,6 @@ export function renderDashboard(
 	// matches. Merged-edge corners still flatten to 0 regardless (see styles.css).
 	grid.style.setProperty("--sbd-card-radius", `${effectiveCardRadius(s)}px`);
 	grid.style.setProperty("--card-border-width", `${effectiveCardBorderWidth(s)}px`);
-	const fit = effectiveFitToPage(s);
-	// In fit-to-page mode the board is locked to one screen, so leave the
-	// min-height to CSS (which clips the overflow). Otherwise grow the board
-	// to fit its cards.
-	if (!fit) grid.style.minHeight = `${layoutHeight(cards) + GRID_GAP}px`;
 
 	// An empty board is left blank — no placeholder text or icon. The Arrange
 	// toolbar (with "Add card") is still available above.
@@ -101,16 +75,24 @@ export function renderDashboard(
 	// createVaultEventHub). Lives on the render component, torn down with it.
 	const events = createVaultEventHub(view.app, (ref) => component.registerEvent(ref));
 
-	// Shared layout state for the drag engine (magnetic alignment to siblings).
+	// Shared layout state for the packer and the reorder drag. The metrics are
+	// measured below, once the grid element is in the DOM and has a width.
 	const gridLayout: GridLayout = {
 		cards,
 		elements: new Map(),
+		metrics: boardMetrics(effectiveMaxWidth(s), effectiveWidgetScale(s)),
 	};
 
 	for (const card of cards) {
 		const el = grid.createDiv("sbd-card");
 		gridLayout.elements.set(card, el);
-		applyCardPosition(el, card);
+
+		// The widget's fixed size, as a class the stylesheet keys its per-size
+		// layout off (Widget Set draws every widget four times, and what changes
+		// between the four is the content, not just the frame).
+		el.addClass(`is-size-${card.size}`);
+		const spec = sizeSpec(card.kind, card.size);
+		el.style.setProperty("--sbd-widget-radius", `${spec.radius}px`);
 
 		// Every card carries its kind as a class, so styles.css can state the
 		// reference's per-widget chrome (its card padding, above all) without
@@ -159,56 +141,31 @@ export function renderDashboard(
 		}
 
 		if (view.arrangeMode) {
-			enableDragResize(view, el, grid, card, gridLayout, component, commit);
+			enableReorderDrag(view, el, grid, card, gridLayout, component, commit);
 		}
 	}
 
-	// Sharpen touching corners between neighbouring cards so adjacent cards
-	// read as one merged tile. Recomputed after every drag/resize commit and
-	// on viewport resize (handled below) since card positions reflow.
-	applyEdgeMerging(grid);
-
-	// Recompute edge merging whenever the board reflows (pane resize, zoom,
-	// dashboard switch) — fractional widths shift which edges touch.
-	const remerge = () => applyEdgeMerging(grid);
-	component.registerDomEvent(window, "resize", debounce(remerge, 120, true));
-
-	// In fit-to-page mode the board is locked to one screen, so cards taller than
-	// the board would spill below the fold. Proportionally squeeze the vertical
-	// layout so everything fits, matching how the horizontal axis already scales
-	// with the pane width (fx/fw are board-width fractions).
-	//
-	// This is purely visual — it never writes back to the stored geometry. An
-	// earlier version clamped and persisted against the measured board height,
-	// but on a PC start, plugin update or full sync the workspace restores panes
-	// before they reach their final size. The board was briefly short, cards got
-	// clamped to that too-small height, and the upward-shifted positions were
-	// saved — permanently pushing the whole board up (and compounding, since the
-	// true positions were overwritten). Re-fitting on layout changes without
-	// persisting means a transient/too-small measurement can't corrupt anything:
-	// once the pane reaches its real height the next call repositions every card
-	// from its untouched stored geometry, so the board self-heals.
-	if (fit) {
-		const refit = () => {
-			if (!grid.isConnected) return;
-			// One shared scale keeps relative spacing intact, so cards never
-			// overlap when the window is made short (clamping each card on its own
-			// piled them at the top). Ending a drag re-runs the very same helper, so
-			// an arranged card is never left in a different space from its neighbours.
-			applyFitLayout(grid, gridLayout);
-			applyEdgeMerging(grid);
-		};
-		// Apply the fit synchronously on the next frame, before the browser
-		// paints, so cards never flash at their unscaled (taller) positions first.
-		// That unscaled first frame is what made every existing card visibly jump
-		// when a new card was added: the board briefly rendered at full height and
-		// then snapped back once the debounced observer squeezed it. Fitting up
-		// front means the very first painted frame is already the final layout.
-		window.requestAnimationFrame(refit);
-		const observer = new ResizeObserver(debounce(refit, 60, true));
-		observer.observe(grid);
-		component.register(() => observer.disconnect());
-	}
+	// Lay the board out from the measured pane width, then keep it in step with
+	// the pane: the column count is derived from the width (widgets keep a
+	// constant size and the board gains columns as it widens), so a resize can
+	// change the packing, not merely stretch it.
+	const layoutNow = () => {
+		if (!grid.isConnected) return;
+		const width = grid.clientWidth || effectiveMaxWidth(s);
+		const next = boardMetrics(width, effectiveWidgetScale(s));
+		gridLayout.metrics = next;
+		grid.style.setProperty("--sbd-grid-cell", `${next.cell}px`);
+		grid.style.setProperty("--sbd-grid-gap", `${next.gap}px`);
+		relayout(grid, gridLayout);
+		// Sharpen touching corners so adjacent widgets read as one merged tile,
+		// and rebuild the shared frost mask that keys off those classes.
+		applyEdgeMerging(grid);
+	};
+	// Lay out before the first paint, so widgets never flash at a stale width.
+	window.requestAnimationFrame(layoutNow);
+	const observer = new ResizeObserver(debounce(layoutNow, 60, true));
+	observer.observe(grid);
+	component.register(() => observer.disconnect());
 }
 
 /** Render a card's body. Each (re)draw renders under a fresh child component so
@@ -414,20 +371,10 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 		add.addEventListener("click", () => {
 			openCardPicker(view.app, {
 				sbdVersion: view.plugin.manifest.version,
-				onChoose: (template) => {
-					const s = view.plugin.settings;
-					const card = cardFromTemplate(template);
-					// Place the new card into a free slot in the current layout so
-					// it never shifts the cards already on the board (placeFreeform).
-					placeFreeform(
-						card,
-						renderCards(s),
-						effectiveMaxWidth(s),
-						effectiveColumns(s),
-						GRID_GAP,
-						effectiveRowHeight(s) || ROW_HEIGHT,
-					);
-					activeCards(s).push(card);
+				onChoose: (template, size) => {
+					// A new widget goes on the end, which is where the packer puts
+					// it: the first slot it fits after everything already placed.
+					activeCards(view.plugin.settings).push(cardFromTemplate(template, size));
 					persistAndRender(view);
 				},
 			});

@@ -6,6 +6,7 @@ import { FILE_TYPE_GROUPS, fileTypeLabel, FOLDERS_GROUP_ID, groupForFile } from 
 import { t } from "../i18n";
 import { openFile } from "../opener";
 import { type DashboardCard } from "../types";
+import { bySize } from "../widgetsize";
 import { makeClickable } from "../ui";
 import { type HomeView } from "../view";
 import { type CardDefinition, type CardEditorContext } from "./definition";
@@ -14,7 +15,11 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
 // ---- Recent files -------------------------------------------------------
 
 export function renderRecent(view: HomeView, card: DashboardCard, body: HTMLElement): void {
-	const count = card.count && card.count > 0 ? card.count : 8;
+	// Reference (Widget Set → RECENT): one file at small, two at medium, five
+	// at large and seven — in two columns — at extra large. A card that names
+	// its own count still gets it, capped by what the tile can hold.
+	const fits = bySize(card.size, [1, 2, 5, 7]);
+	const count = card.count && card.count > 0 ? Math.min(card.count, fits) : fits;
 	// Optional file-type filter: keep only files whose group is selected. An
 	// empty/undefined list means no filtering (show every type). The filter is
 	// applied before the count is capped, so the card shows the N most recent
@@ -125,7 +130,7 @@ export function recentTypesEditor(ctx: CardEditorContext, containerEl: HTMLEleme
 export const recentCard: CardDefinition<"recent"> = {
 	kind: "recent",
 	templates: [
-		{ id: "recent", name: "Recent files", icon: "history", build: () => ({ kind: "recent", title: "Recent", count: 8, w: 4, h: 3 }) },
+		{ id: "recent", defaultSize: "medium", name: "Recent files", icon: "history", build: () => ({ kind: "recent", title: "Recent", count: 8 }) },
 	],
 	render: (view, card, body) => renderRecent(view, card, body),
 	renderEditor: (container, ctx) => recentEditor(ctx, container),

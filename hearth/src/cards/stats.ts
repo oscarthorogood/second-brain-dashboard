@@ -1,11 +1,12 @@
 import { getAllTags, setIcon, Setting, TFile, TFolder } from "obsidian";
-import { dailyNotePath, dailyNotesOptions, moment, type Moment } from "../cardbodies";
+import { dailyNotePath, dailyNotesOptions, moment, summaryTile, type Moment } from "../cardbodies";
 import { addResetButton, moveItem } from "../editors";
 import { FILE_TYPE_GROUPS, fileTypeLabel, FOLDERS_GROUP_ID, groupById, groupForFile } from "../filetypes";
 import { t } from "../i18n";
 import { countQuery } from "../query";
 import { ALL_STATS, DEFAULT_STATS, STAT_ICONS, type DashboardCard, type StatId } from "../types";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -70,33 +71,65 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 	};
 	const streak = dailyNoteStreak(view);
 
+	const builtinIds = advanced && cfg?.builtins ? cfg.builtins : DEFAULT_STATS;
+
+	// Reference (Widget Set → STATS): the small tile is one figure and what it
+	// counts ("2,481" over "notes"), set as a summary rather than squeezed into
+	// a stat grid that has room for exactly one cell.
+	if (card.size === "small") {
+		const first = builtinIds[0];
+		const value = first === "dayStreak" ? (streak ?? 0) : (values[first] ?? 0);
+		summaryTile(body, {
+			value: value.toLocaleString(),
+			label:
+				first === "dayStreak"
+					? t().cards.stats.dayStreak
+					: t().cards.stats[first],
+		});
+		return;
+	}
+
 	const grid = body.createDiv("sbd-stats");
 
-	const builtins = advanced && cfg?.builtins ? cfg.builtins : DEFAULT_STATS;
+	// Two tiles at medium, six at large and extra large — the full set of
+	// notes, attachments, folders, tags, day streak and days using Obsidian.
+	const fits = bySize(card.size, [1, 2, 6, 6]);
+	let shown = 0;
+	const room = () => shown < fits;
+
+	const builtins = builtinIds.slice(0, fits);
 	for (const id of builtins) {
 		// The day-streak tile only appears when daily notes are configured — same
 		// as it always has — whether or not it's explicitly selected.
 		if (id === "dayStreak") {
-			if (streak !== null) addStat(grid, undefined, streak, t().cards.stats.dayStreak);
+			if (streak !== null) {
+				addStat(grid, undefined, streak, t().cards.stats.dayStreak);
+				shown++;
+			}
 			continue;
 		}
 		addStat(grid, undefined, values[id], t().cards.stats[id]);
+		shown++;
 	}
 
 	if (!advanced) return;
 
 	// Attachment breakdown: one tile per selected file-type group.
 	for (const groupId of cfg?.attachmentTypes ?? []) {
+		if (!room()) return;
 		const group = groupById(groupId);
 		if (!group) continue;
 		addStat(grid, undefined, byType.get(groupId) ?? 0, fileTypeLabel(group));
+		shown++;
 	}
 
 	// Custom query counts.
 	for (const q of cfg?.queries ?? []) {
+		if (!room()) return;
 		const query = q.query?.trim();
 		if (!query) continue;
 		addStat(grid, q.icon?.trim() || "hash", countQuery(view.app, query), q.label?.trim() || query);
+		shown++;
 	}
 }
 
@@ -330,7 +363,7 @@ export function statsEditor(ctx: CardEditorContext, containerEl: HTMLElement): v
 export const statsCard: CardDefinition<"stats"> = {
 	kind: "stats",
 	templates: [
-		{ id: "stats", name: "Vault statistics", icon: "bar-chart-3", build: () => ({ kind: "stats", title: "Stats", w: 4, h: 2 }) },
+		{ id: "stats", defaultSize: "medium", name: "Vault statistics", icon: "bar-chart-3", build: () => ({ kind: "stats", title: "Stats" }) },
 	],
 	render: (view, card, body) => renderStats(view, card, body),
 	renderEditor: (container, ctx) => statsEditor(ctx, container),

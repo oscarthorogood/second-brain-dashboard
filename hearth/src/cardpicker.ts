@@ -17,6 +17,8 @@ import {
 	type CardCategory,
 	type CardTemplateDef,
 } from "./cards";
+import { templateDefaultSize, templateSizes } from "./cards/definition";
+import { sizeSpec, type WidgetSize } from "./widgetsize";
 import { cardRequestGithubUrl, cardRequestMailtoUrl } from "./cardrequest";
 import { t } from "./i18n";
 
@@ -49,8 +51,8 @@ const SCOPE_KEY = "sbd-card-picker-scope";
 export interface CardPickerOptions {
 	/** The running Second Brain Dashboard version, stamped into a card request. */
 	sbdVersion: string;
-	/** Add this template to the dashboard. */
-	onChoose: (template: CardTemplateDef) => void;
+	/** Add this template to the dashboard at the chosen size. */
+	onChoose: (template: CardTemplateDef, size: WidgetSize) => void;
 }
 
 /** Open the add-card picker. */
@@ -65,6 +67,12 @@ class CardPickerModal extends Modal {
 	 * the #52 naming hazard documented on `SbdTabbedModal`. */
 	private pickerScope: PickerScope = "all";
 	private query = "";
+	/** The widget whose size is being chosen, or null while the catalogue is
+	 * showing. Picking a widget is step one of two: the size is fixed for the
+	 * widget's life, so it is chosen deliberately rather than defaulted. */
+	private chosen: CardTemplateDef | null = null;
+	/** The size highlighted in the size step. */
+	private chosenSize: WidgetSize = "medium";
 
 	/** The template tiles currently on screen, in visual order — the list arrow
 	 * keys walk. Rebuilt on every results render. */
@@ -95,8 +103,7 @@ class CardPickerModal extends Modal {
 		const body = contentEl.createDiv("sbd-picker-body");
 		this.railEl = body.createDiv("sbd-picker-rail");
 		this.resultsEl = body.createDiv("sbd-picker-results");
-		this.renderRail();
-		this.renderResults();
+		this.render();
 
 		// Phones get the keyboard shoved in their face by an autofocused field,
 		// covering the very grid the picker exists to show; the same reason the
@@ -106,6 +113,25 @@ class CardPickerModal extends Modal {
 
 	onClose(): void {
 		this.contentEl.empty();
+	}
+
+	/** Redraw both panes and switch the frame between the catalogue and the
+	 * size step (the step hides the rail and the search field, which have
+	 * nothing to say once a widget has been picked). */
+	private render(): void {
+		this.contentEl.toggleClass("is-choosing-size", this.chosen != null);
+		this.titleEl.setText(
+			this.chosen ? templateName(this.chosen) : t().cardPicker.title,
+		);
+		this.renderRail();
+		this.renderResults();
+	}
+
+	/** Leave the size step and go back to the catalogue. */
+	private backToCatalogue(): void {
+		this.chosen = null;
+		this.render();
+		if (!Platform.isMobile) this.searchEl?.focus();
 	}
 
 	private isScope(value: string): value is PickerScope {
@@ -194,6 +220,11 @@ class CardPickerModal extends Modal {
 		results.empty();
 		this.tiles = [];
 
+		if (this.chosen) {
+			this.renderSizeStep(results, this.chosen);
+			return;
+		}
+
 		if (this.pickerScope === "request") {
 			this.renderRequest(results);
 			return;
@@ -231,6 +262,80 @@ class CardPickerModal extends Modal {
 			text: t().cardPicker.request.footLink,
 		});
 		link.addEventListener("click", () => this.setScope("request"));
+	}
+
+	// ---- Size step ------------------------------------------------------
+
+	/**
+	 * Step two: which of the four fixed sizes to add the widget at.
+	 *
+	 * Each option is drawn at its true proportions — a small widget really is a
+	 * quarter the width of an extra-large one — so the choice is made by eye
+	 * rather than by reading four labels. The reference's own captions (`S ·
+	 * 158×158` and friends) are the model for the cell count under each name.
+	 */
+	private renderSizeStep(containerEl: HTMLElement, template: CardTemplateDef): void {
+		const strings = t().cardPicker.size;
+		const step = containerEl.createDiv("sbd-size-step");
+
+		const back = step.createEl("button", { cls: "sbd-size-back" });
+		setIcon(back.createSpan("sbd-size-back-icon"), "arrow-left");
+		back.createSpan({ text: strings.back });
+		back.addEventListener("click", () => this.backToCatalogue());
+
+		step.createDiv({ cls: "sbd-size-heading", text: strings.heading });
+
+		const options = step.createDiv("sbd-size-options");
+		const offered = templateSizes(template);
+		for (const size of offered) {
+			const spec = sizeSpec(template.build().kind, size);
+			const option = options.createEl("button", { cls: "sbd-size-option" });
+			option.toggleClass("is-active", size === this.chosenSize);
+			option.setAttribute("aria-pressed", String(size === this.chosenSize));
+
+			// The preview keeps the size's real aspect ratio, and its width is
+			// proportional to the widest option offered, so the four previews
+			// read as the four footprints rather than four equal boxes.
+			const frame = option.createDiv("sbd-size-preview-frame");
+			const preview = frame.createDiv("sbd-size-preview");
+			const widest = offered.reduce(
+				(max, s) => Math.max(max, sizeSpec(template.build().kind, s).cols),
+				1,
+			);
+			preview.style.width = `${(spec.cols / widest) * 100}%`;
+			preview.style.aspectRatio = `${spec.cols} / ${spec.rows}`;
+			preview.style.borderRadius = `${Math.round(spec.radius / 3)}px`;
+			setIcon(preview.createSpan("sbd-size-preview-icon"), template.icon);
+
+			option.createDiv({ cls: "sbd-size-name", text: strings.names[size] });
+			option.createDiv({
+				cls: "sbd-size-cells",
+				text: strings.cells(spec.cols, spec.rows),
+			});
+
+			option.addEventListener("click", () => {
+				this.chosenSize = size;
+				this.render();
+			});
+			option.addEventListener("dblclick", () => this.commitSize(template));
+			this.tiles.push(option);
+		}
+
+		step.createDiv({ cls: "sbd-size-note", text: strings.note });
+
+		const add = step.createEl("button", { cls: "sbd-size-add", text: strings.add });
+		add.addEventListener("click", () => this.commitSize(template));
+	}
+
+	/** Add the chosen widget at the chosen size and close. */
+	private commitSize(template: CardTemplateDef): void {
+		const missing = unmetRequirement(this.app, template);
+		this.close();
+		// The widget is added either way — it renders its own "install X" prompt
+		// in place, which is a far better teacher than a missing menu entry —
+		// but say so, with a one-click way to fix it.
+		if (missing) this.noticeMissing(missing.name, missing.pluginId);
+		this.opts.onChoose(template, this.chosenSize);
 	}
 
 	/** The templates to show, filtered by scope and ranked by the query. */
@@ -282,12 +387,10 @@ class CardPickerModal extends Modal {
 		tile.setAttribute("aria-label", templateName(template));
 		tile.addEventListener("keydown", (evt: KeyboardEvent) => this.onTileKey(evt, tile));
 		tile.addEventListener("click", () => {
-			this.close();
-			// The card is added either way — it renders its own "install X" prompt
-			// in place, which is a far better teacher than a missing menu entry —
-			// but say so, with a one-click way to fix it.
-			if (missing) this.noticeMissing(missing.name, missing.pluginId);
-			this.opts.onChoose(template);
+			// Step two: which size. The widget isn't added yet.
+			this.chosen = template;
+			this.chosenSize = templateDefaultSize(template);
+			this.render();
 		});
 		this.tiles.push(tile);
 	}

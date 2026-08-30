@@ -7,12 +7,15 @@ import {
 	CARD_TEMPLATES,
 	TEMPLATE_MENU_ORDER,
 	cardDefinition,
+	cardFromTemplate,
 	cloneCard,
 	templateCategory,
 	templateDescription,
 	templateName,
 	unmetRequirement,
 } from "../src/cards";
+import { templateDefaultSize, templateSizes } from "../src/cards/definition";
+import { WIDGET_SIZES } from "../src/widgetsize";
 import type { App } from "obsidian";
 import type { DashboardCard } from "../src/types";
 
@@ -39,41 +42,41 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 		}));
 		expect(snapshot).toEqual([
 			// ---- Notes & files ----
-			{ id: "note", icon: "file-text", category: "notes", requires: null, build: { kind: "embed", title: "Note", target: "", w: 6, h: 3 } },
-			{ id: "daily", icon: "calendar", category: "notes", requires: null, build: { kind: "daily", w: 6, h: 4 } },
-			{ id: "image", icon: "image", category: "notes", requires: null, build: { kind: "embed", title: "Image", target: "", w: 4, h: 3 } },
+			{ id: "note", icon: "file-text", category: "notes", requires: null, build: { kind: "embed", title: "Note", target: "" } },
+			{ id: "daily", icon: "calendar", category: "notes", requires: null, build: { kind: "daily" } },
+			{ id: "image", icon: "image", category: "notes", requires: null, build: { kind: "embed", title: "Image", target: "" } },
 			{
 				id: "slideshow",
 				icon: "images",
 				category: "notes",
 				requires: null,
-				build: { kind: "slideshow", title: "Slideshow", slideshow: { slides: [] }, w: 4, h: 3 },
+				build: { kind: "slideshow", title: "Slideshow", slideshow: { slides: [] } },
 			},
-			{ id: "canvas", icon: "layout-dashboard", category: "notes", requires: null, build: { kind: "embed", title: "Canvas", target: "", w: 6, h: 4 } },
-			{ id: "excalidraw", icon: "pen-tool", category: "notes", requires: null, build: { kind: "embed", title: "Drawing", target: "", w: 6, h: 4 } },
-			{ id: "base", icon: "database", category: "notes", requires: null, build: { kind: "embed", title: "Base", target: "", w: 6, h: 4 } },
-			{ id: "recent", icon: "history", category: "notes", requires: null, build: { kind: "recent", title: "Recent", count: 8, w: 4, h: 3 } },
-			{ id: "favorites", icon: "star", category: "notes", requires: null, build: { kind: "favorites", title: "Favorites", w: 4, h: 3 } },
-			{ id: "bookmarks", icon: "bookmark", category: "notes", requires: null, build: { kind: "bookmarks", title: "Bookmarks", w: 4, h: 3 } },
+			{ id: "canvas", icon: "layout-dashboard", category: "notes", requires: null, build: { kind: "embed", title: "Canvas", target: "" } },
+			{ id: "excalidraw", icon: "pen-tool", category: "notes", requires: null, build: { kind: "embed", title: "Drawing", target: "" } },
+			{ id: "base", icon: "database", category: "notes", requires: null, build: { kind: "embed", title: "Base", target: "" } },
+			{ id: "recent", icon: "history", category: "notes", requires: null, build: { kind: "recent", title: "Recent", count: 8 } },
+			{ id: "favorites", icon: "star", category: "notes", requires: null, build: { kind: "favorites", title: "Favorites" } },
+			{ id: "bookmarks", icon: "bookmark", category: "notes", requires: null, build: { kind: "bookmarks", title: "Bookmarks" } },
 
 			// ---- Planning ----
-			{ id: "tasks", icon: "list-todo", category: "planning", requires: null, build: { kind: "tasks", title: "Tasks", tasks: {}, w: 4, h: 4 } },
-			{ id: "schedule", icon: "calendar-range", category: "planning", requires: null, build: { kind: "schedule", title: "Calendar", schedule: {}, w: 8, h: 6 } },
-			{ id: "calendar", icon: "calendar-days", category: "planning", requires: null, build: { kind: "calendar", title: "Calendar", w: 4, h: 4 } },
-			{ id: "clock", icon: "clock", category: "planning", requires: null, build: { kind: "clock", title: "", w: 4, h: 2 } },
+			{ id: "tasks", icon: "list-todo", category: "planning", requires: null, build: { kind: "tasks", title: "Tasks", tasks: {} } },
+			{ id: "schedule", icon: "calendar-range", category: "planning", requires: null, build: { kind: "schedule", title: "Calendar", schedule: {} } },
+			{ id: "calendar", icon: "calendar-days", category: "planning", requires: null, build: { kind: "calendar", title: "Calendar" } },
+			{ id: "clock", icon: "clock", category: "planning", requires: null, build: { kind: "clock", title: "" } },
 
 			// ---- Vault insight ----
-			{ id: "search", icon: "search", category: "vault", requires: null, build: { kind: "search", title: "Query", savedSearch: { query: "" }, w: 4, h: 4 } },
-			{ id: "searchbar", icon: "text-cursor-input", category: "vault", requires: null, build: { kind: "searchbar", title: "", searchBar: {}, w: 6, h: 1 } },
-			{ id: "stats", icon: "bar-chart-3", category: "vault", requires: null, build: { kind: "stats", title: "Stats", w: 4, h: 2 } },
-			{ id: "heatmap", icon: "activity", category: "vault", requires: null, build: { kind: "heatmap", title: "Activity", heatmap: {}, w: 6, h: 3 } },
+			{ id: "search", icon: "search", category: "vault", requires: null, build: { kind: "search", title: "Query", savedSearch: { query: "" } } },
+			{ id: "searchbar", icon: "text-cursor-input", category: "vault", requires: null, build: { kind: "searchbar", title: "", searchBar: {} } },
+			{ id: "stats", icon: "bar-chart-3", category: "vault", requires: null, build: { kind: "stats", title: "Stats" } },
+			{ id: "heatmap", icon: "activity", category: "vault", requires: null, build: { kind: "heatmap", title: "Activity", heatmap: {} } },
 
 			// ---- Tools ----
-			{ id: "links", icon: "layout-grid", category: "tools", requires: null, build: { kind: "links", title: "Links", links: [], w: 6, h: 2 } },
-			{ id: "commands", icon: "terminal-square", category: "tools", requires: null, build: { kind: "commands", title: "Commands", commands: [], w: 6, h: 2 } },
-			{ id: "text", icon: "pencil", category: "tools", requires: null, build: { kind: "text", title: "Notes", text: "", w: 4, h: 2 } },
-			{ id: "calculator", icon: "calculator", category: "tools", requires: null, build: { kind: "calculator", title: "Calculator", calculator: {}, w: 4, h: 3 } },
-			{ id: "web", icon: "globe", category: "tools", requires: null, build: { kind: "web", title: "Web", url: "", w: 6, h: 4 } },
+			{ id: "links", icon: "layout-grid", category: "tools", requires: null, build: { kind: "links", title: "Links", links: [] } },
+			{ id: "commands", icon: "terminal-square", category: "tools", requires: null, build: { kind: "commands", title: "Commands", commands: [] } },
+			{ id: "text", icon: "pencil", category: "tools", requires: null, build: { kind: "text", title: "Notes", text: "" } },
+			{ id: "calculator", icon: "calculator", category: "tools", requires: null, build: { kind: "calculator", title: "Calculator", calculator: {} } },
+			{ id: "web", icon: "globe", category: "tools", requires: null, build: { kind: "web", title: "Web", url: "" } },
 
 			// ---- Integrations ----
 			{
@@ -81,16 +84,16 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 				icon: "file-plus-2",
 				category: "integrations",
 				requires: "Templater",
-				build: { kind: "templater", title: "New note", templater: { items: [] }, w: 6, h: 2 },
+				build: { kind: "templater", title: "New note", templater: { items: [] } },
 			},
-			{ id: "dataview", icon: "database", category: "integrations", requires: "Dataview", build: { kind: "dataview", title: "Dataview", dataview: {}, w: 6, h: 4 } },
-			{ id: "datacore", icon: "database-zap", category: "integrations", requires: "Datacore", build: { kind: "datacore", title: "Datacore", datacore: {}, w: 6, h: 4 } },
+			{ id: "dataview", icon: "database", category: "integrations", requires: "Dataview", build: { kind: "dataview", title: "Dataview", dataview: {} } },
+			{ id: "datacore", icon: "database-zap", category: "integrations", requires: "Datacore", build: { kind: "datacore", title: "Datacore", datacore: {} } },
 			{
 				id: "git",
 				icon: "git-branch",
 				category: "integrations",
 				requires: "Git",
-				build: { kind: "git", title: "Git", git: {}, w: 4, h: 4 },
+				build: { kind: "git", title: "Git", git: {} },
 			},
 			{
 				id: "jira",
@@ -107,28 +110,26 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 						refreshMin: 0,
 						cacheMin: 5,
 					},
-					w: 6,
-					h: 5,
 				},
 			},
-			{ id: "rss", icon: "rss", category: "integrations", requires: null, build: { kind: "rss", title: "RSS", rss: { sources: [] }, w: 4, h: 5 } },
+			{ id: "rss", icon: "rss", category: "integrations", requires: null, build: { kind: "rss", title: "RSS", rss: { sources: [] } } },
 			{
 				id: "weather",
 				icon: "cloud-sun",
 				category: "integrations",
 				requires: null,
-				build: { kind: "weather", title: "Weather", weather: {}, w: 4, h: 3 },
+				build: { kind: "weather", title: "Weather", weather: {} },
 			},
 			{
 				id: "leaf",
 				icon: "layout-panel-left",
 				category: "integrations",
 				requires: "Hostable side-panel views",
-				build: { kind: "leaf", title: "Plugin view", leafView: {}, w: 5, h: 4 },
+				build: { kind: "leaf", title: "Plugin view", leafView: {} },
 			},
 
 			// ---- Fun ----
-			{ id: "pet", icon: "cat", category: "fun", requires: null, build: { kind: "pet", title: "Pet", pet: {}, w: 3, h: 4 } },
+			{ id: "pet", icon: "cat", category: "fun", requires: null, build: { kind: "pet", title: "Pet", pet: {} } },
 		]);
 	});
 
@@ -182,10 +183,7 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 function maximalCard(): DashboardCard {
 	return {
 		id: "orig",
-		x: 0,
-		y: 0,
-		w: 4,
-		h: 4,
+		size: "large",
 		kind: "tasks",
 		title: "Everything",
 		links: [{ label: "A", href: "a" } as never],
@@ -347,12 +345,41 @@ describe("liveness classification", () => {
 	});
 });
 
+describe("template sizes", () => {
+	it("offers all four sizes everywhere except the search widget", () => {
+		for (const tpl of CARD_TEMPLATES) {
+			const offered = templateSizes(tpl);
+			if (tpl.id === "searchbar") {
+				// Widget Set → SEARCH is captioned 4x2 and 8x2 only: a search
+				// field over filter chips has nothing to put in a tall tile.
+				expect(offered).toEqual(["medium", "xlarge"]);
+			} else {
+				expect(offered).toEqual(WIDGET_SIZES);
+			}
+		}
+	});
+
+	it("preselects a size every template actually offers", () => {
+		for (const tpl of CARD_TEMPLATES) {
+			expect(templateSizes(tpl)).toContain(templateDefaultSize(tpl));
+		}
+	});
+
+	it("builds a widget at the size the picker chose", () => {
+		const tpl = CARD_TEMPLATES.find((t) => t.id === "recent");
+		expect(tpl).toBeDefined();
+		expect(cardFromTemplate(tpl!, "xlarge").size).toBe("xlarge");
+		// Falling back to the template's own default when none is named.
+		expect(cardFromTemplate(tpl!).size).toBe(templateDefaultSize(tpl!));
+	});
+});
+
 describe("cardDefinition", () => {
 	it("serves an inert fallback for a kind this build doesn't know", () => {
 		// Persisted data can outrun the code: a data.json written by a newer
 		// Second Brain Dashboard (then downgraded), a sync conflict, a hand edit. The lookup must
 		// stay total so one alien card can't take down the whole dashboard render.
-		const alien = { id: "a", x: 0, y: 0, w: 1, h: 1, kind: "hologram" } as unknown as DashboardCard;
+		const alien = { id: "a", size: "medium", kind: "hologram" } as unknown as DashboardCard;
 		const def = cardDefinition(alien);
 		expect(def).toBeDefined();
 		expect(def.liveness).toEqual({ mode: "static" });

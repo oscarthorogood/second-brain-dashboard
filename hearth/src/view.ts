@@ -7,7 +7,6 @@ import { applyBackground, renderBanner } from "./background";
 import { deferRedrawWhileTyping } from "./cardfocus";
 import {
 	bannerActive,
-	effectiveFitToPage,
 	effectiveMaxWidth,
 	effectiveShowSearch,
 	effectiveShowTitle,
@@ -198,7 +197,6 @@ export class HomeView extends ItemView {
 		if (!banner) applyBackground(this, root, child);
 
 		const scroll = root.createDiv("sbd-scroll");
-		scroll.toggleClass("sbd-fit", effectiveFitToPage(this.plugin.settings));
 
 		if (banner) renderBanner(this, scroll, child);
 

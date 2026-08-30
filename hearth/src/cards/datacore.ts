@@ -1,5 +1,5 @@
 import { Component, setIcon, Setting } from "obsidian";
-import { emptyState, wireMarkdownLinks } from "../cardbodies";
+import { emptyState, summaryTile, wireMarkdownLinks } from "../cardbodies";
 import {
 	DATACORE_PLUGIN_ID,
 	datacoreQueryError,
@@ -43,6 +43,14 @@ export function renderDatacore(
 	const query = (cfg.query ?? "").trim();
 	if (!query) {
 		emptyState(body, "code", t().cards.empty.datacoreNoQuery);
+		return;
+	}
+
+	// Same as DATAVIEW: the small tile names what the query is about rather
+	// than clipping its result to a couple of pixels.
+	if (card.size === "small") {
+		summaryTile(body, { icon: "database", value: card.title?.trim() || query });
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 
@@ -201,10 +209,10 @@ export const datacoreCard: CardDefinition<"datacore"> = {
 	kind: "datacore",
 	templates: [
 		{
-			id: "datacore",
+			id: "datacore", defaultSize: "large",
 			name: "Datacore query",
 			icon: "database-zap",
-			build: () => ({ kind: "datacore", title: "Datacore", datacore: {}, w: 6, h: 4 }),
+			build: () => ({ kind: "datacore", title: "Datacore", datacore: {} }),
 			requires: {
 				name: "Datacore",
 				pluginId: DATACORE_PLUGIN_ID,

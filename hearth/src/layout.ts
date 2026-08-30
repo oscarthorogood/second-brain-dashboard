@@ -39,6 +39,7 @@ import {
 	type TasksConfig,
 	CARD_BORDER_WIDTH_MAX,
 	clampBannerHeight,
+	clampWidgetScale,
 } from "./types";
 import { CARD_KINDS } from "./cards";
 import { isEmbeddableBaseViewName } from "./bases";
@@ -59,18 +60,20 @@ import {
 	type GitCommitScope,
 } from "./git";
 import { t } from "./i18n";
+import { asWidgetSize } from "./widgetsize";
 
 /** Current dashboard-layout export schema version.
  *
- * v3 (current): a single `cards` array plus globals, same shape as v1 — multi-
- * page support (and the intervening v2 multi-dashboard export) was removed.
- * v2: every dashboard (with per-board overrides and backgrounds) plus pinned
- * cards; still imported for backward compatibility, folding onto a single
- * board by keeping the active dashboard's cards plus every pinned card and
- * discarding every other board and its overrides — the same collapse
- * `migrateSettings` performs on upgrade.
- * v1: a bare single `cards` array; still imported. */
-export const LAYOUT_SCHEMA = 3;
+ * v4 (current): widgets carry a fixed `size` and no coordinates, and the board
+ * has no column count, row height or fit-to-page switch — the free-form
+ * geometry every earlier schema stored has no meaning on the fixed grid. A
+ * v1–v3 layout is therefore *not* importable onto this board: its widgets are
+ * sized and placed in units that no longer exist. `importLayout` says so
+ * rather than guessing a size for each widget.
+ * v3: a single `cards` array (with x/y/w/h and fx/fy/fw/fh) plus globals.
+ * v2: every dashboard plus pinned cards.
+ * v1: a bare single `cards` array. */
+export const LAYOUT_SCHEMA = 4;
 
 /** Current full-settings export schema version. A settings export is a superset
  * of a layout export: it embeds the whole layout (so it imports cleanly through
@@ -81,9 +84,7 @@ export const SETTINGS_SCHEMA = 1;
 export interface LayoutExport {
 	sbdLayout: number;
 	cards: DashboardCard[];
-	gridColumns: number;
-	rowHeight: number;
-	fitToPage: boolean;
+	widgetScale: number;
 	maxWidth: number;
 	favorites: string[];
 }
@@ -91,11 +92,7 @@ export interface LayoutExport {
 /** Value ranges enforced on import so a malformed/hostile layout can't set
  * values the settings UI could never produce. Mirror the sliders in settings. */
 const RANGE = {
-	gridColumns: { min: 4, max: 16 },
-	rowHeight: { min: 32, max: 160 },
 	maxWidth: { min: 700, max: 1600 },
-	cardW: { min: 1, max: 16 },
-	cardH: { min: 1, max: 60 },
 	cardBlur: { min: 0, max: 24 },
 	cardRadius: { min: 0, max: 14 },
 	cardBorderWidth: { min: 0, max: CARD_BORDER_WIDTH_MAX },
@@ -113,9 +110,7 @@ function layoutPayload(s: HomeSettings): LayoutExport {
 	return {
 		sbdLayout: LAYOUT_SCHEMA,
 		cards: s.cards.map(scrubCard),
-		gridColumns: s.gridColumns,
-		rowHeight: s.rowHeight,
-		fitToPage: s.fitToPage,
+		widgetScale: s.widgetScale,
 		maxWidth: s.maxWidth,
 		favorites: s.favorites,
 	};
@@ -279,33 +274,14 @@ function sanitizeCard(raw: unknown, index: number): DashboardCard | null {
 		: null;
 	if (!kind) return null;
 
+	// A widget's whole geometry is its size, and its position is its index in
+	// the array — so there is nothing else here to sanitize. An unknown or
+	// missing size falls back to medium rather than rejecting the widget.
 	const card: DashboardCard = {
 		id: str(r.id) ?? `card-${Date.now().toString(36)}-${index}`,
 		kind,
-		x: num(r.x, -1),
-		y: num(r.y, -1),
-		w: clampNum(r.w, RANGE.cardW.min, RANGE.cardW.max, 4),
-		h: clampNum(r.h, RANGE.cardH.min, RANGE.cardH.max, 2),
+		size: asWidgetSize(r.size),
 	};
-
-	// Preserve the live free-form geometry so an exported layout round-trips
-	// faithfully between devices. Without this the coordinates the board actually
-	// renders with (fx/fy/fw/fh) were dropped on import and re-derived from the
-	// legacy x/y/w/h grid units — which go stale the moment a card is dragged —
-	// so a shared/synced layout reverted to its pre-arrange positions.
-	// fx/fw are board-width fractions (0..1); fy/fh are absolute pixels (>= 0).
-	if (typeof r.fx === "number" && Number.isFinite(r.fx)) {
-		card.fx = Math.max(0, Math.min(1, r.fx));
-	}
-	if (typeof r.fw === "number" && Number.isFinite(r.fw)) {
-		card.fw = Math.max(0.02, Math.min(1, r.fw));
-	}
-	if (typeof r.fy === "number" && Number.isFinite(r.fy)) {
-		card.fy = Math.max(0, r.fy);
-	}
-	if (typeof r.fh === "number" && Number.isFinite(r.fh)) {
-		card.fh = Math.max(0, r.fh);
-	}
 
 	const title = str(r.title);
 	if (title !== undefined) card.title = title;
@@ -960,6 +936,16 @@ function applyLayout(
 	s: HomeSettings,
 	data: Record<string, unknown>,
 ): string | null {
+	// A layout written before the fixed grid (schema 1-3, and every legacy
+	// multi-dashboard export) stores each widget's free-form geometry and no
+	// size. Those units no longer exist, and inventing a size for every widget
+	// would rebuild the board into an arrangement its author never chose — so
+	// say so instead of importing something misleading.
+	const schema = typeof data.sbdLayout === "number" ? data.sbdLayout : 0;
+	if (Array.isArray(data.dashboards) || (Array.isArray(data.cards) && schema < LAYOUT_SCHEMA)) {
+		return t().layout.preGridLayout;
+	}
+
 	// Legacy multi-dashboard export (from before multi-page support was
 	// removed): keep the active dashboard's own cards plus every pinned card
 	// (which rendered on every board), discarding every other board and its
@@ -1034,19 +1020,8 @@ export function importSettings(s: HomeSettings, json: string): string | null {
 
 /** Apply the global (non-per-board) settings carried by a layout, clamped. */
 function applyGlobals(s: HomeSettings, data: Record<string, unknown>): void {
-	s.gridColumns = clampNum(
-		data.gridColumns,
-		RANGE.gridColumns.min,
-		RANGE.gridColumns.max,
-		s.gridColumns,
-	);
-	if (typeof data.rowHeight === "number") {
-		s.rowHeight = clampNum(
-			data.rowHeight,
-			RANGE.rowHeight.min,
-			RANGE.rowHeight.max,
-			s.rowHeight,
-		);
+	if (typeof data.widgetScale === "number") {
+		s.widgetScale = clampWidgetScale(data.widgetScale);
 	}
 	s.maxWidth = clampNum(
 		data.maxWidth,
@@ -1054,7 +1029,6 @@ function applyGlobals(s: HomeSettings, data: Record<string, unknown>): void {
 		RANGE.maxWidth.max,
 		s.maxWidth,
 	);
-	if (typeof data.fitToPage === "boolean") s.fitToPage = data.fitToPage;
 	if (Array.isArray(data.favorites)) {
 		s.favorites = data.favorites.filter(
 			(p): p is string => typeof p === "string",
