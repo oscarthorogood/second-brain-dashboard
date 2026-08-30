@@ -69,7 +69,12 @@ export abstract class SbdTabbedModal extends Modal {
 		const tabs = this.sbdTabs();
 		const active = this.sbdActiveTab(tabs);
 
-		this.sbdRenderRibbon(contentEl, tabs, active);
+		// A ribbon of one is a label pretending to be a control. The card
+		// settings modal became single-tab when the fixed widget sizes deleted
+		// everything its Layout tab held, and drawing a lone "Content" pill
+		// above the body would only ask the user to notice a choice they don't
+		// have.
+		if (tabs.length > 1) this.sbdRenderRibbon(contentEl, tabs, active);
 
 		const body = contentEl.createDiv("sbd-modal-tabbody");
 		// Per-tab backstop (the #52 lesson): a throw while building one tab shows

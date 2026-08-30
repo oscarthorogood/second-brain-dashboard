@@ -2332,6 +2332,8 @@ export const en = {
 			placeholder: "2 + 2, 10 km to miles, 10 € to USD…",
 		},
 		rss: {
+			/** The small widget's summary line under the unread count. */
+			unreadSummary: "unread",
 			allTab: "All",
 			untitled: "(untitled)",
 			loading: "Loading feed…",
@@ -2383,6 +2385,8 @@ export const en = {
 			},
 		},
 		jira: {
+			/** The small widget's summary line under the open-issue count. */
+			openSummary: "open issues",
 			controls: {
 				status: "Status",
 				assignee: "Assignee",
@@ -2404,6 +2408,9 @@ export const en = {
 			notConfigured: "Configure a Jira host, token, and saved filter in card settings",
 		},
 		git: {
+			/** The small widget's line under the branch name: how far it is from
+			 * its upstream, and how much is uncommitted. */
+			aheadBehind: (ahead: number, changes: number) => `↑${ahead} ✎${changes}`,
 			sections: {
 				status: "Repository status",
 				actions: "Buttons",
@@ -2458,6 +2465,8 @@ export const en = {
 			noNoteYet: "No note for today yet",
 		},
 		heatmap: {
+			/** The small widget's line under this week's count. */
+			thisWeek: "this week",
 			less: "Less",
 			more: "More",
 			// The card's headline names what the squares count; the range says
@@ -2530,12 +2539,18 @@ export const en = {
 			everyMinutes: (n: number) => `${n} min`,
 			everyHours: (n: number) => `${n} hr`,
 		},
+		leaf: {
+			/** The small widget's line under the hosted view's name. */
+			hosted: "hosted view",
+		},
 		bookmarks: {
 			untitled: "Untitled",
 			// The card's own headline, drawn inside it beside a bookmark glyph.
 			heading: "Bookmarks",
 		},
 		tasks: {
+			/** The small widget's summary line under the outstanding count. */
+			openSummary: "open tasks",
 			createNewTask: "Create new task",
 			toDo: "To do",
 			done: "Done",

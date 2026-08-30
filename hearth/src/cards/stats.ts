@@ -1,5 +1,5 @@
 import { getAllTags, setIcon, Setting, TFile, TFolder } from "obsidian";
-import { dailyNotePath, dailyNotesOptions, moment, type Moment } from "../cardbodies";
+import { dailyNotePath, dailyNotesOptions, moment, summaryTile, type Moment } from "../cardbodies";
 import { addResetButton, moveItem } from "../editors";
 import { FILE_TYPE_GROUPS, fileTypeLabel, FOLDERS_GROUP_ID, groupById, groupForFile } from "../filetypes";
 import { t } from "../i18n";
@@ -71,17 +71,33 @@ export function renderStats(view: HomeView, card: DashboardCard, body: HTMLEleme
 	};
 	const streak = dailyNoteStreak(view);
 
+	const builtinIds = advanced && cfg?.builtins ? cfg.builtins : DEFAULT_STATS;
+
+	// Reference (Widget Set → STATS): the small tile is one figure and what it
+	// counts ("2,481" over "notes"), set as a summary rather than squeezed into
+	// a stat grid that has room for exactly one cell.
+	if (card.size === "small") {
+		const first = builtinIds[0];
+		const value = first === "dayStreak" ? (streak ?? 0) : (values[first] ?? 0);
+		summaryTile(body, {
+			value: value.toLocaleString(),
+			label:
+				first === "dayStreak"
+					? t().cards.stats.dayStreak
+					: t().cards.stats[first],
+		});
+		return;
+	}
+
 	const grid = body.createDiv("sbd-stats");
 
-	// Reference (Widget Set → STATS): two tiles at medium, six at large and
-	// extra large — the full set of notes, attachments, folders, tags, day
-	// streak and days using Obsidian. A small tile has no room for a stat
-	// grid at all, so it shows the first figure alone.
+	// Two tiles at medium, six at large and extra large — the full set of
+	// notes, attachments, folders, tags, day streak and days using Obsidian.
 	const fits = bySize(card.size, [1, 2, 6, 6]);
 	let shown = 0;
 	const room = () => shown < fits;
 
-	const builtins = (advanced && cfg?.builtins ? cfg.builtins : DEFAULT_STATS).slice(0, fits);
+	const builtins = builtinIds.slice(0, fits);
 	for (const id of builtins) {
 		// The day-streak tile only appears when daily notes are configured — same
 		// as it always has — whether or not it's explicitly selected.

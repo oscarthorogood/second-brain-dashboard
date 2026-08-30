@@ -1,5 +1,5 @@
 import { Component, Menu, Notice, setIcon, Setting, TFile } from "obsidian";
-import { emptyState, moment } from "../cardbodies";
+import { emptyState, moment, summaryTile } from "../cardbodies";
 import { addResetButton, moveItem } from "../editors";
 import {
 	GIT_ACTION_DEFS,
@@ -167,6 +167,23 @@ export function renderGit(
 				text: t().cards.git.openSourceControl,
 			});
 			button.addEventListener("click", () => void openGitView(view.app, "sourceControl"));
+			return;
+		}
+
+		// The small tile is the branch and how far it is from its upstream, with
+		// no sections at all (Widget Set → GIT: a branch glyph over "main" over
+		// "↑2 ↓0"). A 158×158 tile has no room for a status line, an action row
+		// and a change list, and the branch is the answer the widget exists for.
+		if (card.size === "small") {
+			const counts = gitChangeCounts(snapshot.status);
+			const ahead = snapshot.unpushed ?? 0;
+			const wrapper = wrap.createDiv("sbd-summary-host");
+			summaryTile(wrapper, {
+				icon: "git-branch",
+				value: snapshot.branch?.current || t().cards.git.noBranch,
+				label: t().cards.git.aheadBehind(ahead, counts.total),
+			});
+			wrapper.firstElementChild?.addClass("is-name");
 			return;
 		}
 

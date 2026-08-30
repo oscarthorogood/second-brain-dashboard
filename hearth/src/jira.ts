@@ -5,6 +5,7 @@ import {
 	setIcon,
 } from "obsidian";
 import type { HomeView } from "./view";
+import { summaryTile } from "./cardbodies";
 import {
 	type DashboardCard,
 	effectiveAutoRefreshMinutes,
@@ -646,6 +647,15 @@ export function renderJiraCard(
 		}
 		if (!issues.length) {
 			content.createDiv({ cls: "sbd-jira-state", text: strings.empty });
+			return;
+		}
+		// The small tile answers "how many are open" rather than showing one
+		// arbitrary issue (Widget Set → JIRA: "5" over "open issues").
+		if (card.size === "small") {
+			summaryTile(content, {
+				value: String(issues.length),
+				label: strings.openSummary,
+			});
 			return;
 		}
 		for (const issue of issues) {

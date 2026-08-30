@@ -74,6 +74,46 @@ export function emptyState(body: HTMLElement, icon: string, text: string): void 
 }
 
 
+/** The figure a small widget shows in place of a list. */
+export interface WidgetSummary {
+	/** The figure itself: "8", "2,481", "main". */
+	value: string;
+	/** What it counts, under the figure: "open tasks", "notes". Omitted where
+	 * the figure speaks for itself (EMBED's note name). */
+	label?: string;
+	/** A glyph above the figure, where the reference draws one (GIT, LEAF). */
+	icon?: string;
+	/** A quieter third line (GIT's "↑2 ↓0"). */
+	detail?: string;
+}
+
+/**
+ * The small tile.
+ *
+ * A 158×158 tile can hold one row of a list, and the reference decided that
+ * one row is the wrong thing to show: across the Widget Set the small tile of
+ * every list-shaped widget is a *summary* instead — TASKS draws "8 / open
+ * tasks", JIRA "5 / open issues", STATS "2,481 / notes", GIT its branch and
+ * ahead/behind. It answers the question the widget exists for at a glance,
+ * which a single arbitrary row does not.
+ *
+ * The figure is set in the reference at 44px, dropping to 32px once it is long
+ * enough that 44px would not fit (STATS' grouped thousands) — `is-long` below.
+ */
+export function summaryTile(body: HTMLElement, summary: WidgetSummary): void {
+	const wrap = body.createDiv("sbd-summary");
+	if (summary.icon) setIcon(wrap.createDiv("sbd-summary-icon"), summary.icon);
+	const value = wrap.createDiv({ cls: "sbd-summary-value", text: summary.value });
+	value.toggleClass("is-long", summary.value.length > 3);
+	if (summary.label) {
+		wrap.createDiv({ cls: "sbd-summary-label", text: summary.label });
+	}
+	if (summary.detail) {
+		wrap.createDiv({ cls: "sbd-summary-detail", text: summary.detail });
+	}
+}
+
+
 /**
  * A small action button floated over the card — the "open this file" affordance
  * the daily, embed and slideshow cards each offer. It is attached to the card

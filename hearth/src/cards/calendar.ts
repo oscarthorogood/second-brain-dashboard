@@ -6,6 +6,7 @@ import {
 	emptyState,
 	heatLevel,
 	moment,
+	summaryTile,
 	type DailyNotesOptions,
 	type Moment,
 } from "../cardbodies";
@@ -50,6 +51,18 @@ export function renderCalendar(
 	// external calendar to overlay, or TaskNotes as a source.
 	if (!options && sources.length === 0 && !useTaskNotes) {
 		emptyState(body, "calendar-days", t().cards.empty.dailyEnable);
+		return;
+	}
+
+	// Widget Set → CALENDAR's small tile is today's date under its month. A
+	// seven-column month grid plus an agenda does not fit in 158x158, and the
+	// date is what a glance at a calendar is for.
+	if (card.size === "small") {
+		const today = moment();
+		summaryTile(body, {
+			value: today.format("D"),
+			label: today.format("MMMM"),
+		});
 		return;
 	}
 

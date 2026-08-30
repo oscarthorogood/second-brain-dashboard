@@ -12,7 +12,7 @@ import {
 	TFolder,
 	type App,
 } from "obsidian";
-import { emptyState, moment } from "../cardbodies";
+import { emptyState, moment, summaryTile } from "../cardbodies";
 import { formatRelativeDate, parseNaturalDate } from "../dates";
 import { addResetButton } from "../editors";
 import { t } from "../i18n";
@@ -1893,6 +1893,17 @@ async function loadAndRenderTasks(
 	// Reference (Widget Set → TASKS): two tasks at medium, three at large and
 	// extra large (where the tile carries a second column beside them).
 	const fits = bySize(size, [1, 2, 6, 10]);
+
+	// The small tile answers "how much is outstanding" rather than showing one
+	// arbitrary task (Widget Set → TASKS: "8" over "open tasks").
+	if (size === "small") {
+		summaryTile(container, {
+			value: String(list.length),
+			label: t().cards.tasks.openSummary,
+		});
+		return;
+	}
+
 	const limit = cfg.count && cfg.count > 0 ? Math.min(cfg.count, fits) : fits;
 	list = list.slice(0, limit);
 

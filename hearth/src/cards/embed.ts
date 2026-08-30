@@ -11,6 +11,7 @@ import {
 	renderEditableEmbed,
 	renderLivePreviewEmbed,
 	renderMarkdownFile,
+	summaryTile,
 	watchedCardPath,
 	wireMarkdownLinks,
 } from "../cardbodies";
@@ -60,6 +61,15 @@ export function renderEmbed(
 	const file = view.app.vault.getAbstractFileByPath(target);
 	if (!(file instanceof TFile)) {
 		emptyState(body, "file-x", `Not found: ${target}`);
+		return;
+	}
+
+	// Widget Set → EMBED's small tile is a file glyph over the note's name.
+	// Rendering markdown (or a base, or a canvas) into 158x158 produces a few
+	// clipped words at best, and pays a full markdown render for them.
+	if (card.size === "small") {
+		summaryTile(body, { icon: "file-text", value: file.basename });
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 

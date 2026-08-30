@@ -1938,6 +1938,82 @@ body.theme-dark {
 	align-content: start;
 }
 
+/* ---- The small tile's summary --------------------------------------
+ *
+ * What a list-shaped widget draws at 158×158 instead of one arbitrary row:
+ * a figure and what it counts, centred. Straight off the reference's own S
+ * tiles (TASKS "8 / open tasks", JIRA "5 / open issues", STATS "2,481 /
+ * notes", GIT its branch over "↑2 ↓0").
+ */
+.sbd-summary {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	gap: 6px;
+}
+
+.sbd-summary-icon {
+	display: flex;
+	margin-bottom: 2px;
+}
+
+.sbd-summary-icon .svg-icon {
+	width: 17px;
+	height: 17px;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+/* 44px in the reference, with -1.5px of tracking pulled out of it. */
+.sbd-summary-value {
+	font-size: 2.75rem;
+	font-weight: 700;
+	line-height: 1;
+	letter-spacing: -1.5px;
+	color: rgba(255, 255, 255, 0.98);
+}
+
+/* A grouped thousand ("2,481") is too wide for 44px in a 158px tile, so the
+ * reference sets STATS' figure at 32px. Same rule, keyed off the length. */
+.sbd-summary-value.is-long {
+	font-size: 2rem;
+	letter-spacing: -0.6px;
+}
+
+.sbd-summary-label {
+	font-size: 0.8125rem;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.sbd-summary-detail {
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.66);
+}
+
+/* A widget whose body is already a flex column (GIT) hands the summary a host
+ * that takes the remaining height, so the tile still centres. */
+/* The calculator's keypad, hidden on the small tile (see calculator.ts). */
+.sbd-calc-keys.is-hidden {
+	display: none;
+}
+
+.sbd-summary-host {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+/* GIT's and LEAF's small tiles carry a name rather than a count, so the
+ * "figure" is set as a name: 15px semibold, not the 44px numeral. */
+.sbd-summary.is-name .sbd-summary-value {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	letter-spacing: normal;
+	color: rgba(255, 255, 255, 0.96);
+}
+
 /* Per-kind padding. The inset is now a function of the widget's SIZE (the
  * table just above), because that is what the reference varies it by — the
  * same widget is drawn at 18px in a 158px tile and 26px in a 354px one. What

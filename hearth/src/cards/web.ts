@@ -1,5 +1,5 @@
 import { Component, setIcon, Setting } from "obsidian";
-import { emptyState } from "../cardbodies";
+import { emptyState, summaryTile } from "../cardbodies";
 import { addResetButton } from "../editors";
 import { t } from "../i18n";
 import { type DashboardCard } from "../types";
@@ -17,6 +17,15 @@ export function renderWeb(card: DashboardCard, body: HTMLElement, component: Com
 	// Only allow http(s) URLs into the iframe.
 	if (!/^https?:\/\//i.test(url)) {
 		emptyState(body, "globe", "URL must start with http:// or https://");
+		return;
+	}
+
+	// Widget Set → WEB's small tile is a glyph over the address: a page
+	// rendered into 158x158 is a postage stamp of someone else's site, and an
+	// iframe that small still pays the full cost of loading it.
+	if (card.size === "small") {
+		summaryTile(body, { icon: "globe", value: hostLabel(url) });
+		body.firstElementChild?.addClass("is-name");
 		return;
 	}
 
