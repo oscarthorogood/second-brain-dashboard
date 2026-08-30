@@ -14,6 +14,7 @@ import {
 import { type DashboardCard } from "../types";
 import { makeClickable, renderHighlighted } from "../ui";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -28,7 +29,12 @@ export function renderSavedSearch(view: HomeView, card: DashboardCard, body: HTM
 		emptyState(body, "search", t().cards.empty.searchNoQuery);
 		return;
 	}
-	const limit = cfg.count && cfg.count > 0 ? cfg.count : 12;
+	// The Widget Set has no saved-query tile of its own (the reference folded
+	// SEARCH into the search bar), so this takes the density every other
+	// vault-list widget in it is drawn at: one hit at small, two at medium,
+	// five at large and seven at extra large.
+	const fits = bySize(card.size, [1, 2, 5, 7]);
+	const limit = cfg.count && cfg.count > 0 ? Math.min(cfg.count, fits) : fits;
 	const useTiles = (cfg.view ?? "list") === "tiles";
 
 	// Files only: the card's rows open a note on click, so a folder hit would

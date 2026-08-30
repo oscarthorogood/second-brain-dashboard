@@ -2,6 +2,7 @@ import { Component, Setting } from "obsidian";
 import { FILE_TYPE_GROUPS, fileTypeLabel } from "../filetypes";
 import { createSearchBarButton } from "../header";
 import { t } from "../i18n";
+import { bySize } from "../widgetsize";
 import { SearchSection } from "../search";
 import { type DashboardCard, type SearchBarConfig } from "../types";
 import { type HomeView } from "../view";
@@ -17,11 +18,11 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * navigation) rather than reimplementing a second, weaker one. The action
  * button beside it is the header's button too, in either of its modes.
  *
- * The field's thickness is the card's own height: the bar stretches to fill
- * whatever room the card has left after the optional chip row, so it is resized
- * by dragging the card rather than by a setting (see styles.css). `seamless`
- * drops the frame entirely (see `cardClass` below), which is how you put a bare
- * search bar anywhere on the board instead of a card that contains one.
+ * The field's thickness is the widget's own height: the bar fills whatever room
+ * the tile has left after the chip row, so it follows the size chosen when the
+ * widget was added rather than a setting of its own (see styles.css).
+ * `seamless` drops the frame entirely (see `cardClass` below), which is how you
+ * put a bare search bar on the board instead of a tile that contains one.
  */
 export function renderSearchBar(
 	view: HomeView,
@@ -43,9 +44,13 @@ export function renderSearchBar(
 	if (cfg.button && cfg.button !== "none") {
 		bar.append(createSearchBarButton(view, bar, cfg.button));
 	}
+	// Reference (Widget Set → SEARCH): the filter row is part of this widget,
+	// not an option on it — "search on top, type filters below" is what the
+	// tile is. Four chips fit the 4×2 tile, eight the 8×2 one.
 	search.renderResultsAndFilters(wrap, wrap, component, {
-		filters: cfg.filters === true,
+		filters: cfg.filters !== false,
 		hiddenFilters: cfg.hiddenFilters,
+		maxFilters: bySize(card.size, [4, 4, 4, 8]),
 	});
 }
 
@@ -136,9 +141,9 @@ export function searchBarEditor(ctx: CardEditorContext, containerEl: HTMLElement
 				ctx.opts.rerender();
 			}),
 		);
-	// There is no thickness control: the bar fills the card, so its height is the
-	// card's. Say so here — it isn't discoverable from a settings pane that has
-	// no slider for it.
+	// There is no thickness control: the bar fills the tile, so its height is
+	// the size the widget was added at. Say so here — it isn't discoverable
+	// from a settings pane that has no slider for it.
 	const note = new Setting(containerEl).setDesc(t().editors.searchBar.sizeNote);
 	note.settingEl.addClass("sbd-setting-note");
 }

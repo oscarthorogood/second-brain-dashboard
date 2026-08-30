@@ -335,7 +335,7 @@ export const en = {
 				"do for you.",
 			calloutBody:
 				"But Second Brain Dashboard is built above all to be heavily customizable, and this wizard " +
-				"only touches a fraction of it. Every card can be moved, resized, retitled, " +
+				"only touches a fraction of it. Every widget can be moved, retitled, " +
 				"recoloured, reconfigured or thrown out, and there is a great deal more in " +
 				"the settings than was asked about here. Dig around in there and edit " +
 				"everything to your liking — that is what Second Brain Dashboard is for.",
@@ -419,7 +419,7 @@ export const en = {
 		hideCardHeaders: "Hide card headers",
 		doneArranging: "Done arranging",
 		finishArranging: "Finish arranging cards",
-		moveResize: "Move & resize cards",
+		moveResize: "Rearrange widgets",
 		cardSettings: "Card settings",
 		removeCard: "Remove card",
 		removeCardTitle: "Remove card?",
@@ -1546,8 +1546,8 @@ export const en = {
 				"Drop the card frame — no border, background or title row — so this " +
 				"reads as a standalone search bar on the board.",
 			sizeNote:
-				"The field is as thick as the card is tall — drag the card's edge in " +
-				"Arrange to make the bar chunkier or slimmer.",
+				"The field is as thick as the widget is tall. Widgets aren't resized — " +
+				"to change it, remove this one and add it again at the other size.",
 		},
 		links: {
 			heading: "Links",

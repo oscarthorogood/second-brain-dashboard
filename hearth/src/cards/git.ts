@@ -36,6 +36,7 @@ import { openFile } from "../opener";
 import { effectiveAutoRefreshMinutes, type DashboardCard } from "../types";
 import { confirmAction, makeClickable } from "../ui";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -72,7 +73,10 @@ export function renderGit(
 	const cfg = card.git ?? {};
 	const sections = gitSections(cfg.sections);
 	const wantsLog = sections.includes("log");
-	const logLimit = wantsLog ? Math.max(1, cfg.logLimit ?? 5) : 0;
+	// Reference (Widget Set → GIT): two rows at medium, four at large and extra
+	// large.
+	const fits = bySize(card.size, [1, 2, 4, 4]);
+	const logLimit = wantsLog ? Math.min(Math.max(1, cfg.logLimit ?? 5), fits) : 0;
 	// The ahead-count and last-commit time are only drawn by the status line, and
 	// both cost a git call, so a card without it doesn't pay for them.
 	const includeSync = sections.includes("status");

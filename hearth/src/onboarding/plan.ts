@@ -220,12 +220,9 @@ export interface PlannedCard {
 	card: DashboardCard;
 }
 
-/** A planned card before it has an id or a packed position. */
+/** A planned widget before it has an id. Carries its size and nothing else
+ * about geometry: where it lands is its index in the finished array. */
 type CardDraft = Omit<DashboardCard, "id">;
-
-/** The default grid width a plan lays out against — Second Brain Dashboard's own default, so a
- * board built here lines up with one built by hand. */
-const PLAN_COLUMNS = 12;
 
 /**
  * Decide which cards the board gets, configured and laid out.

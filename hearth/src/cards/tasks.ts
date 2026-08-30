@@ -76,6 +76,7 @@ import {
 import { openInTaskNotes, TASKNOTES_PLUGIN_ID } from "../tasknotes";
 import { confirmAction, makeClickable } from "../ui";
 import { type HomeView } from "../view";
+import { bySize, type WidgetSize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -178,7 +179,7 @@ function checkboxStatuses(cfg: TasksConfig): { symbol: string; label: string; do
 export function renderTasks(view: HomeView, card: DashboardCard, body: HTMLElement): void {
 	const cfg = card.tasks ?? {};
 	const container = body.createDiv("sbd-tasks-wrap");
-	const refresh = () => void loadAndRenderTasks(view, cfg, container, refresh);
+	const refresh = () => void loadAndRenderTasks(view, cfg, card.size, container, refresh);
 	refresh();
 }
 
@@ -1832,6 +1833,7 @@ class TaskFilterModal extends Modal {
 async function loadAndRenderTasks(
 	view: HomeView,
 	cfg: TasksConfig,
+	size: WidgetSize,
 	container: HTMLElement,
 	refresh: () => void,
 ): Promise<void> {
@@ -1888,7 +1890,10 @@ async function loadAndRenderTasks(
 		const filter = cfg.taskFilter as TaskFilterConfig;
 		list = list.filter((h) => taskMatchesFilter(h, filter, today));
 	}
-	const limit = cfg.count && cfg.count > 0 ? cfg.count : 10;
+	// Reference (Widget Set → TASKS): two tasks at medium, three at large and
+	// extra large (where the tile carries a second column beside them).
+	const fits = bySize(size, [1, 2, 6, 10]);
+	const limit = cfg.count && cfg.count > 0 ? Math.min(cfg.count, fits) : fits;
 	list = list.slice(0, limit);
 
 	// The list's sort/filter/add controls — docked into the card's title header

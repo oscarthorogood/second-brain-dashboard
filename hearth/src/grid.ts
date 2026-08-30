@@ -174,18 +174,26 @@ function readingOrder(col: number, row: number, columns: number): number {
  * other widget that starts earlier in that order. Comparing *starts* (rather
  * than hit-testing the widget under the pointer) keeps the answer stable while
  * a big widget straddles several of its neighbours.
+ *
+ * The comparison is made against the board REPACKED WITHOUT the dragged
+ * widget, which is the board the user is actually dropping onto: lifting a
+ * widget out pulls every widget after it back into the space it left, so
+ * measuring against positions that still include it reads every drop one slot
+ * short of where it was aimed. The index this returns is likewise an index
+ * into the array without the dragged widget, which is exactly what
+ * {@link moveCard} splices at.
  */
 export function reorderIndex(
-	placements: readonly Placement[],
+	cards: readonly DashboardCard[],
 	dragged: DashboardCard,
 	col: number,
 	row: number,
 	columns: number,
 ): number {
 	const target = readingOrder(col, row, columns);
+	const rest = packCards(cards.filter((c) => c !== dragged), columns);
 	let index = 0;
-	for (const p of placements) {
-		if (p.card === dragged) continue;
+	for (const p of rest) {
 		if (readingOrder(p.col, p.row, columns) < target) index++;
 	}
 	return index;
@@ -284,8 +292,7 @@ export function enableReorderDrag(
 		const centreX = left + cardEl.offsetWidth / 2;
 		const centreY = top + cardEl.offsetHeight / 2;
 		const { col, row } = cellFromPoint(centreX, centreY, layout.metrics);
-		const placements = packCards(layout.cards, layout.metrics.columns);
-		const index = reorderIndex(placements, card, col, row, layout.metrics.columns);
+		const index = reorderIndex(layout.cards, card, col, row, layout.metrics.columns);
 		if (moveCard(layout.cards, card, index)) {
 			relayout(gridEl, layout, card);
 			applyEdgeMerging(gridEl);

@@ -10,7 +10,8 @@ import {
 	type SetupAnswers,
 } from "../src/onboarding/plan";
 import type { SetupDetection } from "../src/onboarding/detect";
-import { DEFAULT_SETTINGS, migrateSettings, type HomeSettings } from "../src/types";
+import { DEFAULT_SETTINGS, isWidgetSized, migrateSettings, type HomeSettings } from "../src/types";
+import { packCards } from "../src/grid";
 import { parseTaskNotesSettings } from "../src/tasknotes";
 
 /**
@@ -260,11 +261,14 @@ describe("planCards", () => {
 	const ids = (answers: SetupAnswers, detection = emptyDetection()): string[] =>
 		planCards(answers, detection, (i) => `c${i}`).map((p) => p.id);
 
-	it("always starts with a full-width clock", () => {
+	it("always starts with a clock", () => {
 		const [first] = planCards(blankAnswers(), emptyDetection(), (i) => `c${i}`);
 
+		// The clock leads every board the wizard builds. It carries no
+		// coordinates: a widget's place is its index in this array, and the
+		// board packs from there.
 		expect(first.id).toBe("clock");
-		expect(first.card).toMatchObject({ kind: "clock", x: 0, y: 0, w: 12 });
+		expect(first.card).toMatchObject({ kind: "clock", size: "small" });
 	});
 
 	it("adds a card group per chosen purpose", () => {
@@ -389,7 +393,7 @@ describe("planCards", () => {
 		});
 	});
 
-	it("lays every card out without overlapping, inside the grid", () => {
+	it("packs every widget onto the board without overlapping", () => {
 		const planned = planCards(
 			blankAnswers({
 				purposes: ["daily", "tasks", "planning", "browsing", "capture", "insights", "reading", "ambience"],
@@ -400,19 +404,21 @@ describe("planCards", () => {
 		);
 
 		expect(planned.length).toBeGreaterThan(10);
-		for (const { card } of planned) {
-			expect(card.x).toBeGreaterThanOrEqual(0);
-			expect(card.x + card.w).toBeLessThanOrEqual(12);
-		}
-		for (const a of planned) {
-			for (const b of planned) {
-				if (a === b) continue;
-				const overlaps =
-					a.card.x < b.card.x + b.card.w &&
-					a.card.x + a.card.w > b.card.x &&
-					a.card.y < b.card.y + b.card.h &&
-					a.card.y + a.card.h > b.card.y;
-				expect(overlaps, `${a.id} overlaps ${b.id}`).toBe(false);
+		// Every widget is one of the four sizes, and the packer is what turns
+		// that plus the array order into a layout — so the property to check is
+		// that the packed board is sound, not that the plan carries geometry.
+		const placements = packCards(planned.map((p) => p.card), 8);
+		expect(placements).toHaveLength(planned.length);
+		const taken = new Set<string>();
+		for (const p of placements) {
+			expect(p.col).toBeGreaterThanOrEqual(0);
+			expect(p.col + p.cols).toBeLessThanOrEqual(8);
+			for (let r = p.row; r < p.row + p.rows; r++) {
+				for (let c = p.col; c < p.col + p.cols; c++) {
+					const key = `${r}:${c}`;
+					expect(taken.has(key), "two widgets share a cell").toBe(false);
+					taken.add(key);
+				}
 			}
 		}
 	});
@@ -524,33 +530,24 @@ describe("applySetup", () => {
 		expect(settings.cards).toHaveLength(outcome.cardCount);
 	});
 
-	it("lets a tall board scroll instead of squeezing it onto one screen", () => {
+	it("installs the plan in order, since the order is the layout", () => {
 		const settings = freshSettings();
 		applySetup(
 			settings,
 			blankAnswers({
-				purposes: [
-					"daily",
-					"tasks",
-					"planning",
-					"browsing",
-					"capture",
-					"insights",
-					"reading",
-					"ambience",
-				],
+				purposes: ["daily", "tasks", "planning", "browsing"],
 			}),
 			emptyDetection(),
 		);
 
-		expect(settings.fitToPage).toBe(false);
-	});
-
-	it("leaves a board that comfortably fits on fit-to-page", () => {
-		const settings = freshSettings();
-		applySetup(settings, blankAnswers({ purposes: ["browsing"] }), emptyDetection());
-
-		expect(settings.fitToPage).toBe(true);
+		// There is no fit-to-page switch to relax any more: the board scrolls
+		// at its natural size, and the only thing applySetup decides about the
+		// layout is the order the widgets pack in.
+		expect(settings.cards.length).toBeGreaterThan(1);
+		expect(settings.cards[0].kind).toBe("clock");
+		for (const card of settings.cards) {
+			expect(isWidgetSized(card)).toBe(true);
+		}
 	});
 
 	it("records the run as done", () => {
@@ -570,7 +567,7 @@ describe("isUntouchedStarterBoard", () => {
 
 	it("notices a card added or removed", () => {
 		const added = freshSettings();
-		added.cards.push({ id: "card-mine", kind: "text", x: 0, y: 0, w: 2, h: 2 });
+		added.cards.push({ id: "card-mine", kind: "text", size: "medium" });
 		expect(isUntouchedStarterBoard(added)).toBe(false);
 
 		const removed = freshSettings();
@@ -579,9 +576,10 @@ describe("isUntouchedStarterBoard", () => {
 	});
 
 	it("does not count rearranging as making the board your own", () => {
+		// Rearranging is now a reorder of the array rather than a change of
+		// coordinates, so that is what must not read as a customised board.
 		const moved = freshSettings();
-		moved.cards[0].x = 4;
-		moved.cards[0].y = 9;
+		moved.cards.push(moved.cards.shift() as (typeof moved.cards)[number]);
 
 		expect(isUntouchedStarterBoard(moved)).toBe(true);
 	});

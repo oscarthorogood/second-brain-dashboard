@@ -284,10 +284,7 @@ function jiraCard(id: string, pat: string): DashboardCard {
 	return {
 		id,
 		kind: "jira",
-		x: 0,
-		y: 0,
-		w: 4,
-		h: 4,
+		size: "large",
 		jira: {
 			host: "https://jira.example.com",
 			pat,

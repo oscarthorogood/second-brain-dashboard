@@ -499,13 +499,6 @@ body.theme-dark {
 	mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
 }
 
-/* On a fitted board the banner and the grid share one screen, so cap the strip
- * before it can eat the whole board — a height meant for a scrolling board
- * shouldn't leave nothing to fit. */
-.sbd-fit .sbd-banner {
-	max-height: 60%;
-}
-
 /* ---- Low power mode ---------------------------------------------------
  *
  * The paint-cost half of the setting. Everything with a value behind it — the
@@ -569,21 +562,13 @@ body.theme-dark {
 	padding: var(--sbd-scroll-pad-x);
 }
 
-.sbd-scroll.sbd-fit {
-	overflow-y: hidden;
-	display: flex;
-	flex-direction: column;
-}
-
 /* While the mobile keyboard is open, constrain the scroll area to the visible
    viewport height and allow scrolling so nothing hides behind the keyboard
    (overrides fit-to-page clipping for the duration). Keyed off the focus flag
    as well as the viewport heuristic — focus is set reliably from search.ts even
    on devices where the visualViewport size change doesn't register. */
 .sbd-view.sbd-kbd-open .sbd-scroll,
-.sbd-view.sbd-kbd-open .sbd-scroll.sbd-fit,
-.sbd-view.sbd-search-active .sbd-scroll,
-.sbd-view.sbd-search-active .sbd-scroll.sbd-fit {
+.sbd-view.sbd-search-active .sbd-scroll {
 	height: var(--sbd-vh, 100%);
 	overflow-y: auto;
 }
@@ -594,20 +579,6 @@ body.theme-dark {
 	display: flex;
 	flex-direction: column;
 	gap: var(--sbd-inner-gap, 16px);
-}
-
-.sbd-fit .sbd-inner {
-	height: 100%;
-	min-height: 0;
-}
-
-/* With a banner above it the inner is no longer alone in the fitted column, and
- * `height: 100%` would resolve against the whole scroll area — overflowing (and
- * clipping the bottom row of cards) by exactly the banner's height. Take the
- * remainder instead. */
-.sbd-view.sbd-has-banner .sbd-fit .sbd-inner {
-	height: auto;
-	flex: 1 1 auto;
 }
 
 /* ---- Header --------------------------------------------------------- */
@@ -1702,33 +1673,17 @@ body.theme-dark {
 	z-index: 3;
 }
 
-/* Free-form board: cards are absolutely positioned via inline left/top/width/
-   height (fractions of the board width horizontally, pixels vertically). The
-   grid is a flex child of the dashboard so it fills the space left by the
-   toolbar; its inline min-height (the cards' total footprint) still grows it
-   in scroll mode. */
+/* The board: widgets are absolutely positioned via inline left/top/width/height
+   in pixels, computed by the packer in grid.ts from the invisible grid (a
+   square cell and a gutter, both published here as --sbd-grid-cell and
+   --sbd-grid-gap). The grid is a flex child of the dashboard so it fills the
+   space the toolbar leaves; its inline min-height is the packed board's own
+   height, so the board grows to its content and scrolls. */
 .sbd-grid {
 	position: relative;
 	width: 100%;
 	flex: 1 1 auto;
 	min-height: 0;
-}
-
-.sbd-fit .sbd-grid {
-	/* Fill whatever height the dashboard has left after the in-flow toolbar.
-	 * Don't use height:100% — that ignores the toolbar row and overflows by its
-	 * height, clipping the bottom row of cards (and the arrange button area). */
-	flex: 1 1 auto;
-	height: auto;
-}
-
-/* In fit-to-page mode the board is locked to one screen: clip anything that
-   spills below the fold. No inline min-height is set in this mode (see
-   updateBoardHeight / renderDashboard), so a plain rule wins without needing
-   !important. */
-.sbd-fit .sbd-grid {
-	min-height: 0;
-	overflow: hidden;
 }
 
 .sbd-card {
@@ -1743,7 +1698,7 @@ body.theme-dark {
 	--sbd-card-pad-y: 24px;
 	/* --sbd-card-radius (px) is set board-wide by renderDashboard; the 24px
 	 * fallback keeps the design baseline when it isn't set. */
-	border-radius: var(--sbd-card-radius, 42px);
+	border-radius: var(--sbd-widget-radius, var(--sbd-card-radius, 42px));
 	/* The glass rim, at full token strength (white ~55%). Measured off the
 	 * reference, where the rim is the crispest thing about a card — blending
 	 * it further toward transparent, as this used to, is what let it fade to
@@ -1830,36 +1785,20 @@ body.theme-dark {
 	mask-repeat: no-repeat;
 }
 
-/* While dragging/resizing, drop position transitions so the card tracks the
-   pointer 1:1 and sits above its neighbours. */
-.sbd-card.is-moving,
-.sbd-card.is-resizing {
-	z-index: 5;
-	transition: box-shadow 120ms ease;
+/* A widget being dragged tracks the pointer 1:1 and rides above the board;
+   every other widget slides into its new slot as the pack reflows around it.
+   Only ever while a drag is in progress — a widget must not animate on the
+   first paint, nor while the pane resize repacks the whole board at once. */
+.sbd-grid.is-dragging-card .sbd-card {
+	transition: left 180ms ease, top 180ms ease;
+}
+
+.sbd-grid.is-dragging-card .sbd-card.is-dragging {
+	z-index: 20;
+	cursor: grabbing;
+	transition: none;
 	user-select: none;
-}
-
-/* Magnetic alignment guides shown while a card snaps to a neighbour/board edge. */
-.sbd-align-guide {
-	position: absolute;
-	z-index: 6;
-	pointer-events: none;
-	background: var(--interactive-accent);
-	box-shadow: 0 0 0 0.5px var(--interactive-accent);
-}
-
-.sbd-align-guide.is-vertical {
-	top: 0;
-	bottom: 0;
-	width: 1px;
-	transform: translateX(-0.5px);
-}
-
-.sbd-align-guide.is-horizontal {
-	left: 0;
-	right: 0;
-	height: 1px;
-	transform: translateY(-0.5px);
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14), 0 28px 56px rgba(0, 0, 0, 0.22);
 }
 
 /* The reference draws every card at rest and gives none of them a hover
@@ -1916,48 +1855,105 @@ body.theme-dark {
 	padding: var(--sbd-card-pad-y) var(--sbd-card-pad-x);
 }
 
-/* Per-kind padding, straight off the reference's artboard. Only the kinds that
- * differ from the 24px base appear. WEB and LEAF are 20px because both host a
- * framed view that wants the room; HEATMAP is 28px top-and-bottom because its
- * grid is the widest thing on the board and needs the air; CLOCK and SLIDESHOW
- * have none at all — the clock centres a face in the whole card, and the
- * slideshow's photo is edge-to-edge. */
-.sbd-card.is-embed-card,
-.sbd-card.is-schedule-card {
+/* ---- The four sizes -------------------------------------------------
+ *
+ * Widget Set draws every widget four times and what changes between the four
+ * is the CONTENT, not the type: measured across the whole artboard the body
+ * text sits at 11-15px at every size, and only the extra-large tiles reach
+ * 16px. So a size is not a scale factor. What it actually changes is
+ *
+ *   - the inset, which steps 18 / 18 / 24 / 26 with the tile;
+ *   - how much is shown, which each widget's module decides (see `bySize`);
+ *   - and the shape of the layout: the two short tiles centre what little they
+ *     hold, the tall one runs a labelled list, and the wide one splits that
+ *     list into two columns.
+ *
+ * These are the rules for the last of those. They come before the per-kind
+ * table below, so a kind with a genuine structural exception (a clock face, a
+ * full-bleed photo) still overrides them.
+ */
+
+.sbd-card.is-size-small {
+	--sbd-card-pad-x: 18px;
+	--sbd-card-pad-y: 18px;
+}
+
+.sbd-card.is-size-medium {
+	--sbd-card-pad-x: 20px;
+	--sbd-card-pad-y: 18px;
+}
+
+.sbd-card.is-size-large {
+	--sbd-card-pad-x: 22px;
+	--sbd-card-pad-y: 24px;
+}
+
+.sbd-card.is-size-xlarge {
 	--sbd-card-pad-x: 28px;
-	--sbd-card-pad-y: 26px;
-}
-
-.sbd-card.is-daily-card,
-.sbd-card.is-tasks-card,
-.sbd-card.is-git-card {
-	--sbd-card-pad-y: 26px;
-}
-
-.sbd-card.is-calendar-card {
-	--sbd-card-pad-x: 26px;
-}
-
-.sbd-card.is-stats-card,
-.sbd-card.is-weather-card {
-	--sbd-card-pad-x: 26px;
-	--sbd-card-pad-y: 26px;
-}
-
-.sbd-card.is-heatmap-card {
-	--sbd-card-pad-x: 26px;
 	--sbd-card-pad-y: 28px;
 }
 
-.sbd-card.is-text-card,
-.sbd-card.is-commands-card,
-.sbd-card.is-favorites-card {
-	--sbd-card-pad-x: 22px;
-	--sbd-card-pad-y: 22px;
+/* The two short tiles hold one or two rows in 158px of height, so the
+ * reference centres them rather than letting them sit against the top edge
+ * with a band of empty glass beneath (`justify-content:center` on both the
+ * S and M tile of RECENT, LEAF, BOOKMARKS, FAVORITES, TEXT and the rest). */
+.sbd-card.is-size-small > .sbd-card-body,
+.sbd-card.is-size-medium > .sbd-card-body {
+	justify-content: center;
 }
 
-.sbd-card.is-bookmarks-card,
-.sbd-card.is-recent-card,
+/* A medium tile drops the eyebrow: at 338×158 the two rows it can show are
+ * worth more than a label naming a widget the user just placed. The small tile
+ * keeps it, because there it is the only thing saying what the one row IS. */
+.sbd-card.is-size-medium .sbd-card-eyebrow {
+	display: none;
+}
+
+/* Row gaps tighten with the tile, matching the reference's own steps
+ * (8px small, 9-10px medium, 12-13px large, 14-16px extra large). */
+.sbd-card.is-size-small > .sbd-card-body {
+	gap: 8px;
+}
+
+.sbd-card.is-size-medium > .sbd-card-body {
+	gap: 10px;
+}
+
+.sbd-card.is-size-large > .sbd-card-body {
+	gap: 13px;
+}
+
+.sbd-card.is-size-xlarge > .sbd-card-body {
+	gap: 16px;
+}
+
+/* An extra-large tile is twice the width of a large one and the same height,
+ * so a single column of rows would leave half the tile empty. The reference
+ * splits the list into two columns at this size and only at this size
+ * (RECENT, BOOKMARKS, STATS, COMMANDS, JIRA, RSS and the rest all do it). */
+.sbd-card.is-size-xlarge .sbd-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px 28px;
+	align-content: start;
+}
+
+/* Per-kind padding. The inset is now a function of the widget's SIZE (the
+ * table just above), because that is what the reference varies it by — the
+ * same widget is drawn at 18px in a 158px tile and 26px in a 354px one. What
+ * is left here are the kinds whose inset is structural rather than a matter of
+ * taste, and so holds at every size: WEB and LEAF host a framed view that
+ * wants the room back, and CLOCK and SLIDESHOW have none at all — the clock
+ * centres a face in the whole tile, the slideshow's photo is edge-to-edge.
+ * (Those rules are further down; the rest of the old per-kind table is gone
+ * with the free-form board it was measured on.)
+ *
+ * Removing it also closes a bug it was hiding: the table's last entry listed
+ * `.is-bookmarks-card, .is-recent-card,` and then ran straight into the
+ * comment above `.sbd-query-head`, so those two selectors were swallowed into
+ * that rule and every bookmarks and recent widget was being laid out as a
+ * query head row. */
+
 /* SEARCH's head row: the saved query in mono over the card's glass, and the
  * match count closing it. 14px on both, the count a touch brighter and bold —
  * it is the answer, the query is the question. */
@@ -7938,18 +7934,17 @@ body.theme-dark {
 	position: absolute;
 	inset: 0;
 	border: 1px dashed var(--interactive-accent);
-	border-radius: var(--sbd-card-radius, 42px);
+	border-radius: var(--sbd-widget-radius, var(--sbd-card-radius, 42px));
 	opacity: 0.5;
 	pointer-events: none;
 }
 
-.sbd-card-overlay {
-	position: absolute;
-	inset: 0;
-	z-index: 5;
+/* Widgets are dragged by the widget itself — there is no overlay element any
+   more, because there is nothing else a press in arrange mode could mean now
+   that resizing is gone. Claim the gesture so a drag doesn't also scroll or
+   swipe the page. */
+.sbd-grid.is-arranging .sbd-card {
 	cursor: grab;
-	background: transparent;
-	/* Claim the gesture so dragging a card doesn't also scroll/swipe the page. */
 	touch-action: none;
 }
 
@@ -7980,8 +7975,8 @@ body.theme-dark {
 	 * Painting nothing is what the reference actually shows. */
 	background: none;
 	border-bottom: none;
-	border-radius: var(--sbd-card-radius, 42px)
-		var(--sbd-card-radius, 42px) 0 0;
+	border-radius: var(--sbd-widget-radius, var(--sbd-card-radius, 42px))
+		var(--sbd-widget-radius, var(--sbd-card-radius, 42px)) 0 0;
 	pointer-events: none;
 }
 
@@ -8041,107 +8036,6 @@ body.theme-dark {
 .sbd-card-action.is-danger:hover {
 	color: #ffffff;
 	background: var(--text-error);
-}
-
-.sbd-card.is-moving {
-	cursor: grabbing;
-	z-index: 20;
-	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14), 0 28px 56px rgba(0, 0, 0, 0.22);
-}
-
-.sbd-card.is-moving .sbd-card-overlay {
-	cursor: grabbing;
-}
-
-.sbd-card.is-resizing {
-	z-index: 20;
-}
-
-/* Resize grips: one per edge and corner so a card can be resized from any
-   side. Edge grips are thin strips along each side; corner grips sit on top of
-   them. Resizing must not also scroll/swipe the page on touch devices. */
-.sbd-resize-handle {
-	position: absolute;
-	z-index: 6;
-	touch-action: none;
-}
-
-/* Edges */
-.sbd-resize-handle.is-n,
-.sbd-resize-handle.is-s {
-	left: 8px;
-	right: 8px;
-	height: 8px;
-	cursor: ns-resize;
-}
-.sbd-resize-handle.is-n {
-	top: 0;
-}
-.sbd-resize-handle.is-s {
-	bottom: 0;
-}
-
-.sbd-resize-handle.is-e,
-.sbd-resize-handle.is-w {
-	top: 8px;
-	bottom: 8px;
-	width: 8px;
-	cursor: ew-resize;
-}
-.sbd-resize-handle.is-e {
-	right: 0;
-}
-.sbd-resize-handle.is-w {
-	left: 0;
-}
-
-/* Corners (sit above the edge strips) */
-.sbd-resize-handle.is-ne,
-.sbd-resize-handle.is-nw,
-.sbd-resize-handle.is-se,
-.sbd-resize-handle.is-sw {
-	width: 16px;
-	height: 16px;
-	z-index: 7;
-}
-.sbd-resize-handle.is-nw {
-	top: 0;
-	left: 0;
-	cursor: nwse-resize;
-}
-.sbd-resize-handle.is-se {
-	bottom: 0;
-	right: 0;
-	cursor: nwse-resize;
-}
-.sbd-resize-handle.is-ne {
-	top: 0;
-	right: 0;
-	cursor: nesw-resize;
-}
-.sbd-resize-handle.is-sw {
-	bottom: 0;
-	left: 0;
-	cursor: nesw-resize;
-}
-
-/* Bigger, easier-to-grab resize targets on touch devices. */
-@media (pointer: coarse) {
-	.sbd-resize-handle.is-n,
-	.sbd-resize-handle.is-s {
-		height: 14px;
-	}
-	.sbd-resize-handle.is-e,
-	.sbd-resize-handle.is-w {
-		width: 14px;
-	}
-	.sbd-resize-handle.is-ne,
-	.sbd-resize-handle.is-nw,
-	.sbd-resize-handle.is-se,
-	.sbd-resize-handle.is-sw {
-		width: 26px;
-		height: 26px;
-	}
 }
 
 /* ---- Settings ------------------------------------------------------- */
@@ -12111,6 +12005,173 @@ body.sbd-dv-resizing {
 
 .sbd-picker-search-input:focus {
 	box-shadow: none;
+}
+
+/* ---- Size step ------------------------------------------------------
+ *
+ * Step two of adding a widget: which of the four fixed footprints. The rail
+ * and the search field have nothing to say once a widget has been picked, so
+ * the frame hides both and gives the whole sheet to the choice.
+ */
+.sbd-card-picker.is-choosing-size .sbd-picker-rail,
+.sbd-card-picker.is-choosing-size .sbd-picker-search {
+	display: none;
+}
+
+.sbd-card-picker.is-choosing-size .sbd-picker-body {
+	border-top: none;
+}
+
+.sbd-size-step {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 18px;
+	padding: 4px 4px 8px;
+}
+
+.sbd-size-back {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 14px 7px 10px;
+	border-radius: 12px;
+	border: none;
+	background: var(--sbd-panel-tier-fill-quiet);
+	color: var(--text-muted);
+	font-size: 0.875rem;
+	cursor: pointer;
+	box-shadow: none;
+}
+
+.sbd-size-back:hover {
+	background: var(--sbd-panel-tier-fill);
+	color: var(--text-normal);
+}
+
+.sbd-size-back-icon {
+	display: flex;
+}
+
+.sbd-size-back-icon .svg-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.sbd-size-heading {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: var(--text-normal);
+}
+
+/* The four options in a row, each as wide as it needs to be. Bottom-aligned,
+ * so the previews sit on one baseline and step UP in height the way the
+ * reference's own row of four tiles does. */
+.sbd-size-options {
+	display: flex;
+	align-items: flex-end;
+	gap: 18px;
+	width: 100%;
+	flex-wrap: wrap;
+}
+
+.sbd-size-option {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 0;
+	min-width: 108px;
+	padding: 14px 12px 12px;
+	border-radius: 18px;
+	border: 1px solid transparent;
+	background: none;
+	cursor: pointer;
+	box-shadow: none;
+}
+
+.sbd-size-option:hover {
+	background: var(--sbd-panel-tier-fill-quiet);
+}
+
+.sbd-size-option.is-active {
+	background: var(--sbd-panel-tier-fill);
+	border-color: var(--interactive-accent);
+}
+
+/* The preview frame reserves the tallest option's height so the row doesn't
+ * jump as the previews change shape; the preview itself is drawn at the
+ * size's true aspect ratio and true relative width (set inline). */
+.sbd-size-preview-frame {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	width: 100%;
+	height: 92px;
+}
+
+.sbd-size-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	max-height: 100%;
+	/* The widget material, at the picker's smaller scale: the reference's
+	 * white-10% glass under its white-42% rim. */
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.sbd-size-option.is-active .sbd-size-preview {
+	background: var(--sbd-panel-tier-fill);
+	color: var(--text-normal);
+}
+
+.sbd-size-preview-icon {
+	display: flex;
+}
+
+.sbd-size-preview-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.sbd-size-name {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.sbd-size-cells {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+/* Said once, here, because it is the one thing about the choice that can't be
+ * undone later. */
+.sbd-size-note {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+.sbd-size-add {
+	align-self: flex-end;
+	padding: 11px 22px;
+	border-radius: 20px;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	cursor: pointer;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* The settings modal's read-only statement of a placed widget's size. */
+.sbd-size-readout {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.8125rem;
+	color: var(--text-muted);
 }
 
 /* ---- Rail + results ---- */

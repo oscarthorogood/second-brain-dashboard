@@ -79,3 +79,26 @@ export function sizeSpec(kind: CardKind, size: WidgetSize): SizeSpec {
 export function asWidgetSize(value: unknown, fallback: WidgetSize = "medium"): WidgetSize {
 	return WIDGET_SIZES.includes(value as WidgetSize) ? (value as WidgetSize) : fallback;
 }
+
+/**
+ * Pick the value for a widget's size out of a smallest-first tuple.
+ *
+ * The reference's whole idea of a size is "how much does this widget show",
+ * not "how big is its type": measured across the artboard the body text sits
+ * at 11–15px at every size, while the number of rows a widget draws steps with
+ * the tile (RECENT shows 1, 2, 5 and 7 files; JIRA 1, 5 and 7 issues). So each
+ * widget module states its own four numbers, cited to its entry in the Widget
+ * Set, and reads them through here.
+ */
+export function bySize<T>(size: WidgetSize, values: readonly [T, T, T, T]): T {
+	switch (size) {
+		case "small":
+			return values[0];
+		case "medium":
+			return values[1];
+		case "large":
+			return values[2];
+		case "xlarge":
+			return values[3];
+	}
+}

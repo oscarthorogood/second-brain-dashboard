@@ -11,6 +11,7 @@ import {
 } from "../types";
 import { makeClickable } from "../ui";
 import { type HomeView } from "../view";
+import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -42,7 +43,11 @@ export function renderRss(
 	}
 
 	const layout: RssLayout = cfg.layout ?? "list";
-	const limit = cfg.itemLimit && cfg.itemLimit > 0 ? cfg.itemLimit : 15;
+	// Reference (Widget Set → RSS): one headline at medium, four at large and
+	// six at extra large. A configured item limit still applies, capped by what
+	// the tile can actually show.
+	const fits = bySize(card.size, [1, 1, 4, 6]);
+	const limit = cfg.itemLimit && cfg.itemLimit > 0 ? Math.min(cfg.itemLimit, fits) : fits;
 	const refreshMin = cfg.refreshMin ?? 30;
 	const disabled = view.plugin.settings.disableExternalCalls;
 	// Freshness window for the cache: at least a minute so re-renders don't spam.
