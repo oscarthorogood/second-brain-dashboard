@@ -40,7 +40,7 @@ import {
 	type SetupBackground,
 	type SetupPurpose,
 } from "./plan";
-import { packCards, packedRows } from "../grid";
+import { BOARD_COLUMNS, packCards, packedRows } from "../grid";
 
 /** The wizard's steps, in order. `integrations` is dropped when the vault has
  * none to offer, so nobody is walked through an empty page. */
@@ -68,7 +68,7 @@ const STEP_ICONS: Record<SetupStepId, string> = {
  *
  * Eight is the width of an extra-large widget, so every planned widget fits at
  * its true footprint and the drawing needs no clamping of its own. */
-const PREVIEW_COLUMNS = 8;
+const PREVIEW_COLUMNS = BOARD_COLUMNS;
 
 export class SetupWizardModal extends Modal {
 	private readonly plugin: SbdPlugin;

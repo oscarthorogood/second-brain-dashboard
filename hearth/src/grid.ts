@@ -22,22 +22,23 @@ import { GRID_CELL, GRID_GAP as REFERENCE_GAP, sizeSpec } from "./widgetsize";
 
 /** The board's fixed column count.
  *
- * Eight is the width of an extra-large widget, so the board is exactly one
- * extra-large tile across and every other footprint divides into it: two
- * mediums, four smalls, a large beside a large. The count does not change with
- * the pane — see {@link boardMetrics} for why. */
-export const BOARD_COLUMNS = 8;
+ * Sixteen cells is four large widgets across (a large is 4x4), which with
+ * {@link BOARD_ROWS} is what makes the page hold eight of them. Every other
+ * footprint divides into it too: two extra-larges, four mediums, eight smalls.
+ * The count does not change with the pane — see {@link boardMetrics} for why. */
+export const BOARD_COLUMNS = 16;
 
 /** The board's own height, in grid rows.
  *
- * Four is the height of an extra-large widget, so the board is one XL tile: an
- * 8x4 page. Content is never truncated to it — a board packed taller than four
- * rows simply grows and scrolls — but it is the height the board is drawn at
- * when it has room, and the height the cell is fitted to. */
-export const BOARD_ROWS = 4;
+ * Eight cells is two large widgets down, so a 16x8 page is a 4x2 arrangement of
+ * large tiles: eight of them, which is the page this board is drawn for. Other
+ * sizes fill it in the same grid — 32 smalls, 16 mediums, 4 extra-larges, or
+ * any mix the packer fits. Content is never truncated to the page: a board
+ * packed taller than eight rows simply grows and scrolls. */
+export const BOARD_ROWS = 8;
 
-/** The reference board's pixel size: the span of a full 8x4 page at the
- * reference cell and gutter (698x338). The live cell is this shape scaled to
+/** The reference board's pixel size: the span of a full 16x8 page at the
+ * reference cell and gutter (1418x698). The live cell is this shape scaled to
  * whatever box the board is given. */
 const REFERENCE_BOARD_WIDTH =
 	BOARD_COLUMNS * GRID_CELL + (BOARD_COLUMNS - 1) * REFERENCE_GAP;
@@ -57,7 +58,7 @@ export interface BoardMetrics {
 /**
  * Measure the grid for a board of `boardWidth` x `availableHeight` pixels.
  *
- * The board is ALWAYS an 8x4 page, and the *cell* is what the pane decides:
+ * The board is ALWAYS a 16x8 page, and the *cell* is what the pane decides:
  * the reference page is scaled down (or up) until it fits the space given, so
  * resizing the window resizes the widgets and nothing ever changes slot.
  *
@@ -71,8 +72,8 @@ export interface BoardMetrics {
  *
  * Both axes are fitted so the whole page stays on screen: the binding
  * constraint is whichever of width and height runs out first, which is what
- * keeps four rows visible on a short pane instead of pushing the bottom row
- * under the fold. `availableHeight` is optional — passing 0 (or omitting it)
+ * keeps all eight rows visible on a short pane instead of pushing the bottom
+ * row under the fold. `availableHeight` is optional — passing 0 (or omitting it)
  * fits width alone, for callers that have no height to offer.
  *
  * `scale` (the user's one remaining board knob) multiplies the fitted cell, so
@@ -84,8 +85,15 @@ export function boardMetrics(boardWidth: number, scale = 1, availableHeight = 0)
 	// A board with nothing to measure yet (first paint, a pane with no width)
 	// draws at the reference cell rather than collapsing to a 1px grid.
 	const factor = (fit > 0 ? fit : 1) * scale;
-	const cell = Math.max(1, Math.round(GRID_CELL * factor));
-	const gap = Math.max(0, Math.round(REFERENCE_GAP * factor));
+	// Floored, not rounded: the page's span is a whole multiple of the cell and
+	// the gutter, so rounding either UP scales that error by the track count and
+	// the page comes out wider or taller than the box it was just fitted into —
+	// which is the one thing the fit exists to prevent (a 16x8 page fitted to
+	// 400px of height rounds to 403px and pushes its bottom row under the fold).
+	// Flooring can only ever leave the page a pixel per track short, which is
+	// slack the centring absorbs.
+	const cell = Math.max(1, Math.floor(GRID_CELL * factor));
+	const gap = Math.max(0, Math.floor(REFERENCE_GAP * factor));
 	return { cell, gap, columns: BOARD_COLUMNS };
 }
 
@@ -110,9 +118,9 @@ export interface Placement {
  * earlier row left open rather than starting a new row. That backfilling is
  * what closes gaps automatically when a widget is moved or removed.
  *
- * The board is {@link BOARD_COLUMNS} wide, which is exactly an extra-large
- * widget, so nothing ever needs clamping there; the clamp is kept for callers
- * that pack onto a narrower grid of their own (the setup wizard's preview).
+ * The board is {@link BOARD_COLUMNS} wide, which every footprint divides into,
+ * so nothing ever needs clamping there; the clamp is kept for callers that pack
+ * onto a narrower grid of their own.
  */
 export function packCards(cards: readonly DashboardCard[], columns: number): Placement[] {
 	const width = Math.max(1, Math.floor(columns));
@@ -280,11 +288,11 @@ export function relayout(gridEl: HTMLElement, layout: GridLayout, skip?: Dashboa
 		const el = layout.elements.get(p.card);
 		if (el) applyPlacement(el, p, layout.metrics);
 	}
-	// The page is exactly as wide as its eight columns and is centred in the
+	// The page is exactly as wide as its sixteen columns and is centred in the
 	// pane by CSS (margin-inline: auto), so a board drawn below full scale sits
 	// in the middle instead of hugging the left edge.
 	gridEl.style.width = `${gridSpan(layout.metrics.columns, layout.metrics)}px`;
-	// The page keeps its full four rows even when the widgets don't fill them
+	// The page keeps its full eight rows even when the widgets don't fill them
 	// (see drawnRows), so the board doesn't resize itself as cards come and go.
 	const height = gridSpan(drawnRows(placements), layout.metrics);
 	gridEl.style.minHeight = height > 0 ? `${height}px` : "";
