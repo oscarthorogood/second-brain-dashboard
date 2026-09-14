@@ -1,16 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
+	BOARD_COLUMNS,
+	BOARD_ROWS,
 	boardHeight,
 	boardMetrics,
 	cellFromPoint,
-	MIN_COLUMNS,
+	drawnRows,
+	gridSpan,
 	moveCard,
 	packCards,
 	packedRows,
 	placementRect,
 	reorderIndex,
 } from "../src/grid";
-import type { DashboardCard } from "../src/types";
+import {
+	clampWidgetScale,
+	type DashboardCard,
+	WIDGET_SCALE_MAX,
+	WIDGET_SCALE_MIN,
+} from "../src/types";
 import { GRID_CELL, GRID_GAP, SIZE_SPECS, sizeSpec, type WidgetSize } from "../src/widgetsize";
 
 /**
@@ -36,25 +44,77 @@ describe("the invisible grid", () => {
 		expect(span(4)).toBe(338);
 	});
 
-	it("gains columns as the board widens, keeping the cell constant", () => {
+	it("is eight cells across and four down, whatever the pane measures", () => {
+		// The page is a fixed 8x4 — an extra-large widget's footprint — so the
+		// column count is not a function of the width any more.
+		expect(BOARD_COLUMNS).toBe(8);
+		expect(BOARD_ROWS).toBe(4);
+		for (const width of [0, 10, 320, 700, 1400, 4000]) {
+			expect(boardMetrics(width).columns).toBe(BOARD_COLUMNS);
+		}
+	});
+
+	it("scales the cell with the pane instead of repacking the board", () => {
+		// This is the whole point: a wider pane draws the SAME eight columns
+		// bigger, so no widget changes slot when the window is resized.
 		const narrow = boardMetrics(700);
 		const wide = boardMetrics(1400);
-		expect(wide.cell).toBe(narrow.cell);
-		expect(wide.columns).toBeGreaterThan(narrow.columns);
+		expect(wide.columns).toBe(narrow.columns);
+		expect(wide.cell).toBeGreaterThan(narrow.cell);
+		expect(wide.gap).toBeGreaterThan(narrow.gap);
 	});
 
-	it("never lays out below the width of a medium widget", () => {
-		expect(boardMetrics(10).columns).toBe(MIN_COLUMNS);
-		expect(boardMetrics(0).columns).toBe(MIN_COLUMNS);
+	it("draws the reference page at the reference cell", () => {
+		// 8 cells and 7 gutters is 8*68 + 7*22 = 698.
+		const metrics = boardMetrics(698);
+		expect(metrics.cell).toBe(GRID_CELL);
+		expect(metrics.gap).toBe(GRID_GAP);
 	});
 
-	it("scales the whole grid together", () => {
-		const one = boardMetrics(1200, 1);
-		const big = boardMetrics(1200, 2);
-		expect(big.cell).toBe(one.cell * 2);
-		expect(big.gap).toBe(one.gap * 2);
-		// Same board, larger widgets, so fewer of them fit across.
-		expect(big.columns).toBeLessThan(one.columns);
+	it("fills the width it is given", () => {
+		const width = 1240;
+		const metrics = boardMetrics(width);
+		// Within a pixel of the cell's own rounding on each of the eight cells.
+		expect(Math.abs(gridSpan(BOARD_COLUMNS, metrics) - width)).toBeLessThanOrEqual(8);
+	});
+
+	it("falls back to the reference cell when there is nothing to measure", () => {
+		expect(boardMetrics(0).cell).toBe(GRID_CELL);
+	});
+
+	it("fits the height too, so all four rows stay on screen", () => {
+		const wide = 4000;
+		// A pane far wider than it is tall: the height is what binds, and four
+		// rows have to land inside it.
+		const metrics = boardMetrics(wide, 1, 400);
+		expect(gridSpan(BOARD_ROWS, metrics)).toBeLessThanOrEqual(400);
+		// Width alone would have drawn the page far larger.
+		expect(metrics.cell).toBeLessThan(boardMetrics(wide).cell);
+	});
+
+	it("ignores the height when none is offered", () => {
+		expect(boardMetrics(1200, 1, 0)).toEqual(boardMetrics(1200));
+	});
+
+	it("scales the whole page together", () => {
+		const full = boardMetrics(1200, 1);
+		const small = boardMetrics(1200, WIDGET_SCALE_MIN);
+		expect(small.cell).toBeLessThan(full.cell);
+		expect(small.gap).toBeLessThan(full.gap);
+		// Same eight columns, drawn smaller — the knob sizes the page, it does
+		// not change how many widgets fit across it.
+		expect(small.columns).toBe(full.columns);
+		// The page then stops filling the pane, which is what leaves the room
+		// the board is centred in.
+		expect(gridSpan(BOARD_COLUMNS, small)).toBeLessThan(1200);
+	});
+
+	it("caps the scale at the size that fills the pane", () => {
+		// The cell is fitted to the pane, so there is nothing above 1 to ask
+		// for; a board saved at the old ceiling of 2 lands on it.
+		expect(WIDGET_SCALE_MAX).toBe(1);
+		expect(clampWidgetScale(2)).toBe(1);
+		expect(clampWidgetScale(0.1)).toBe(WIDGET_SCALE_MIN);
 	});
 });
 
@@ -133,17 +193,26 @@ describe("packCards", () => {
 		}
 	});
 
-	it("clamps a widget wider than the board rather than overflowing it", () => {
-		// An extra-large widget is eight columns; a four-column board has to
-		// give it the full width instead of letting it run off the edge.
-		const [placement] = packCards([widget("xlarge")], MIN_COLUMNS);
-		expect(placement.cols).toBe(MIN_COLUMNS);
+	it("fits an extra-large widget exactly across the board", () => {
+		// The page is eight columns, which is an extra-large widget's own
+		// footprint: it fills the row with nothing clamped away.
+		const [placement] = packCards([widget("xlarge")], BOARD_COLUMNS);
+		expect(placement).toMatchObject({ col: 0, row: 0, cols: 8, rows: 4 });
+	});
+
+	it("clamps a widget wider than the grid it is packed onto", () => {
+		// Only reachable from a caller packing onto a narrower grid of its own,
+		// but a widget must never run off the edge of one.
+		const [placement] = packCards([widget("xlarge")], 4);
+		expect(placement.cols).toBe(4);
 	});
 });
 
 describe("board geometry", () => {
 	it("measures a tile at its reference pixel size", () => {
-		const metrics = boardMetrics(1200);
+		// On a board drawn at the reference page width (698), the cell is the
+		// reference cell and the tiles come out at their captioned sizes.
+		const metrics = boardMetrics(698);
 		const [placement] = packCards([widget("medium")], metrics.columns);
 		const rect = placementRect(placement, metrics);
 		expect(rect.width).toBe(338);
@@ -151,7 +220,7 @@ describe("board geometry", () => {
 	});
 
 	it("is as tall as its packed rows", () => {
-		const metrics = boardMetrics(1200);
+		const metrics = boardMetrics(698);
 		const placements = packCards([widget("large")], metrics.columns);
 		expect(packedRows(placements)).toBe(4);
 		expect(boardHeight(placements, metrics)).toBe(354 - 16);
@@ -159,6 +228,19 @@ describe("board geometry", () => {
 
 	it("has no height when it has no widgets", () => {
 		expect(boardHeight([], boardMetrics(1200))).toBe(0);
+	});
+
+	it("is drawn four rows tall even when the widgets don't fill it", () => {
+		// The page reserves its own height, so adding or removing a widget
+		// doesn't resize the board (and so every widget on it).
+		expect(drawnRows([])).toBe(BOARD_ROWS);
+		expect(drawnRows(packCards([widget("small")], BOARD_COLUMNS))).toBe(BOARD_ROWS);
+	});
+
+	it("keeps the extra rows of a board packed taller than the page", () => {
+		// Three extra-large widgets are twelve rows; the page is not a cap.
+		const cards = [widget("xlarge"), widget("xlarge"), widget("xlarge")];
+		expect(drawnRows(packCards(cards, BOARD_COLUMNS))).toBe(12);
 	});
 });
 

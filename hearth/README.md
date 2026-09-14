@@ -14,7 +14,7 @@ Think of it as a new-tab dashboard, start page and command launcher in one.
 
 - 🔍 **Search everything** — fuzzy, full-text, tags, frontmatter and commands
 - 🧩 **25+ card types** — embeds, tasks, calendars, Dataview, Git, Jira, and more
-- 🎛️ **Free-form layout** — drag, resize and snap cards anywhere
+- 🎛️ **Fixed 8×4 board** — drag widgets between slots; the page scales with the window
 - 🪟 **Frosted glass** — per-card opacity, blur, color and corner radius
 - 📱 **Mobile mode** — collapses to a search-only launcher
 

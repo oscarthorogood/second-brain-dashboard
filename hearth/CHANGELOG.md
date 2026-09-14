@@ -15,6 +15,20 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **The board is a fixed 8×4 page that scales with the window.** It used to
+  keep widgets at a constant size and derive its column count from the pane, so
+  every few pixels of resize crossed a column boundary and repacked the whole
+  board — widgets changed neighbours, changed rows and generally landed
+  somewhere other than where they were put. The page is now always eight cells
+  across and four down (an extra-large widget's own footprint) and the *cell*
+  is what tracks the pane: it is fitted to the measured width and height, so
+  resizing the window resizes the widgets and nothing changes slot. A board
+  that packs taller than four rows keeps its extra rows and scrolls; a board
+  that doesn't fill them still reserves them, so its size no longer jumps as
+  widgets are added and removed. **Widget size** in settings is now a fraction
+  of the pane-filling size (0.6–1, default 1) and centres the page when it is
+  drawn below full; a board saved above the old ceiling clamps to 1.
+
 - **Fixed four things the artboards could not show.** The search bar was
   drawing two nested glass pills — the card's surface and the bar's own
   inside it — where the reference draws a single 34px panel with the query,

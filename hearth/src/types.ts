@@ -1400,14 +1400,20 @@ export function clampBannerHeight(h: number | undefined): number {
 	return Math.max(BANNER_HEIGHT_MIN, Math.min(BANNER_HEIGHT_MAX, Math.round(h)));
 }
 
-/** Widget scale bounds. The floor keeps a small widget legible (a 2×2 tile at
- * 0.6 is barely 95px square); the ceiling keeps an extra-large one from being
- * wider than any realistic pane. */
+/** Widget scale bounds. The scale is a fraction of the size that fills the
+ * pane, so 1 is the ceiling: the 8×4 page is already fitted to the space it
+ * has and drawing it larger would only push it off the edge. The floor draws
+ * the page at 60% of the pane, which is as small as a 2×2 tile stays legible.
+ *
+ * A board saved at the old ceiling of 2 (when the scale multiplied a constant
+ * cell rather than a fitted one) clamps to 1 on load, which is the same
+ * "as large as it goes" it asked for. */
 export const WIDGET_SCALE_MIN = 0.6;
-export const WIDGET_SCALE_MAX = 2;
+export const WIDGET_SCALE_MAX = 1;
 
 /** Clamp a widget scale to {@link WIDGET_SCALE_MIN}..{@link WIDGET_SCALE_MAX},
- * falling back to 1 (the reference cell size) for anything non-numeric. */
+ * falling back to 1 (the page drawn at the full size of its pane) for anything
+ * non-numeric. */
 export function clampWidgetScale(scale: number | undefined): number {
 	if (typeof scale !== "number" || !Number.isFinite(scale)) return 1;
 	return Math.max(WIDGET_SCALE_MIN, Math.min(WIDGET_SCALE_MAX, scale));
@@ -1631,13 +1637,15 @@ export interface HomeSettings {
 	/** The dashboard's cards, in the order they pack onto the board. */
 	cards: DashboardCard[];
 	/**
-	 * How large a grid cell is drawn, as a multiple of the reference 68px.
+	 * How large the board is drawn, as a multiple of the size that fills the
+	 * pane.
 	 *
-	 * The board keeps widgets at a constant size and gains columns as the pane
-	 * widens, the way a home screen does, so this is the one knob over the
+	 * The board is a fixed 8x4 page whose cell is fitted to whatever room the
+	 * pane gives it, so at 1 the page fills the pane exactly; below 1 it is
+	 * drawn smaller than the pane on purpose. It is the one knob over the
 	 * board's geometry — it replaces the old column count, row height and
 	 * fit-to-page switch, none of which mean anything once every widget is one
-	 * of four fixed footprints.
+	 * of four fixed footprints on a fixed page.
 	 */
 	widgetScale: number;
 	/** Curated note paths shown by "favorites" cards. */

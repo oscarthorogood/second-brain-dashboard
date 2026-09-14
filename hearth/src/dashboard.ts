@@ -145,14 +145,17 @@ export function renderDashboard(
 		}
 	}
 
-	// Lay the board out from the measured pane width, then keep it in step with
-	// the pane: the column count is derived from the width (widgets keep a
-	// constant size and the board gains columns as it widens), so a resize can
-	// change the packing, not merely stretch it.
+	// Lay the board out from the measured pane, then keep it in step with it.
+	// The board is a fixed 8x4 page, so a resize never repacks it: the grid
+	// cell is fitted to the space instead, and every widget keeps its slot and
+	// merely scales. Both axes are measured so the whole page stays on screen.
 	const layoutNow = () => {
 		if (!grid.isConnected) return;
-		const width = grid.clientWidth || effectiveMaxWidth(s);
-		const next = boardMetrics(width, effectiveWidgetScale(s));
+		// Measured off the CONTAINER, not the grid: the grid carries the page's
+		// own width inline (so it can be centred), which would otherwise feed
+		// back into the next fit and shrink the board on every pass.
+		const width = container.clientWidth || grid.clientWidth || effectiveMaxWidth(s);
+		const next = boardMetrics(width, effectiveWidgetScale(s), availableHeight(grid));
 		gridLayout.metrics = next;
 		grid.style.setProperty("--sbd-grid-cell", `${next.cell}px`);
 		grid.style.setProperty("--sbd-grid-gap", `${next.gap}px`);
@@ -161,11 +164,41 @@ export function renderDashboard(
 		// and rebuild the shared frost mask that keys off those classes.
 		applyEdgeMerging(grid);
 	};
-	// Lay out before the first paint, so widgets never flash at a stale width.
+	// Lay out before the first paint, so widgets never flash at a stale size.
 	window.requestAnimationFrame(layoutNow);
 	const observer = new ResizeObserver(debounce(layoutNow, 60, true));
-	observer.observe(grid);
+	// The container, because that is what the fit is measured from — the grid's
+	// own width is an output of the fit, not an input to it.
+	observer.observe(container);
+	// The board's own height is whatever the fitted cell makes it, so a pane
+	// that only gets SHORTER never resizes the grid element and would never
+	// re-fire the observer above. Watch the scroll area — whose height is the
+	// pane's — so a vertical resize rescales the page like a horizontal one.
+	const scroll = scrollHost(grid);
+	if (scroll && scroll !== container) observer.observe(scroll);
 	component.register(() => observer.disconnect());
+}
+
+/** The scroll area the board lives in, whose height is the pane's usable
+ * height. Null when the board is rendered outside the view (tests, a preview). */
+function scrollHost(grid: HTMLElement): HTMLElement | null {
+	return grid.closest<HTMLElement>(".sbd-scroll");
+}
+
+/** How much vertical room the board has, in pixels: from the top of the grid
+ * to the bottom of the scroll area, less its bottom padding.
+ *
+ * Measured rather than taken from a CSS height because the board is not a
+ * full-height flex child — a header (title, search) and an optional banner sit
+ * above it and take as much as they take. Returns 0 when there is nothing
+ * usable to measure (an unattached grid, a hidden pane), which
+ * {@link boardMetrics} reads as "fit the width alone". */
+function availableHeight(grid: HTMLElement): number {
+	const scroll = scrollHost(grid);
+	if (!scroll) return 0;
+	const pad = parseFloat(getComputedStyle(scroll).paddingBottom) || 0;
+	const room = scroll.getBoundingClientRect().bottom - grid.getBoundingClientRect().top - pad;
+	return room > 0 ? room : 0;
 }
 
 /** Render a card's body. Each (re)draw renders under a fresh child component so

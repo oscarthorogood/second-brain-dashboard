@@ -16,7 +16,7 @@
  *
  * so the review step can show the first without committing the second.
  */
-import { MIN_COLUMNS, packCards, packedRows } from "../grid";
+import { BOARD_COLUMNS, packCards, packedRows } from "../grid";
 import {
 	type BackgroundLayout,
 	type DashboardCard,
@@ -589,11 +589,11 @@ function applyIntegrations(
 
 /** How many grid rows a set of widgets occupies once packed.
  *
- * Measured on the narrowest board the grid ever lays out ({@link MIN_COLUMNS}),
- * which is the worst case: fewer columns means more rows, so a plan that is
- * short here is short everywhere. */
+ * Measured on the board the grid actually lays out ({@link BOARD_COLUMNS}
+ * wide). The board no longer changes column count with the pane, so there is
+ * one answer here rather than a narrowest-case one. */
 export function boardRows(cards: DashboardCard[]): number {
-	return packedRows(packCards(cards, MIN_COLUMNS));
+	return packedRows(packCards(cards, BOARD_COLUMNS));
 }
 
 /** Install the planned cards as the board. */

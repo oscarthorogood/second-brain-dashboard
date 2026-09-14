@@ -1676,12 +1676,21 @@ body.theme-dark {
 /* The board: widgets are absolutely positioned via inline left/top/width/height
    in pixels, computed by the packer in grid.ts from the invisible grid (a
    square cell and a gutter, both published here as --sbd-grid-cell and
-   --sbd-grid-gap). The grid is a flex child of the dashboard so it fills the
-   space the toolbar leaves; its inline min-height is the packed board's own
-   height, so the board grows to its content and scrolls. */
+   --sbd-grid-gap). The board is a fixed 8x4 page and the CELL is what tracks
+   the pane — grid.ts fits it to the measured width and height — so resizing
+   the window resizes the widgets rather than repacking them. The grid is a
+   flex child of the dashboard so it fills the space the toolbar leaves; its
+   inline min-height is the page's four rows, or the packed height when the
+   widgets overflow them, in which case the board scrolls. */
 .sbd-grid {
 	position: relative;
+	/* grid.ts sets the element's width to the page's own eight columns; the auto
+	   inline margins then centre it, so a board drawn below full widget scale is
+	   centred in the pane rather than left-aligned against a band of dead space.
+	   The 100% is the pre-layout fallback only. */
 	width: 100%;
+	max-width: 100%;
+	margin-inline: auto;
 	flex: 1 1 auto;
 	min-height: 0;
 }
