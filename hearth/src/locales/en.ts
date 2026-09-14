@@ -1013,7 +1013,7 @@ export const en = {
 				"Size and transparency of the widget grid. Widgets themselves are added and configured on the board.",
 			widgetScale: "Widget size",
 			widgetScaleDesc:
-				"How large the board is drawn. The board is always eight widget cells across and four down, and it scales to fit the pane, so widgets resize with the window rather than rearranging. Below 1 the board is drawn smaller than the pane.",
+				"How large the board is drawn. The board is always sixteen widget cells across and eight down — room for eight large widgets, or any other mix — and it scales to fit the pane, so widgets resize with the window rather than rearranging. Below 1 the board is drawn smaller than the pane.",
 			arrangeButtonVisibility: "Arrange button visibility",
 			arrangeButtonVisibilityDesc:
 				"Choose whether the arrange/edit button is always visible or revealed when hovering its area.",

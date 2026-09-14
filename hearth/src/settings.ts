@@ -1563,7 +1563,7 @@ export class HomeSettingTab extends PluginSettingTab {
 		const s = this.plugin.settings;
 
 		// The board's one geometry control. Widgets are four fixed footprints on
-		// a fixed 8x4 page that scales to the pane, so what is left to choose is
+		// a fixed 16x8 page that scales to the pane, so what is left to choose is
 		// how big that page is drawn — not how many cells it has, how tall a row
 		// is, or whether the board is squeezed to fit.
 		new Setting(containerEl)

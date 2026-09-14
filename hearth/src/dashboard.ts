@@ -146,7 +146,7 @@ export function renderDashboard(
 	}
 
 	// Lay the board out from the measured pane, then keep it in step with it.
-	// The board is a fixed 8x4 page, so a resize never repacks it: the grid
+	// The board is a fixed 16x8 page, so a resize never repacks it: the grid
 	// cell is fitted to the space instead, and every widget keeps its slot and
 	// merely scales. Both axes are measured so the whole page stays on screen.
 	const layoutNow = () => {

@@ -1640,7 +1640,7 @@ export interface HomeSettings {
 	 * How large the board is drawn, as a multiple of the size that fills the
 	 * pane.
 	 *
-	 * The board is a fixed 8x4 page whose cell is fitted to whatever room the
+	 * The board is a fixed 16x8 page whose cell is fitted to whatever room the
 	 * pane gives it, so at 1 the page fills the pane exactly; below 1 it is
 	 * drawn smaller than the pane on purpose. It is the one knob over the
 	 * board's geometry — it replaces the old column count, row height and
