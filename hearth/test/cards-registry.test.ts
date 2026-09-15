@@ -63,6 +63,13 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 			{ id: "tasks", icon: "list-todo", category: "planning", requires: null, build: { kind: "tasks", title: "Tasks", tasks: {} } },
 			{ id: "schedule", icon: "calendar-range", category: "planning", requires: null, build: { kind: "schedule", title: "Calendar", schedule: {} } },
 			{ id: "calendar", icon: "calendar-days", category: "planning", requires: null, build: { kind: "calendar", title: "Calendar" } },
+			{
+				id: "course",
+				icon: "graduation-cap",
+				category: "planning",
+				requires: null,
+				build: { kind: "course", title: "Course", course: {} },
+			},
 			{ id: "clock", icon: "clock", category: "planning", requires: null, build: { kind: "clock", title: "" } },
 
 			// ---- Vault insight ----
@@ -126,6 +133,22 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 				category: "integrations",
 				requires: "Hostable side-panel views",
 				build: { kind: "leaf", title: "Plugin view", leafView: {} },
+			},
+
+			// ---- Artificial intelligence ----
+			{
+				id: "calsync",
+				icon: "refresh-cw",
+				category: "ai",
+				requires: null,
+				build: { kind: "calsync", title: "Calendar sync", calsync: {} },
+			},
+			{
+				id: "detail",
+				icon: "paperclip",
+				category: "ai",
+				requires: null,
+				build: { kind: "detail", title: "Add detail", detail: {} },
 			},
 
 			// ---- Fun ----
@@ -341,6 +364,12 @@ describe("liveness classification", () => {
 			git: "static",
 			leaf: "static",
 			pet: "vault",
+			// The three coursework cards all read the vault's own notes — the
+			// course card its lectures and deadlines, the other two the filing
+			// queue — so each follows vault changes.
+			course: "vault",
+			calsync: "vault",
+			detail: "vault",
 		});
 	});
 });
