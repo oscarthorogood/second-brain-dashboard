@@ -53,6 +53,12 @@ export type CardCategory =
 	| "vault"
 	| "tools"
 	| "integrations"
+	/** Cards whose work is done by Claude rather than by this plugin: they
+	 * collect something, write it into the vault, and queue the decision about
+	 * where it belongs (see `claudebridge.ts`). Grouped apart from
+	 * "integrations" because the dependency isn't a service this plugin calls —
+	 * it is an agent working in the same vault. */
+	| "ai"
 	| "fun";
 
 /** One entry in the "Add card" picker. A kind may offer several (embed has

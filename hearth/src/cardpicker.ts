@@ -504,5 +504,6 @@ const CATEGORY_ICONS: Record<CardCategory, string> = {
 	vault: "bar-chart-3",
 	tools: "wrench",
 	integrations: "plug",
+	ai: "bot",
 	fun: "sparkles",
 };

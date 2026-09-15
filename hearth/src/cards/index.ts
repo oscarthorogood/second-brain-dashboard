@@ -38,6 +38,9 @@ import { weatherCard } from "./weather";
 import { gitCard } from "./git";
 import { leafCard } from "./leaf";
 import { petCard } from "./pet";
+import { courseCard } from "./course";
+import { calSyncCard } from "./calsync";
+import { detailCard } from "./detail";
 
 export type {
 	CardCategory,
@@ -84,6 +87,9 @@ export const CARD_DEFINITIONS: { [K in CardKind]: CardDefinition<K> } = {
 	git: gitCard,
 	leaf: leafCard,
 	pet: petCard,
+	course: courseCard,
+	calsync: calSyncCard,
+	detail: detailCard,
 };
 
 /** Every registered kind, in registry order. Used for layout-import validation
@@ -125,10 +131,11 @@ export const TEMPLATE_MENU_GROUPS: { category: CardCategory; templates: string[]
 		category: "notes",
 		templates: ["note", "daily", "image", "slideshow", "canvas", "excalidraw", "base", "recent", "favorites", "bookmarks"],
 	},
-	{ category: "planning", templates: ["tasks", "schedule", "calendar", "clock"] },
+	{ category: "planning", templates: ["tasks", "schedule", "calendar", "course", "clock"] },
 	{ category: "vault", templates: ["search", "searchbar", "stats", "heatmap"] },
 	{ category: "tools", templates: ["links", "commands", "text", "calculator", "web"] },
 	{ category: "integrations", templates: ["templater", "dataview", "datacore", "git", "jira", "rss", "weather", "leaf"] },
+	{ category: "ai", templates: ["calsync", "detail"] },
 	{ category: "fun", templates: ["pet"] },
 ];
 

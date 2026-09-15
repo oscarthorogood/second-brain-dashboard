@@ -13127,3 +13127,798 @@ body.sbd-dv-resizing {
 		height: 140px;
 	}
 }
+
+/* ==========================================================================
+   Coursework cards — course overview, calendar sync, add detail
+   (Widget Set v2 → COURSE / SYNC / DETAIL)
+
+   These three share the board's existing surfaces rather than inventing any:
+   the white sheet (--sbd-sheet-*) for panes that carry dense rows, the glass
+   for panes that sit back, and the mono eyebrow to caption both. Only the
+   structures the reference actually introduces are new here — the switcher
+   pill, the status dot, the action tile.
+   ========================================================================== */
+
+/* ---- Shared: a card header that stacks an eyebrow over a title ---------- */
+
+.sbd-course-head,
+.sbd-sync-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	min-width: 0;
+}
+
+.sbd-course-head.is-stacked,
+.sbd-sync-head.is-stacked {
+	align-items: flex-start;
+	margin-bottom: 14px;
+}
+
+.sbd-course-headtext,
+.sbd-sync-headtext {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+/* The eyebrow already carries its own bottom margin for a standalone card;
+   inside these stacked headers the gap above does that job. */
+.sbd-course-headtext .sbd-card-eyebrow,
+.sbd-sync-headtext .sbd-card-eyebrow {
+	margin-bottom: 0;
+}
+
+.sbd-course-name,
+.sbd-sync-title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+	line-height: 1.2;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-course-name.is-large,
+.sbd-sync-title.is-large {
+	font-size: 1.25rem;
+	white-space: normal;
+}
+
+.sbd-course-meta,
+.sbd-sync-when {
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.62);
+	line-height: 1.3;
+}
+
+/* ---- Course overview --------------------------------------------------- */
+
+.sbd-course-dot {
+	width: 8px;
+	height: 8px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--course-color, var(--interactive-accent));
+}
+
+.sbd-course-code {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.625rem;
+	letter-spacing: var(--sbd-label-tracking-inner);
+	color: rgba(255, 255, 255, 0.55);
+}
+
+.sbd-course-latest {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: auto;
+	min-width: 0;
+}
+
+.sbd-course-latest.is-wide {
+	justify-content: center;
+	margin-top: 0;
+	flex: 1;
+}
+
+.sbd-course-topic {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.95);
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sbd-course-latest.is-wide .sbd-course-topic {
+	font-size: 0.9375rem;
+}
+
+.sbd-course-when {
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.62);
+}
+
+/* The switcher pill. Compact at small/medium, where it is a bare chevron. */
+.sbd-course-switch {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	flex: none;
+	padding: 6px 10px;
+	border-radius: var(--sbd-radius-s);
+	background: rgba(255, 255, 255, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+	transition: background 120ms ease;
+}
+
+.sbd-course-switch.is-compact {
+	padding: 5px 7px;
+	gap: 5px;
+}
+
+.sbd-course-switch:hover {
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.sbd-course-switch:active {
+	background: rgba(255, 255, 255, 0.4);
+}
+
+.sbd-course-switch-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.92);
+	white-space: nowrap;
+}
+
+.sbd-course-switch-icon {
+	display: flex;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+.sbd-course-switch-icon .svg-icon {
+	width: 12px;
+	height: 12px;
+}
+
+.sbd-course-panes {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-course-cols {
+	display: flex;
+	gap: 12px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-course-pane,
+.sbd-sync-col {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	padding: 14px 16px;
+	border-radius: var(--sbd-radius-l);
+}
+
+.sbd-course-pane.is-sheet,
+.sbd-sync-col.is-sheet,
+.sbd-sync-row.is-sheet {
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+.sbd-course-pane.is-glass {
+	background: rgba(255, 255, 255, 0.18);
+}
+
+/* Rows inside a sheet pane sit directly on the white, so the shared
+   is-sheet list treatment (its own chip per row) would double the surface. */
+.sbd-course-pane.is-sheet .sbd-list.is-sheet {
+	gap: 0;
+}
+
+.sbd-course-pane.is-sheet .sbd-list.is-sheet .sbd-list-item {
+	background: none;
+	padding: 5px 0;
+	border-radius: 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+	align-items: center;
+}
+
+.sbd-course-pane.is-sheet .sbd-list.is-sheet .sbd-list-item:last-child {
+	border-bottom: none;
+}
+
+.sbd-course-pane.is-sheet .sbd-list-label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-course-pane.is-sheet .sbd-list-age,
+.sbd-course-pane.is-sheet .sbd-course-code {
+	color: var(--sbd-sheet-ink-muted);
+}
+
+.sbd-course-pane.is-glass .sbd-list.is-bare {
+	gap: 8px;
+}
+
+.sbd-course-rowmain {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1;
+	min-width: 0;
+}
+
+.sbd-course-none {
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.sbd-course-pane.is-sheet .sbd-course-none {
+	color: var(--sbd-sheet-ink-faint);
+}
+
+/* ---- Calendar sync ----------------------------------------------------- */
+
+.sbd-sync-mini {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 2px;
+}
+
+.sbd-sync-mini-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.sbd-sync-name {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.92);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-sync-foot {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	margin-top: auto;
+}
+
+.sbd-sync-total {
+	font-size: 0.625rem;
+	color: rgba(255, 255, 255, 0.42);
+}
+
+/* The status dot is the card's whole message at a glance, so each state gets
+   a colour that means the same thing everywhere on the board: green synced,
+   amber working, red failed, grey nothing to do. */
+.sbd-sync-dot {
+	width: 8px;
+	height: 8px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--sbd-sheet-ink-faint);
+}
+
+.sbd-sync-dot.is-synced {
+	background: #4caf6f;
+}
+
+.sbd-sync-dot.is-syncing {
+	background: #e8a94f;
+}
+
+.sbd-sync-dot.is-error {
+	background: #d9594c;
+}
+
+.sbd-sync-dot.is-blocked {
+	background: #8d949b;
+}
+
+.sbd-sync-refresh {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: none;
+	padding: 6px 10px;
+	border-radius: var(--sbd-radius-s);
+	background: rgba(255, 255, 255, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+	transition: background 120ms ease;
+}
+
+.sbd-sync-refresh.is-icon {
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	justify-content: center;
+	border-radius: 50%;
+}
+
+.sbd-sync-refresh:hover {
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.sbd-sync-refresh:active {
+	background: rgba(255, 255, 255, 0.4);
+}
+
+.sbd-sync-refresh-icon {
+	display: flex;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+.sbd-sync-refresh-icon .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+.sbd-sync-refresh.is-spinning .sbd-sync-refresh-icon {
+	animation: sbd-rss-spin 0.9s linear infinite;
+}
+
+.sbd-sync-refresh-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.92);
+	white-space: nowrap;
+}
+
+.sbd-sync-tiles {
+	display: flex;
+	gap: 10px;
+	flex: 1;
+	align-items: stretch;
+}
+
+.sbd-sync-tile {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+	min-width: 0;
+	padding: 10px 12px;
+	border-radius: var(--sbd-radius-m);
+	background: rgba(255, 255, 255, 0.16);
+}
+
+.sbd-sync-status {
+	font-size: 0.625rem;
+	color: rgba(255, 255, 255, 0.6);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sbd-sync-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-sync-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex: 1;
+	min-height: 0;
+	padding: 12px 16px;
+	border-radius: var(--sbd-radius-l);
+}
+
+.sbd-sync-rowleft {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	min-width: 0;
+}
+
+.sbd-sync-rowtext {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.sbd-sync-row.is-sheet .sbd-sync-name {
+	font-size: 0.875rem;
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-sync-provider {
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.6);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-sync-row.is-sheet .sbd-sync-provider,
+.sbd-sync-col.is-sheet .sbd-sync-provider {
+	color: var(--sbd-sheet-ink-muted);
+}
+
+.sbd-sync-row.is-sheet .sbd-sync-status {
+	flex: none;
+	font-size: 0.6875rem;
+	color: var(--sbd-sheet-ink-muted);
+}
+
+.sbd-sync-cols {
+	display: flex;
+	gap: 12px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-sync-colhead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.sbd-sync-colhead .sbd-card-eyebrow {
+	margin-bottom: 0;
+}
+
+.sbd-sync-colstatus {
+	margin-top: 10px;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-sync-count {
+	margin-top: auto;
+	font-size: 0.6875rem;
+	color: var(--sbd-sheet-ink-caption);
+}
+
+/* ---- Add detail -------------------------------------------------------- */
+
+.sbd-detail-tile {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100%;
+	cursor: pointer;
+}
+
+.sbd-detail-plus {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	color: rgba(255, 255, 255, 0.94);
+}
+
+.sbd-detail-plus .svg-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.sbd-detail-title {
+	margin-top: auto;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+.sbd-detail-sub {
+	font-size: 0.625rem;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.sbd-detail-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1;
+}
+
+.sbd-detail-search {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	flex: 1.4;
+	min-width: 0;
+	padding: 9px 12px;
+	border-radius: var(--sbd-radius-m);
+	background: rgba(255, 255, 255, 0.24);
+	cursor: pointer;
+	transition: background 120ms ease;
+}
+
+.sbd-detail-search:hover {
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.sbd-detail-search-icon {
+	display: flex;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.sbd-detail-search-icon .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+/* The reference sets this text solid white rather than the usual 92% — it is
+   a field's placeholder over glass, and anything softer stopped reading. */
+.sbd-detail-search-text {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: #ffffff;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sbd-detail-chip {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 10px;
+	border-radius: var(--sbd-radius-s);
+	background: rgba(255, 255, 255, 0.16);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.92);
+	text-align: center;
+	cursor: pointer;
+	transition: background 120ms ease;
+}
+
+.sbd-detail-chip:hover {
+	background: rgba(255, 255, 255, 0.26);
+}
+
+.sbd-detail-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-detail-cols {
+	display: flex;
+	gap: 12px;
+	flex: 1;
+	min-height: 0;
+}
+
+.sbd-detail-action {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	padding: 14px 16px;
+	border-radius: var(--sbd-radius-l);
+	cursor: pointer;
+	transition: background 120ms ease;
+}
+
+.sbd-detail-cols .sbd-detail-action {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 18px;
+	border-radius: var(--sbd-radius-xl);
+}
+
+.sbd-detail-action.is-sheet {
+	background: var(--sbd-sheet-fill);
+	color: var(--sbd-sheet-ink-body);
+	text-shadow: none;
+}
+
+.sbd-detail-action.is-sheet:hover {
+	background: var(--sbd-sheet-fill-hover);
+}
+
+.sbd-detail-action.is-glass {
+	background: rgba(255, 255, 255, 0.24);
+}
+
+.sbd-detail-action.is-glass:hover {
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.sbd-detail-action-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+.sbd-detail-action.is-sheet .sbd-detail-action-icon {
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-detail-action-icon .svg-icon {
+	width: 18px;
+	height: 18px;
+}
+
+.sbd-detail-action-text {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.sbd-detail-cols .sbd-detail-action-text {
+	margin-top: auto;
+}
+
+.sbd-detail-action-title {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.96);
+}
+
+.sbd-detail-action.is-sheet .sbd-detail-action-title {
+	color: var(--sbd-sheet-ink);
+}
+
+.sbd-detail-action-sub {
+	font-size: 0.6875rem;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.sbd-detail-action.is-sheet .sbd-detail-action-sub {
+	color: var(--sbd-sheet-ink-muted);
+}
+
+/* The queue line: present only when something is actually waiting, so it
+   reads as a state rather than a permanent label. */
+.sbd-detail-queue {
+	margin-top: 10px;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.72);
+	cursor: pointer;
+}
+
+.sbd-detail-queue:hover {
+	color: #ffffff;
+}
+
+/* ---- Add detail dialog ------------------------------------------------- */
+
+.sbd-detail-modal .sbd-detail-target {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.sbd-detail-target-name {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	padding: 6px 10px;
+	border-radius: var(--sbd-radius-s);
+	background: var(--background-modifier-hover);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sbd-detail-target-none {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.sbd-detail-target-clear {
+	cursor: pointer;
+	color: var(--text-muted);
+}
+
+.sbd-detail-drop {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 18px;
+	border: 2px dashed var(--background-modifier-border);
+	border-radius: var(--sbd-radius-m);
+	cursor: pointer;
+}
+
+.sbd-detail-drop.is-over {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.sbd-detail-drop-text {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.sbd-detail-drop-sub {
+	font-size: 0.75rem;
+	color: var(--text-faint);
+}
+
+/* The real input covers the drop zone so a click anywhere on it opens the
+   file picker, while the drop handlers still see the drag events. */
+.sbd-detail-file-input {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.sbd-detail-files {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.sbd-detail-file {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 7px 10px;
+	border-radius: var(--sbd-radius-s);
+	background: var(--background-modifier-hover);
+}
+
+.sbd-detail-file-name {
+	font-size: 0.75rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sbd-detail-file-remove {
+	cursor: pointer;
+	color: var(--text-muted);
+	flex: none;
+}
+
+.sbd-detail-notes {
+	width: 100%;
+	min-height: 110px;
+	resize: vertical;
+	font-family: inherit;
+	font-size: 0.8125rem;
+}

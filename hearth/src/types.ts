@@ -37,7 +37,10 @@ export type CardKind =
 	| "weather"
 	| "git"
 	| "leaf"
-	| "pet";
+	| "pet"
+	| "course"
+	| "calsync"
+	| "detail";
 
 /** A refinement control available on a Jira saved-filter card. */
 export type JiraControl =
@@ -1200,6 +1203,56 @@ export interface LinkItem {
 	row?: number;
 }
 
+// ---- Coursework cards -----------------------------------------------------
+
+/** Which course a "course" card shows, and whether it may be changed. */
+export interface CourseCardConfig {
+	/** The course note's name. Empty = the first course in the vault, so a card
+	 * added before any `Courses/` note exists still draws something later. */
+	selected?: string;
+	/** Hide the switcher, fixing the card to one course. */
+	pinned?: boolean;
+}
+
+/**
+ * The three feeds a "calsync" card watches.
+ *
+ * Fixed slots rather than an open list: each one means something different to
+ * whoever files its events (a class is a lecture; an assignment is a deadline;
+ * the personal calendar is neither), and that meaning is the most useful thing
+ * a filing request can carry. An arbitrary list of feeds would lose it.
+ */
+export type CalendarSyncSlotId = "classes" | "assignments" | "obsidian";
+
+/** One feed: where it is, and whether it is being watched. */
+export interface CalendarSyncSlot {
+	/** ICS/webcal subscription URL. Empty = this slot isn't set up. */
+	url?: string;
+	/** False switches the feed off without losing the URL. */
+	enabled?: boolean;
+}
+
+export interface CalendarSyncConfig {
+	classes?: CalendarSyncSlot;
+	assignments?: CalendarSyncSlot;
+	obsidian?: CalendarSyncSlot;
+	/** Minutes between automatic refreshes. Omitted means 60. */
+	refreshMin?: number;
+	/** How many days back events are still worth a note. Omitted means 7. */
+	pastDays?: number;
+	/** How far ahead to look. Omitted means 21 — a term's timetable is
+	 * published months out, and a note per lecture for all of it would bury
+	 * the queue. */
+	aheadDays?: number;
+}
+
+/** The note an "add detail" card attaches to unless the dialog is pointed
+ * somewhere else. */
+export interface DetailCardConfig {
+	/** Vault path of the default target note. */
+	target?: string;
+}
+
 export interface DashboardCard {
 	id: string;
 	kind: CardKind;
@@ -1271,6 +1324,12 @@ export interface DashboardCard {
 	leafView?: LeafViewConfig;
 	/** kind === "pet": species, colors, name and what feeds its mood. */
 	pet?: PetConfig;
+	/** kind === "course": which course the card shows. */
+	course?: CourseCardConfig;
+	/** kind === "calsync": the three iCal feeds and their refresh window. */
+	calsync?: CalendarSyncConfig;
+	/** kind === "detail": the note new detail is attached to by default. */
+	detail?: DetailCardConfig;
 
 	// ---- Live content ----
 	/** Auto-refresh interval in seconds for live content (embed / web). 0 or
@@ -1578,6 +1637,25 @@ export interface HomeSettings {
 	 * requests are configured live-content cards (including Jira) and the
 	 * calculator's key-less, ECB-backed currency-rate fetch. */
 	disableExternalCalls: boolean;
+
+	// ---- Calendar sync ----
+	/**
+	 * Every calendar occurrence already queued for filing, keyed by
+	 * `{UID}@{start ms}` and valued with when it was queued.
+	 *
+	 * Global rather than per-card so two sync cards on one board can't file the
+	 * same lecture twice, and keyed by occurrence rather than by event because
+	 * a weekly class is one VEVENT with an RRULE — keying on the UID alone
+	 * would file the first week of term and silently skip the rest.
+	 *
+	 * Survives the note being filed: whoever files it moves and renames the
+	 * note and drops the `sbd-*` frontmatter (a typed folder allows no fields
+	 * beyond its template's), so the vault itself stops being able to answer
+	 * "have I already handled this event?". This index is the answer.
+	 */
+	calendarSyncSeen?: Record<string, string>;
+	/** When the last sync finished (epoch ms), for the card's "synced 6m ago". */
+	calendarSyncLast?: number;
 
 	// ---- Opening notes ----
 	/** Where every note Second Brain Dashboard opens goes by default (#106). `"tab"` is the
