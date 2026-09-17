@@ -249,6 +249,30 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Added
 
+- **Three cards for coursework, with the filing decisions handed to Claude.**
+  **Course overview** shows one course's recent lectures and what's due next.
+  A strict vault keeps its notes in flat folders and joins them by link rather
+  than by nesting, so no folder view can gather a course's material — this card
+  does, resolving the course by exact name so that two similarly-titled courses
+  are never collapsed into one.
+
+  **Calendar sync** keeps your class, assignment and personal calendars in step
+  with the vault, noticing which events have no note yet. It tracks each
+  *occurrence* rather than each event, so a weekly class — one entry with a
+  repeat rule — is followed all term instead of only in its first week.
+
+  **Add detail** attaches a page, files or notes to a note.
+
+  **What the last two won't do is guess.** Telling a tutorial from an
+  assessment, or finished reference material from an active working file, is a
+  reading of your own vault's rules, and getting it wrong silently orphans a
+  note or files it where you won't find it. So both cards write everything into
+  a holding folder the moment it arrives and queue the filing decision in
+  `Claude/inbox`, where Claude makes it with those rules in front of it. They
+  live under **Artificial intelligence** in the add-card picker, and Claude is
+  optional: without it the queue is simply two folders to work through by hand,
+  and nothing is ever lost waiting.
+
 - **A launchpad that makes notes: the Templater card.** Hearth's third tile card
   sits beside Links and Commands, but each of its buttons creates a note. A tile
   carries three things — one of your
