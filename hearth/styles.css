@@ -1948,6 +1948,17 @@ body.theme-dark {
 	align-content: start;
 }
 
+/* The rule above is for a list that has the whole tile to itself. A widget
+   that has already split the tile into columns of its own must not have each
+   column split again: the course card's extra large runs four panes across
+   702px, so two columns inside one of them is a ~50px column, which is not a
+   layout. Its panes keep the single column the base .sbd-list gives (their
+   gaps are already set by the .sbd-course-pane rules further down). */
+.sbd-card.is-size-xlarge .sbd-course-pane .sbd-list {
+	display: flex;
+	flex-direction: column;
+}
+
 /* ---- The small tile's summary --------------------------------------
  *
  * What a list-shaped widget draws at 158×158 instead of one arbitrary row:

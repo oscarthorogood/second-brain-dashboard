@@ -221,6 +221,12 @@ export function upcoming(
  * reading. Assessments live in Revision, not Tutorials (`Claude/memory.md`). */
 export const ASSIGNMENT_TYPES: readonly NoteType[] = ["tutorial", "essay", "project", "revision"];
 
+/** Everything a course owes that isn't a lecture — the assignment types plus
+ * readings. The large card draws one pane titled "Assignments & readings", so
+ * readings have to be in the list that fills it; asking for ASSIGNMENT_TYPES
+ * alone silently drops the half the title promises. */
+export const DEADLINE_TYPES: readonly NoteType[] = [...ASSIGNMENT_TYPES, "reading"];
+
 /** The next `Lecture No.` / `Tutorial No.` for a course: max + 1 across the
  * whole course, since numbering runs continuously rather than per semester. */
 export function nextNumberFor(items: readonly CourseworkItem[], type: NoteType): number {
