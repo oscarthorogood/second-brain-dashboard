@@ -1,6 +1,6 @@
 import { Notice, setIcon, Setting, type Component } from "obsidian";
 import { feedHost } from "../cardbodies";
-import { holdForFiling, pendingRequestCount, revealFilingQueue } from "../claudebridge";
+import { holdForFiling, pendingRequestCount, revealFilingQueue, type HeldItem } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { formatCompactAge } from "../dates";
 import { t } from "../i18n";
@@ -78,13 +78,47 @@ export function renderCalSync(
 	component: Component,
 ): void {
 	const cfg = (card.calsync ??= {});
-	const redraw = () => {
+	// A repaint paints; it does not re-enter this function. It used to, and the
+	// scheduling below came with it: a sync repaints twice (once as it starts,
+	// once as it finishes), so every sync left two more auto-refresh timers on
+	// the component. Those timers live until the card is remounted, and each
+	// one's own sync adds two more again — so a board left open ends up
+	// refetching all three feeds over and over. Everything past `paint()` is
+	// mount-time wiring and runs once, which is the shape the RSS and Git cards
+	// already use.
+	const paint = () => {
 		body.empty();
-		renderCalSync(view, card, body, component);
+		paintCalSync(view, card, body, paint);
 	};
+	paint();
 
+	// The first render kicks a fetch and, when the board stays open, schedules
+	// the repeat — the same shape the calendar card's IcsContext uses, so a
+	// dashboard left on a second monitor keeps the vault current by itself.
+	const configured = SLOTS.map((id) => slotState(view, card, id)).filter((s) => s.enabled && s.url);
+	if (!configured.length) return;
+	if (!started.has(card.id)) {
+		started.add(card.id);
+		void syncNow(view, card, false, paint);
+	}
+	const minutes = effectiveAutoRefreshMinutes(view.plugin.settings, cfg.refreshMin ?? 60);
+	if (minutes > 0) {
+		component.registerInterval(
+			window.setInterval(() => void syncNow(view, card, true, paint), minutes * 60_000),
+		);
+	}
+}
+
+/** Draw the card as it stands right now. Called on mount and on every repaint,
+ * and deliberately schedules nothing — that is what keeps the auto-refresh to
+ * one timer per mount. */
+function paintCalSync(
+	view: HomeView,
+	card: DashboardCard,
+	body: HTMLElement,
+	redraw: () => void,
+): void {
 	const slots = SLOTS.map((id) => slotState(view, card, id));
-	const configured = slots.filter((s) => s.enabled && s.url);
 
 	switch (card.size) {
 		case "small":
@@ -106,21 +140,6 @@ export function renderCalSync(
 		const queue = body.createDiv({ cls: "sbd-detail-queue", text: t().cards.calsync.pending(pending) });
 		makeClickable(queue, () => void revealFilingQueue(view.app), t().cards.calsync.pending(pending));
 		queue.addEventListener("click", () => void revealFilingQueue(view.app));
-	}
-
-	// The first render kicks a fetch and, when the board stays open, schedules
-	// the repeat — the same shape the calendar card's IcsContext uses, so a
-	// dashboard left on a second monitor keeps the vault current by itself.
-	if (!configured.length) return;
-	if (!started.has(card.id)) {
-		started.add(card.id);
-		void syncNow(view, card, false, redraw);
-	}
-	const minutes = effectiveAutoRefreshMinutes(view.plugin.settings, cfg.refreshMin ?? 60);
-	if (minutes > 0) {
-		component.registerInterval(
-			window.setInterval(() => void syncNow(view, card, true, redraw), minutes * 60_000),
-		);
 	}
 }
 
@@ -352,16 +371,31 @@ export async function syncNow(
 				// refresh, and a duplicate note is worse than a missing one the
 				// user can re-sync for.
 				seen[key] = new Date().toISOString();
-				await queueEvent(view, label, occurrence, courses);
+				// A write that produced nothing at all is the other case, and it
+				// needs the opposite treatment: the event has no note and the mark
+				// would be the only record of it, so the event would be dropped
+				// silently and for good. Take the mark back and let the next
+				// refresh try again.
+				const held = await queueEvent(view, label, occurrence, courses);
+				if (!held.holding) {
+					delete seen[key];
+					continue;
+				}
 				queued++;
 			}
 		}
 
 		plugin.settings.calendarSyncLast = Date.now();
-		await plugin.saveData(plugin.settings);
 		if (queued > 0) new Notice(t().notices.calsyncQueued(queued));
 	} finally {
+		// Cleared first, before anything that can throw: a `syncing` left true
+		// refuses every later refresh for the rest of the session.
 		syncing = false;
+		// Saved here rather than at the end of the try, for the same reason the
+		// index is written before the note: a throw part-way through the loop
+		// would otherwise discard the marks for the events that *were* filed,
+		// and the next refresh would file every one of them a second time.
+		void plugin.saveData(plugin.settings);
 		redraw();
 	}
 }
@@ -374,20 +408,22 @@ export function occurrenceKey(occurrence: { uid: string; start: number; summary:
 	return `${id}@${occurrence.start}`;
 }
 
-/** Write one event into the holding folder and ask for it to be filed. */
+/** Write one event into the holding folder and ask for it to be filed. Hands
+ * back what landed, so the caller can tell a write that failed from one that
+ * worked (see the `seen` index in {@link syncNow}). */
 async function queueEvent(
 	view: HomeView,
 	calendar: string,
 	occurrence: IcsOccurrence,
 	courses: readonly string[],
-): Promise<void> {
+): Promise<HeldItem> {
 	const strings = t().cards.calsync;
 	const when = new Date(occurrence.start);
 	const whenLabel = occurrence.allDay
 		? when.toISOString().slice(0, 10)
 		: `${when.toISOString().slice(0, 10)} ${when.toTimeString().slice(0, 5)}`;
 
-	await holdForFiling(
+	return holdForFiling(
 		view.app,
 		{
 			kind: "calendar-event",

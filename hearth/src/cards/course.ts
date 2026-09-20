@@ -2,6 +2,7 @@ import { Menu, Setting, setIcon, TFile } from "obsidian";
 import { emptyState } from "../cardbodies";
 import {
 	ASSIGNMENT_TYPES,
+	DEADLINE_TYPES,
 	readCourseItems,
 	readCourses,
 	recentLectures,
@@ -58,6 +59,10 @@ export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElem
 	const items = readCourseItems(view.app, selected.name);
 	const lectures = recentLectures(items);
 	const due = upcoming(items, ASSIGNMENT_TYPES);
+	// The large card's one deadline pane is titled "Assignments & readings", so
+	// it is fed both; `due` (assignments alone) is what the two narrower panes
+	// at extra large split against the readings column.
+	const deadlines = upcoming(items, DEADLINE_TYPES);
 	const readings = upcoming(items, ["reading"]);
 
 	switch (card.size) {
@@ -68,7 +73,7 @@ export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElem
 			renderMedium(view, card, body, courses, selected, lectures, redraw);
 			break;
 		case "large":
-			renderLarge(view, card, body, courses, selected, lectures, due, redraw);
+			renderLarge(view, card, body, courses, selected, lectures, deadlines, redraw);
 			break;
 		case "xlarge":
 			renderXLarge(view, card, body, courses, selected, lectures, due, readings, redraw);
@@ -138,13 +143,13 @@ function renderLarge(
 	courses: Course[],
 	course: Course,
 	lectures: CourseworkItem[],
-	due: CourseworkItem[],
+	deadlines: CourseworkItem[],
 	redraw: () => void,
 ): void {
 	courseHeader(view, card, body, courses, course, "large", redraw);
 	const panes = body.createDiv("sbd-course-panes");
 	pane(view, panes, t().cards.course.recentLectures, lectures.slice(0, ROWS.large), "sheet");
-	pane(view, panes, t().cards.course.assignmentsReadings, due.slice(0, ROWS.large), "glass");
+	pane(view, panes, t().cards.course.assignmentsReadings, deadlines.slice(0, ROWS.large), "glass");
 }
 
 function renderXLarge(
@@ -163,9 +168,13 @@ function renderXLarge(
 	// Reference (Widget Set v2 → COURSE XL): four columns alternating sheet and
 	// glass, so neighbouring panes stay distinguishable at a glance.
 	const assignments = due.filter((i) => i.type !== "revision");
-	const revision = due.filter((i) => i.type === "revision");
 	pane(view, cols, t().cards.course.recentLectures, lectures.slice(0, ROWS.xlarge), "sheet");
-	pane(view, cols, t().cards.course.upcoming, [...revision, ...assignments].slice(0, ROWS.xlarge), "glass");
+	// "Upcoming" is every deadline the course has, soonest first — which is
+	// exactly what `upcoming()` already returned. Splitting `due` by type and
+	// concatenating the halves put every revision note above an essay falling
+	// due tomorrow, and with two rows to spend that essay never appeared here
+	// at all.
+	pane(view, cols, t().cards.course.upcoming, due.slice(0, ROWS.xlarge), "glass");
 	pane(view, cols, t().cards.course.assignments, assignments.slice(0, ROWS.xlarge), "sheet");
 	pane(view, cols, t().cards.course.readings, readings.slice(0, ROWS.xlarge), "glass");
 }

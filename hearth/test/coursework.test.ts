@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	ASSIGNMENT_TYPES,
+	DEADLINE_TYPES,
 	dayMs,
 	newestFirst,
 	nextNumberFor,
@@ -115,6 +116,47 @@ describe("upcoming", () => {
 		const items = [item({ type: "revision", title: "MCQ", when: "2026-09-30" })];
 		expect(upcoming(items, ASSIGNMENT_TYPES, NOW).map((i) => i.title)).toEqual(["MCQ"]);
 		expect(ASSIGNMENT_TYPES).toContain("revision");
+	});
+});
+
+describe("DEADLINE_TYPES", () => {
+	// The large course card draws one pane titled "Assignments & readings" and
+	// fills it from a single `upcoming` call. It was called with
+	// ASSIGNMENT_TYPES, which excludes readings by definition, so half of what
+	// the title promised could never appear there.
+	it("carries readings as well as the assignment types", () => {
+		expect([...DEADLINE_TYPES].sort()).toEqual(
+			[...ASSIGNMENT_TYPES, "reading" as const].sort(),
+		);
+	});
+
+	it("interleaves readings with assignments by date rather than appending them", () => {
+		const items = [
+			item({ type: "essay", title: "essay", when: "2026-10-01" }),
+			item({ type: "reading", title: "reading", when: "2026-09-18" }),
+			item({ type: "tutorial", title: "tutorial", when: "2026-09-25" }),
+		];
+		expect(upcoming(items, DEADLINE_TYPES, NOW).map((i) => i.title)).toEqual([
+			"reading",
+			"tutorial",
+			"essay",
+		]);
+	});
+});
+
+describe("the extra large card's Upcoming column", () => {
+	// It was drawn from `[...revision, ...assignments]`, which is `upcoming`'s
+	// own result taken apart and put back in type order. With only two rows to
+	// spend, an exam a month out pushed out an essay due tomorrow.
+	it("is already soonest-first, whatever the type", () => {
+		const items = [
+			item({ type: "revision", title: "exam", when: "2026-10-20" }),
+			item({ type: "essay", title: "essay", when: "2026-09-16" }),
+			item({ type: "tutorial", title: "tutorial", when: "2026-09-30" }),
+		];
+		const due = upcoming(items, ASSIGNMENT_TYPES, NOW);
+		expect(due.map((i) => i.title)).toEqual(["essay", "tutorial", "exam"]);
+		expect(due.slice(0, 2).map((i) => i.title)).toEqual(["essay", "tutorial"]);
 	});
 });
 
