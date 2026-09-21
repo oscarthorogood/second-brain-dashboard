@@ -335,17 +335,47 @@ export function topicFromTitle(title: string, course: string): string {
 
 // ---- Handing an item to Claude -------------------------------------------
 
-/** Where items wait while they are unfiled. Deliberately outside the seven
- * note folders: a note in `Lectures/` is claiming to be a lecture, and an
- * unclassified item hasn't earned that claim yet. */
-export const HOLDING_FOLDER = "Unsorted";
+/**
+ * Claude's own folder: the instructions, and the two trays beside them.
+ *
+ * Everything unfiled now lands inside `Claude/` rather than in a top-level
+ * holding folder. That is what makes the two trays legible to whoever drains
+ * them: an agent given the vault as its working directory reads
+ * `Claude/AGENTS.md` and finds the work sitting in the next folder along,
+ * instead of an inbox in one place pointing at content in another. It also
+ * keeps unfiled items out of the seven typed folders, so nothing half-filed
+ * ever shows up in a `.base` view.
+ */
+export const CLAUDE_FOLDER = "Claude";
 
-/** Where a filing request is written for Claude to pick up. Inside `Claude/`
- * so it sits with the instructions it refers to, and out of the seven folders
- * so it never shows up in a `.base` view. */
-export const INBOX_FOLDER = "Claude/inbox";
+/**
+ * The inbox tray: every calendar event the sync card writes.
+ *
+ * One tray per source, not per stage. A calendar event arrives already
+ * described — it has a time, a calendar and a summary — so it only ever needs
+ * one note, and that note is the item *and* the request to file it.
+ */
+export const INBOX_FOLDER = `${CLAUDE_FOLDER}/inbox`;
 
-/** Frontmatter flag marking a holding note as awaiting a filing decision. */
+/**
+ * The unsorted tray: prose and attachments from the detail card.
+ *
+ * Separate from the inbox because it is drained differently. An inbox item is
+ * a decision about what a thing *is*; an unsorted item usually knows what it
+ * is (it names a target note) and needs a decision about where inside that
+ * note, or which course folder, it belongs.
+ */
+export const UNSORTED_FOLDER = `${CLAUDE_FOLDER}/unsorted`;
+
+/** Which tray an item lands in. */
+export type FilingDestination = "inbox" | "unsorted";
+
+/** The folder a destination names. */
+export function destinationFolder(destination: FilingDestination): string {
+	return destination === "inbox" ? INBOX_FOLDER : UNSORTED_FOLDER;
+}
+
+/** Frontmatter flag marking a note as awaiting a filing decision. */
 export const NEEDS_FILING_KEY = "needs-filing";
 
 /** The vault's own instruction set, in the order an agent should read it.
@@ -368,11 +398,17 @@ export interface FilingRequest {
 	source: string;
 	/** One line naming the item — an event summary, a filename. */
 	summary: string;
-	/** The holding note (or attachment) already written, vault-relative. */
-	holdingPath: string;
+	/** Which tray this note is written into. */
+	destination: FilingDestination;
+	/** An attachment already written beside this note, vault-relative. Only an
+	 * attachment needs one: prose and events live in the note itself. */
+	attachmentPath?: string;
 	/** Everything known about the item, rendered as a detail list. Empty values
 	 * are dropped rather than shown as blanks. */
 	details?: Record<string, string | null | undefined>;
+	/** The item itself — an event's description, the user's prose — written
+	 * into the note's body so the tray holds the thing, not a pointer to it. */
+	content?: string;
 	/** The canonical course this looks like, when an exact registry lookup
 	 * found one. A hint, never a decision. */
 	courseHint?: string | null;
@@ -380,30 +416,37 @@ export interface FilingRequest {
 	uid?: string;
 }
 
-/** A filing request rendered as a note: frontmatter for machines, body for
+/** An unfiled item rendered as a note: frontmatter for machines, body for
  * whoever reads it. */
-export interface BuiltRequestNote {
+export interface BuiltFilingNote {
 	filename: string;
 	frontmatter: Record<string, unknown>;
 	body: string;
 }
 
-/** A stable, sortable, collision-free filename for a request. */
-export function requestFilename(req: FilingRequest, now: Date): string {
+/** A stable, sortable, collision-free filename for an unfiled item. */
+export function filingNoteFilename(req: FilingRequest, now: Date): string {
 	const stamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
 	return sanitizeNoteTitle(`${stamp} ${req.kind} ${req.summary}`).slice(0, 110) || stamp;
 }
 
 /**
- * Build the request note.
+ * Build the note that lands in a tray.
  *
- * The body is written for a reader, not a parser: it says what the item is,
- * points at the vault's rules, and lists the steps that finish the job —
- * including deleting the request, so a drained inbox is the signal that
+ * One note, not two. It used to be a pair — the content in a holding folder,
+ * a request pointing at it from the inbox — which meant a filing job could
+ * half-exist: a request naming a note that never landed, or content nobody was
+ * asked to file. Now the item and the ask are the same file, so a tray's depth
+ * is exactly the number of things still to do, and filing one is moving one
+ * note rather than reconciling two.
+ *
+ * The body is written for a reader, not a parser: what the item is, what it
+ * says, the vault's rules, and the steps that finish the job — ending with
+ * moving this note out of the tray, so an empty tray is the signal that
  * everything has been filed. The plugin never parses this back; its own state
  * lives in the sync index, which is why the prose can stay prose.
  */
-export function buildFilingRequestNote(req: FilingRequest, now: Date): BuiltRequestNote {
+export function buildFilingNote(req: FilingRequest, now: Date): BuiltFilingNote {
 	const details: string[] = [];
 	for (const [label, value] of Object.entries(req.details ?? {})) {
 		if (value != null && String(value).trim()) details.push(`- **${label}:** ${String(value).trim()}`);
@@ -414,31 +457,39 @@ export function buildFilingRequestNote(req: FilingRequest, now: Date): BuiltRequ
 		? `\n\nThe course registry has an exact match for **${req.courseHint}** in this item's text. ` +
 			`Confirm it before using it — it is a lookup, not a decision.`
 		: "";
+	const folder = destinationFolder(req.destination);
+	const content = (req.content ?? "").trim();
+	const steps = KIND_STEPS[req.kind];
 
 	const body = [
-		`Unfiled ${KIND_NOUNS[req.kind]} from Second Brain Dashboard. Decide where it belongs and file it.`,
+		`Unfiled ${KIND_NOUNS[req.kind]} from Second Brain Dashboard, sitting in \`${folder}\`. ` +
+			`Decide where it belongs and file it.`,
 		"",
 		`Read first: ${reading}. Those four files are the rules; this note is only the item.${hint}`,
 		"",
 		"## The item",
 		"",
 		`- **Source:** ${req.source}`,
-		`- **Held at:** [[${req.holdingPath}]]`,
+		...(req.attachmentPath ? [`- **File:** [[${req.attachmentPath}]]`] : []),
 		...details,
+		...(content ? ["", "## What it says", "", content] : []),
 		"",
 		"## To file it",
 		"",
-		...KIND_STEPS[req.kind],
-		`${KIND_STEPS[req.kind].length + 1}. Delete this request note — an empty inbox means everything is filed.`,
+		...steps,
+		`${steps.length + 1}. Move this note out of \`${folder}\` once it is filed — an empty tray means ` +
+			`everything is done.`,
 		"",
 	].join("\n");
 
 	return {
-		filename: requestFilename(req, now),
+		filename: filingNoteFilename(req, now),
 		frontmatter: {
+			[NEEDS_FILING_KEY]: true,
 			"sbd-request": req.kind,
 			"sbd-source": req.source,
-			"sbd-holding": req.holdingPath,
+			"sbd-tray": req.destination,
+			...(req.attachmentPath ? { "sbd-attachment": req.attachmentPath } : {}),
 			...(req.uid ? { "sbd-uid": req.uid } : {}),
 			created: now.toISOString(),
 		},
@@ -463,18 +514,18 @@ const KIND_NOUNS: Record<FilingRequestKind, string> = {
 const KIND_STEPS: Record<FilingRequestKind, string[]> = {
 	"calendar-event": [
 		"1. Decide the note type (Lecture, Tutorial, Essay, Project, Revision) and the course, per AGENTS.md §4–6. Assessments — MCQ tests, exams — are Revision, not Tutorials.",
-		"2. Rename the holding note to the pattern for that type (§5), zero-padding any lecture or tutorial number, and continuing the course's existing sequence rather than restarting it.",
+		"2. Rename this note to the pattern for that type (§5), zero-padding any lecture or tutorial number, and continuing the course's existing sequence rather than restarting it.",
 		"3. Move it into that type's flat folder — never nested under a course (§3.1).",
-		"4. Replace its frontmatter with that type's template fields, in template order, and set `base:` to the matching `.base` (§3.2, §3.3). Drop the `sbd-*` keys; they are not template fields.",
+		"4. Replace its frontmatter with that type's template fields, in template order, and set `base:` to the matching `.base` (§3.2, §3.3). Drop the `needs-filing` and `sbd-*` keys, and this note's filing sections; they are not part of a lecture.",
 	],
 	attachment: [
-		"1. Decide whether this is finished reference material (`Resources/{Course}/{Type}/`, lowercase-hyphenated filename) or an active working file (`OneDrive/{Course}/{note type}/`, filename mirroring its note's title) — §9.",
+		"1. Decide whether the file is finished reference material (`Resources/{Course}/{Type}/`, lowercase-hyphenated filename) or an active working file (`OneDrive/{Course}/{note type}/`, filename mirroring its note's title) — §9.",
 		"2. Move the file there, creating the course folder if this is its first file (see open-items.md for the courses with no folder yet).",
 		"3. Link it from the note that wanted it — notes link files, they never embed them. Add the link to that note's `resources` field if its template has one.",
 	],
 	"note-detail": [
 		"1. Open the target note and read how it is already structured — match it rather than imposing a new shape.",
-		"2. Fold the text in under the right heading, creating one only if the note genuinely has nowhere for it.",
+		"2. Fold the text below in under the right heading, creating one only if the note genuinely has nowhere for it.",
 		"3. Leave the frontmatter alone unless a template field is genuinely empty and this text fills it (§3.3 — no new fields).",
 	],
 };

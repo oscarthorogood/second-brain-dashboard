@@ -13262,6 +13262,52 @@ body.sbd-dv-resizing {
 	line-height: 1.3;
 }
 
+/* ---- Where a card writes ----------------------------------------------- */
+
+/* Both AI cards now exist to put things in one folder, so both say which one,
+   in the same chip. It reads as a destination rather than a label because of
+   the arrow: "→ Claude/inbox" is a direction, "Claude/inbox" alone is a path
+   the reader has to work out the meaning of. */
+.sbd-sync-dest {
+	display: inline-flex;
+	align-items: center;
+	align-self: flex-start;
+	gap: 5px;
+	max-width: 100%;
+	padding: 3px 8px 3px 6px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	min-width: 0;
+}
+
+/* In the medium detail card the chip shares a single-line headline with the
+   title, so it takes the far end rather than crowding the words. */
+.sbd-card-headline .sbd-sync-dest {
+	margin-left: auto;
+	flex: none;
+}
+
+.sbd-sync-dest-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-sync-dest-icon .svg-icon {
+	width: 12px;
+	height: 12px;
+}
+
+.sbd-sync-dest-path {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.92);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
 /* ---- Course overview --------------------------------------------------- */
 
 .sbd-course-dot {
@@ -13715,9 +13761,17 @@ body.sbd-dv-resizing {
 	color: rgba(255, 255, 255, 0.96);
 }
 
+/* Carries the destination folder at the small size, which is information
+   rather than decoration — hence the raise from 0.6, which failed AA at 10px,
+   and the ellipsis, since a path is the one thing here long enough to need it. */
 .sbd-detail-sub {
 	font-size: 0.625rem;
-	color: rgba(255, 255, 255, 0.6);
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.78);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .sbd-detail-row {
@@ -13882,18 +13936,61 @@ body.sbd-dv-resizing {
 	color: var(--sbd-sheet-ink-muted);
 }
 
-/* The queue line: present only when something is actually waiting, so it
-   reads as a state rather than a permanent label. */
-.sbd-detail-queue {
+/* The tray line: what is still sitting in the folder this card writes to.
+   Drawn empty or not, unlike the queue line it replaces — the tray is now the
+   card's output, not an error state, and a line that only appears when
+   something is wrong leaves the reader unsure whether nothing is waiting or
+   nothing was written. The empty state says so in the same place instead. */
+.sbd-tray-line {
+	display: flex;
+	align-items: center;
+	gap: 7px;
 	margin-top: 10px;
-	font-size: 0.6875rem;
-	font-weight: 600;
-	color: rgba(255, 255, 255, 0.72);
+	padding: 7px 9px;
+	border-radius: var(--sbd-radius-s);
+	background: rgba(255, 255, 255, 0.12);
 	cursor: pointer;
+	min-width: 0;
+	transition: background 120ms ease;
 }
 
-.sbd-detail-queue:hover {
-	color: #ffffff;
+.sbd-tray-line:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+/* An empty tray is good news, not a dead control: it stays legible and stays
+   clickable (the folder is still worth opening), it just stops competing with
+   the card above it. */
+.sbd-tray-line.is-empty {
+	background: rgba(255, 255, 255, 0.07);
+}
+
+.sbd-tray-icon {
+	display: flex;
+	flex: none;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.sbd-tray-icon .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+.sbd-tray-text {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.88);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sbd-tray-line.is-empty .sbd-tray-text {
+	font-weight: 500;
+	/* 0.72 over the 35% scrim clears AA at this size; the empty state is dimmer
+	   than the waiting one by weight, not by dropping below that floor. */
+	color: rgba(255, 255, 255, 0.72);
 }
 
 /* ---- Add detail dialog ------------------------------------------------- */

@@ -1640,8 +1640,8 @@ export interface HomeSettings {
 
 	// ---- Calendar sync ----
 	/**
-	 * Every calendar occurrence already queued for filing, keyed by
-	 * `{UID}@{start ms}` and valued with when it was queued.
+	 * Every calendar occurrence already written to `Claude/inbox`, keyed by
+	 * `{UID}@{start ms}` and valued with when it was written.
 	 *
 	 * Global rather than per-card so two sync cards on one board can't file the
 	 * same lecture twice, and keyed by occurrence rather than by event because
