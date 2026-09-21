@@ -101,6 +101,32 @@
 	 * open. */
 	--sbd-label-tracking-tight: 0.05em;
 
+	/* How far the backdrop is dimmed before any card is drawn on it.
+	 *
+	 * Every card's type is white on white-at-10%, so the backdrop IS the
+	 * contrast: white at 96% over a card over a light wallpaper measures
+	 * 1.19:1, and the 11px meta line 1.12:1 — unreadable, not merely poor. A
+	 * dark layer between the wallpaper and the cards is Apple's own answer to
+	 * this (HIG > Materials: Liquid Glass dims bright content behind glass),
+	 * and 35% is the figure it gives.
+	 *
+	 * A very bright wallpaper still can't reach 4.5:1 at any tolerable dim —
+	 * nothing white on 10% white can — which is what the reduced-transparency
+	 * and increased-contrast blocks at the foot of this file are for: they
+	 * take the card off the wallpaper entirely. */
+	--sbd-board-dim: 0.35;
+
+	/* The keyboard focus ring.
+	 *
+	 * NOT --interactive-accent: this view deliberately sets that to #ffffff
+	 * (see .sbd-view), so the repo's usual focus pattern would draw a white
+	 * ring on white glass. The user's real Obsidian accent is still on
+	 * --accent-h/s/l, untouched, so the ring can be their colour; the dark
+	 * halo under it is what keeps the ring visible when their accent is as
+	 * pale as the card. */
+	--sbd-focus-ring: hsl(var(--accent-h, 254), calc(var(--accent-s, 80%) * 0.9), 62%);
+	--sbd-focus-halo: rgba(0, 0, 0, 0.55);
+
 	/* Card material: white at 10%, and a crisp white rim that does most of
 	 * the work of separating the card from the board. */
 	--sbd-glass-card-fill: rgba(255, 255, 255, 0.1);
@@ -220,12 +246,19 @@
 	--sbd-sheet-ink-body: #4b5157;
 	--sbd-sheet-ink-jot: #3b4147;
 	--sbd-sheet-ink-leaf: #3f454b;
-	--sbd-sheet-ink-muted: #7b8188;
-	--sbd-sheet-ink-faint: #a5abb1;
-	/* The mono caption on a sheet ("JOT"). The reference's own value; the
-	 * faint tier above is a shade lighter and reads as washed out here. */
-	--sbd-sheet-ink-caption: #9aa1a8;
-	--sbd-sheet-ink-label: #8c9299;
+	/* The secondary tiers, raised to clear WCAG AA.
+	 *
+	 * The reference's values (#7b8188 muted, #a5abb1 faint, #9aa1a8 caption,
+	 * #8c9299 label) measure 3.28, 1.93, 2.18 and 2.98 against the sheet, and
+	 * every one of them is used at 10-11px, where the bar is 4.5:1. #646a70 is
+	 * where that bar sits on this sheet (4.56:1 over the darkest backdrop the
+	 * sheet composites against), so the ladder is compressed into the range
+	 * above it rather than run down past it. The faint tier bottoms out at the
+	 * same value as the caption: a tier lighter than this one can't be read. */
+	--sbd-sheet-ink-muted: #575d63;
+	--sbd-sheet-ink-faint: #646a70;
+	--sbd-sheet-ink-caption: #646a70;
+	--sbd-sheet-ink-label: #5f656b;
 	--sbd-sheet-rule: #e4e8ec;
 	--sbd-sheet-link: #2f8ff0;
 	--sbd-radius-sheet: 22px;
@@ -441,6 +474,28 @@ body.theme-dark {
 	pointer-events: none;
 	background-size: cover;
 	background-position: center;
+}
+
+/* The dimming layer, between the backdrop and the content.
+ *
+ * It is a pseudo-element on the view, NOT a child of .sbd-bg, because
+ * paintBackground() sets `opacity` and `filter: blur()` inline on .sbd-bg — a
+ * scrim inside it would be faded and blurred along with the wallpaper, which
+ * is exactly the wallpaper whose brightness it exists to answer. Sitting here
+ * it also covers the case applyBackground() returns early on (backgroundKind
+ * "none"), where the board is the flat #a2a2a7 this view sets and white text on
+ * it measures 2.22:1; dimmed, 5.46:1.
+ *
+ * z-index 0 is deliberate: .sbd-bg is also 0 and comes first in the DOM, so
+ * this paints over it, while .sbd-scroll at z-index 1 stays above both. */
+.sbd-view::after,
+.sbd-banner::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background: rgba(0, 0, 0, var(--sbd-board-dim));
 }
 
 /* The live weather sky as the board's backdrop. It is the same element the
@@ -13273,6 +13328,13 @@ body.sbd-dv-resizing {
 .sbd-course-switch.is-compact {
 	padding: 5px 7px;
 	gap: 5px;
+	/* A 12px chevron in 5px of padding is a 24px target — under the 28x28
+	 * minimum, and this is the control the whole card depends on. The box
+	 * grows; the pill's drawn size does not, because the padding that shapes
+	 * it is unchanged. */
+	min-width: 28px;
+	min-height: 28px;
+	justify-content: center;
 }
 
 .sbd-course-switch:hover {
@@ -13468,8 +13530,10 @@ body.sbd-dv-resizing {
 }
 
 .sbd-sync-refresh.is-icon {
-	width: 24px;
-	height: 24px;
+	/* 28px, not 24: the minimum control size, and on the small tile this is
+	 * the only control there is. */
+	width: 28px;
+	height: 28px;
 	padding: 0;
 	justify-content: center;
 	border-radius: 50%;
@@ -13856,7 +13920,15 @@ body.sbd-dv-resizing {
 	color: var(--text-muted);
 }
 
+/* A bare ✕ glyph is about a 15px target. These two are the only way to undo a
+ * chosen note or a dropped file, so they get the 28x28 minimum — as a box
+ * around the same glyph, not a bigger glyph. */
 .sbd-detail-target-clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	min-height: 28px;
 	cursor: pointer;
 	color: var(--text-muted);
 }
@@ -13921,6 +13993,11 @@ body.sbd-dv-resizing {
 }
 
 .sbd-detail-file-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	min-height: 28px;
 	cursor: pointer;
 	color: var(--text-muted);
 	flex: none;
@@ -13932,4 +14009,111 @@ body.sbd-dv-resizing {
 	resize: vertical;
 	font-family: inherit;
 	font-size: 0.8125rem;
+}
+
+
+/* ---- Accessibility ----------------------------------------------------
+ *
+ * Last in the file on purpose: these are overrides, and source order is what
+ * lets them win without !important.
+ */
+
+/* Keyboard focus.
+ *
+ * Nothing on the board is a native <button> — cards are built from divs and
+ * made operable by makeClickable() in src/ui.ts, which sets role="button" and
+ * tabindex="0". So the focusable set is exactly `[role="button"]`, and one
+ * selector covers every card rather than a list of class names that the next
+ * card would have to be added to.
+ *
+ * The repo's usual focus pattern is `outline: 2px solid var(--interactive-accent)`,
+ * which cannot be reused here: .sbd-view sets that variable to #ffffff, so the
+ * ring would be white on white glass. --sbd-focus-ring reads the user's real
+ * accent instead, and the dark outer ring in the same box-shadow is what keeps
+ * it visible when their accent happens to be as pale as the card. */
+.sbd-view [role="button"]:focus-visible,
+.sbd-view input:focus-visible,
+.sbd-view textarea:focus-visible,
+.sbd-view button:focus-visible {
+	outline: none;
+	box-shadow:
+		0 0 0 2px var(--sbd-focus-ring),
+		0 0 0 4px var(--sbd-focus-halo);
+	border-radius: 6px;
+}
+
+/* The status dot on the small calendar tile.
+ *
+ * On the three larger sizes each dot sits beside a `detail` line that says the
+ * state in words; the small tile has no room for one, so there the colour was
+ * the only carrier. Shape carries it too now: a ring for nothing-to-do, a
+ * filled disc for synced, a broken ring for working, a square for failed. The
+ * colours are unchanged, and so is the aria-label statusDot() already set. */
+.sbd-view .sbd-sync-mini .sbd-sync-dot {
+	width: 9px;
+	height: 9px;
+	box-sizing: border-box;
+}
+
+.sbd-view .sbd-sync-mini .sbd-sync-dot.is-unset,
+.sbd-view .sbd-sync-mini .sbd-sync-dot.is-blocked {
+	background: transparent;
+	border: 1.5px solid #8d949b;
+}
+
+.sbd-view .sbd-sync-mini .sbd-sync-dot.is-syncing {
+	background: transparent;
+	border: 1.5px solid #e8a94f;
+	border-top-color: transparent;
+}
+
+.sbd-view .sbd-sync-mini .sbd-sync-dot.is-error {
+	border-radius: 2px;
+}
+
+/* The course card's "+N more" line, shown when a column holds more than it can
+ * draw. Same size and colour as the meta line it sits under, so it reads as a
+ * footnote to the list rather than another row of it. */
+.sbd-course-more {
+	margin-top: 3px;
+	font-size: 0.625rem;
+	color: rgba(255, 255, 255, 0.62);
+}
+
+.sbd-course-more.is-on-sheet {
+	color: var(--sbd-sheet-ink-caption);
+}
+
+/* Reduced transparency, and increased contrast.
+ *
+ * White type on white-at-10% is about 2.5:1 over a bright wallpaper, and no
+ * amount of dimming fixes that — the type and the card tint are the same
+ * colour, so the wallpaper is the only thing left to vary. Both of these
+ * settings mean the same thing here: take the card off the wallpaper. An
+ * opaque dark surface puts white type at roughly 14:1 whatever is behind it.
+ *
+ * The override lands on --sbd-card-surface rather than on --sbd-glass-tint or
+ * --card-opacity, because renderDashboard() writes --card-opacity inline on the
+ * grid and an inline value on a descendant would win over either of those. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+	.sbd-view .sbd-card {
+		--sbd-card-surface: #1c1f24;
+	}
+
+	/* The shared blur layers behind the cards: invisible under an opaque card,
+	 * and the whole point of reduced transparency is not to pay for them. */
+	.sbd-view .sbd-frost {
+		display: none;
+	}
+}
+
+@media (prefers-contrast: more) {
+	.sbd-view {
+		/* The rim is what separates a card from the board, and at 0.42 it is a
+		 * suggestion. Against an opaque card it can be a line. */
+		--sbd-glass-card-border: rgba(255, 255, 255, 0.85);
+		/* The dark card no longer needs the board dimmed underneath it, but the
+		 * board's own text (headings between grids) still sits on the wallpaper. */
+		--sbd-board-dim: 0.5;
+	}
 }

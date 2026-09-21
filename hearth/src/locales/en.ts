@@ -48,12 +48,17 @@ export const en = {
 		filingQueueManual: (n: number) =>
 			`Second Brain Dashboard: ${n} ${n === 1 ? "item is" : "items are"} waiting in Claude/inbox.`,
 		detailNothingToSave: "Second Brain Dashboard: add a file or some notes first.",
+		// Names the next action, not just the failure: the other files in the
+		// drop still went through, so "it didn't work" alone leaves the reader
+		// unsure whether to redo all of them or one.
 		detailAttachmentFailed: (name: string) =>
-			`Second Brain Dashboard: couldn't save ${name} into the vault.`,
+			`Second Brain Dashboard: couldn't save ${name} — check Unsorted/attachments is writable, then drop it again.`,
 		detailQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Unsorted and queued for filing.`,
 		calsyncQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} queued for filing.`,
+		calsyncFailed: (n: number) =>
+			`Second Brain Dashboard: couldn't queue ${n} ${n === 1 ? "event" : "events"} — check the vault has room to write, then refresh.`,
 		calsyncForgotten: "Second Brain Dashboard: synced events forgotten — the next refresh will queue them again.",
 		taskNotesCreateFailed: "Second Brain Dashboard: couldn't run TaskNotes: Create new task.",
 		taskChangedOnDisk: "Second Brain Dashboard: that task changed on disk — refreshed.",
@@ -2290,6 +2295,7 @@ export const en = {
 			readings: "Readings",
 			noLectures: "No lectures yet",
 			nothingHere: "Nothing due",
+			moreCount: (n: number) => `+${n} more`,
 			openNote: "Open note",
 			switchShort: "Switch",
 			switchLong: "Switch course",

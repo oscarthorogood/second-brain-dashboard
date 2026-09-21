@@ -2,12 +2,12 @@ import { Notice, setIcon, Setting, type Component } from "obsidian";
 import { feedHost } from "../cardbodies";
 import { holdForFiling, pendingRequestCount, revealFilingQueue, type HeldItem } from "../claudebridge";
 import { courseNames } from "../coursework";
-import { formatCompactAge } from "../dates";
+import { formatCompactAge, localDayKey } from "../dates";
 import { t } from "../i18n";
 import { calendarStatus, expandEvents, loadCalendar, type IcsOccurrence } from "../ics";
 import { effectiveAutoRefreshMinutes, type CalendarSyncSlotId, type DashboardCard } from "../types";
 import { makeClickable } from "../ui";
-import { findCourseInText } from "../vaultfiling";
+import { findCourseInText, INBOX_FOLDER } from "../vaultfiling";
 import { type HomeView } from "../view";
 
 import { type CardDefinition, type CardEditorContext } from "./definition";
@@ -46,16 +46,30 @@ const DEFAULT_AHEAD_DAYS = 21;
 const DAY_MS = 86_400_000;
 
 /**
- * Whether a sync is in flight, and which cards have kicked their first one.
+ * Whether a sync is in flight, and which feeds each card has kicked one for.
  *
  * Module-level rather than on the card or in settings: both are transient facts
  * about this session. A `syncing` flag written into the card's config would be
  * persisted, so a crash mid-fetch would leave the card permanently "syncing"
  * and refusing to refresh — and the flag is global anyway, since two sync cards
  * on one board share the feeds, the index and the queue.
+ *
+ * `started` is a WeakMap keyed by the card object holding the URLs it last
+ * fetched — the shape the RSS card already uses for its tab state. Keying by
+ * `card.id` and storing nothing but "has run" meant editing a feed's URL never
+ * re-fetched it, and a card that bailed because another card's sync was in
+ * flight was marked started anyway, so its feeds were never fetched at all.
  */
 let syncing = false;
-const started = new Set<string>();
+const started = new WeakMap<DashboardCard, string>();
+
+/** The feed URL a slot is actually set up to fetch, or "" if it isn't — an
+ * empty URL and a switched-off feed both mean "don't sync this one", and
+ * render, mount and sync each had their own spelling of that. */
+function slotUrl(slot: { url?: string; enabled?: boolean } | undefined): string {
+	if (!slot || slot.enabled === false) return "";
+	return (slot.url ?? "").trim();
+}
 
 /** One feed's live state, resolved per render. */
 interface SlotState {
@@ -86,7 +100,16 @@ export function renderCalSync(
 	// refetching all three feeds over and over. Everything past `paint()` is
 	// mount-time wiring and runs once, which is the shape the RSS and Git cards
 	// already use.
+	//
+	// A sync may also resolve after the card is torn down and rebuilt: repainting
+	// then writes into a detached node and leaves the live card stuck on its
+	// spinner. Same guard the RSS, Git and weather cards use.
+	let destroyed = false;
+	component.register(() => {
+		destroyed = true;
+	});
 	const paint = () => {
+		if (destroyed) return;
 		body.empty();
 		paintCalSync(view, card, body, paint);
 	};
@@ -95,11 +118,16 @@ export function renderCalSync(
 	// The first render kicks a fetch and, when the board stays open, schedules
 	// the repeat — the same shape the calendar card's IcsContext uses, so a
 	// dashboard left on a second monitor keeps the vault current by itself.
-	const configured = SLOTS.map((id) => slotState(view, card, id)).filter((s) => s.enabled && s.url);
+	const configured = SLOTS.map((id) => slotState(view, card, id)).filter((s) => s.url);
 	if (!configured.length) return;
-	if (!started.has(card.id)) {
-		started.add(card.id);
-		void syncNow(view, card, false, paint);
+	const feeds = configured.map((s) => `${s.id}=${s.url}`).join("\n");
+	if (started.get(card) !== feeds) {
+		started.set(card, feeds);
+		void syncNow(view, card, false, paint).then((ran) => {
+			// A sync that bailed (another card's was already in flight) fetched
+			// nothing, so the mark must not stick or these feeds are never read.
+			if (!ran) started.delete(card);
+		});
 	}
 	const minutes = effectiveAutoRefreshMinutes(view.plugin.settings, cfg.refreshMin ?? 60);
 	if (minutes > 0) {
@@ -297,8 +325,8 @@ function totalEvents(slots: SlotState[]): number {
 function slotState(view: HomeView, card: DashboardCard, id: CalendarSyncSlotId): SlotState {
 	const strings = t().cards.calsync;
 	const slot = card.calsync?.[id] ?? {};
-	const url = (slot.url ?? "").trim();
 	const enabled = slot.enabled !== false;
+	const url = slotUrl(slot);
 	const label = strings.slots[id];
 	if (!url || !enabled) {
 		return { id, label, url, enabled, host: "", state: "unset", detail: enabled ? strings.notConnected : strings.off, events: 0 };
@@ -333,23 +361,23 @@ export async function syncNow(
 	card: DashboardCard,
 	force: boolean,
 	redraw: () => void,
-): Promise<void> {
+): Promise<boolean> {
 	const cfg = card.calsync ?? {};
 	const plugin = view.plugin;
-	if (syncing) return;
+	if (syncing) return false;
 
-	const slots = SLOTS.map((id) => ({ id, slot: cfg[id] ?? {} })).filter(
-		(s) => (s.slot.url ?? "").trim() && s.slot.enabled !== false,
-	);
-	if (!slots.length) return;
+	const slots = SLOTS.map((id) => ({ id, url: slotUrl(cfg[id]) })).filter((s) => s.url);
+	if (!slots.length) return false;
 
 	syncing = true;
-	redraw();
 	try {
+		// Inside the try: a repaint that throws would otherwise leave `syncing`
+		// true and every later refresh would bail for the rest of the session.
+		redraw();
 		const disabled = plugin.settings.disableExternalCalls;
 		const ttlMs = Math.max(cfg.refreshMin ?? 60, 1) * 60_000;
 		const calendars = await Promise.all(
-			slots.map((s) => loadCalendar((s.slot.url ?? "").trim(), { ttlMs, disabled, force })),
+			slots.map((s) => loadCalendar(s.url, { ttlMs, disabled, force })),
 		);
 
 		const now = Date.now();
@@ -358,6 +386,7 @@ export async function syncNow(
 		const seen = (plugin.settings.calendarSyncSeen ??= {});
 		const courses = courseNames(view.app);
 		let queued = 0;
+		let failed = 0;
 
 		for (let i = 0; i < slots.length; i++) {
 			const calendar = calendars[i];
@@ -371,22 +400,31 @@ export async function syncNow(
 				// refresh, and a duplicate note is worse than a missing one the
 				// user can re-sync for.
 				seen[key] = new Date().toISOString();
-				// A write that produced nothing at all is the other case, and it
-				// needs the opposite treatment: the event has no note and the mark
-				// would be the only record of it, so the event would be dropped
-				// silently and for good. Take the mark back and let the next
-				// refresh try again.
+				// A write that half-landed is the other case, and it needs the
+				// opposite treatment: without both the holding note *and* the
+				// filing request the event is never filed, and the mark would be
+				// the only record of it, so it would be dropped silently and for
+				// good. Take the mark back and let the next refresh try again.
+				// ponytail: retries every refresh with no backoff — a permanently
+				// failing event re-attempts forever. Add a per-key attempt count
+				// to `seen` if a broken vault path starts hammering the queue.
 				const held = await queueEvent(view, label, occurrence, courses);
-				if (!held.holding) {
+				if (!held.holding || !held.request) {
 					delete seen[key];
+					failed++;
 					continue;
 				}
 				queued++;
 			}
 		}
 
-		plugin.settings.calendarSyncLast = Date.now();
+		// Only claim a sync happened if something actually landed. A run where
+		// every write failed and rolled back has synced nothing, and stamping it
+		// would tell the user the vault is current when it is not.
+		if (queued > 0 || failed === 0) plugin.settings.calendarSyncLast = Date.now();
 		if (queued > 0) new Notice(t().notices.calsyncQueued(queued));
+		// A rollback used to be entirely silent: no note, no request, no clue.
+		if (failed > 0) new Notice(t().notices.calsyncFailed(failed));
 	} finally {
 		// Cleared first, before anything that can throw: a `syncing` left true
 		// refuses every later refresh for the rest of the session.
@@ -395,9 +433,24 @@ export async function syncNow(
 		// index is written before the note: a throw part-way through the loop
 		// would otherwise discard the marks for the events that *were* filed,
 		// and the next refresh would file every one of them a second time.
-		void plugin.saveData(plugin.settings);
+		await plugin.saveData(plugin.settings);
 		redraw();
 	}
+	return true;
+}
+
+/**
+ * When an event happens, as the filing request shows it and as the note's
+ * `sbd-event-start` frontmatter records it.
+ *
+ * Local throughout. `toISOString()` is UTC, so pairing its date with a local
+ * clock time put a 9am Tokyo lecture on the day before, and an all-day event a
+ * day early at any positive offset.
+ */
+export function eventWhenLabel(occurrence: { start: number; allDay?: boolean }): string {
+	const day = localDayKey(occurrence.start);
+	if (occurrence.allDay) return day;
+	return `${day} ${new Date(occurrence.start).toTimeString().slice(0, 5)}`;
 }
 
 /** The identity of one occurrence of one event. */
@@ -418,10 +471,7 @@ async function queueEvent(
 	courses: readonly string[],
 ): Promise<HeldItem> {
 	const strings = t().cards.calsync;
-	const when = new Date(occurrence.start);
-	const whenLabel = occurrence.allDay
-		? when.toISOString().slice(0, 10)
-		: `${when.toISOString().slice(0, 10)} ${when.toTimeString().slice(0, 5)}`;
+	const whenLabel = eventWhenLabel(occurrence);
 
 	return holdForFiling(
 		view.app,
@@ -488,6 +538,9 @@ export function calSyncEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 				.onChange((v) => {
 					cfg.refreshMin = v === 60 ? undefined : v;
 					ctx.opts.save();
+					// The auto-refresh timer is set up at mount, so a new interval
+					// only takes effect once the card is rebuilt.
+					ctx.opts.rerender();
 				}),
 		);
 
@@ -543,5 +596,8 @@ export const calSyncCard: CardDefinition<"calsync"> = {
 		};
 	},
 	cardClass: "is-sync-card",
-	liveness: { mode: "vault" },
+	// The only vault state this card draws is the filing queue's depth, so a
+	// rebuild on every note edit bought nothing — and each rebuild restarted the
+	// auto-refresh clock, which meant a board in use auto-synced roughly never.
+	liveness: { mode: "vault", shouldRedraw: (_card, ev) => ev.file.path.startsWith(INBOX_FOLDER) },
 };

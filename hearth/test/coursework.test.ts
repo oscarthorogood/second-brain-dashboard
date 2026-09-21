@@ -9,6 +9,7 @@ import {
 	upcoming,
 	type CourseworkItem,
 } from "../src/coursework";
+import { courseColumns } from "../src/cards/course";
 import type { NoteType } from "../src/vaultfiling";
 
 /** A course item, with only the fields a given assertion cares about set. */
@@ -144,19 +145,58 @@ describe("DEADLINE_TYPES", () => {
 	});
 });
 
-describe("the extra large card's Upcoming column", () => {
-	// It was drawn from `[...revision, ...assignments]`, which is `upcoming`'s
-	// own result taken apart and put back in type order. With only two rows to
-	// spend, an exam a month out pushed out an essay due tomorrow.
+describe("the course card's columns", () => {
+	// The extra large card's Upcoming column was drawn from
+	// `[...revision, ...assignments]` — `upcoming`'s own result taken apart and
+	// put back in type order — so an exam a month out pushed out an essay due
+	// tomorrow. Sorting it by date alone fixed that and broke the other half:
+	// the assignments column beside it filtered revision out, so with two rows
+	// per column an exam could appear in none of the four.
 	it("is already soonest-first, whatever the type", () => {
 		const items = [
 			item({ type: "revision", title: "exam", when: "2026-10-20" }),
 			item({ type: "essay", title: "essay", when: "2026-09-16" }),
 			item({ type: "tutorial", title: "tutorial", when: "2026-09-30" }),
 		];
-		const due = upcoming(items, ASSIGNMENT_TYPES, NOW);
-		expect(due.map((i) => i.title)).toEqual(["essay", "tutorial", "exam"]);
-		expect(due.slice(0, 2).map((i) => i.title)).toEqual(["essay", "tutorial"]);
+		expect(courseColumns(items, NOW).due.map((i) => i.title)).toEqual([
+			"essay",
+			"tutorial",
+			"exam",
+		]);
+	});
+
+	it("leaves nothing the course owes out of every column", () => {
+		const items = [
+			item({ type: "revision", title: "exam", when: "2026-10-20" }),
+			item({ type: "essay", title: "essay", when: "2026-09-16" }),
+			item({ type: "tutorial", title: "tutorial", when: "2026-09-30" }),
+			item({ type: "reading", title: "reading", when: "2026-09-18" }),
+			item({ type: "project", title: "project", when: "2026-11-01" }),
+		];
+		const { due, deadlines, readings } = courseColumns(items, NOW);
+		const listed = new Set([...due, ...deadlines, ...readings].map((i) => i.title));
+		for (const entry of upcoming(items, DEADLINE_TYPES, NOW)) {
+			expect(listed).toContain(entry.title);
+		}
+	});
+
+	it("does not draw Upcoming and Assignments as the same column", () => {
+		// Two panes side by side showing the same rows is what feeding both of
+		// them `due` produced whenever a course had no revision note.
+		const items = [
+			item({ type: "essay", title: "essay", when: "2026-09-16" }),
+			item({ type: "reading", title: "reading", when: "2026-09-18" }),
+		];
+		const { due, deadlines } = courseColumns(items, NOW);
+		expect(deadlines.map((i) => i.title)).toEqual(["essay", "reading"]);
+		expect(due.map((i) => i.title)).toEqual(["essay"]);
+	});
+
+	it("keeps recent lectures out of the deadline columns", () => {
+		const items = [item({ type: "lecture", title: "lecture", when: "2026-09-10" })];
+		const { lectures, deadlines } = courseColumns(items, NOW);
+		expect(lectures.map((i) => i.title)).toEqual(["lecture"]);
+		expect(deadlines).toEqual([]);
 	});
 });
 

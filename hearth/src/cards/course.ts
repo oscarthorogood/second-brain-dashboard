@@ -42,6 +42,37 @@ import { openDetailModal } from "./detail";
  * large where four columns share the width. */
 const ROWS = { large: 2, xlarge: 2 } as const;
 
+/** What a pane does with the rows it can't fit: say how many it is holding
+ * back. Two rows of "assignments & readings" can easily be two readings, and
+ * an essay dropping off the bottom with nothing said is how the card starts
+ * lying about what the course owes. */
+
+/**
+ * What the panes draw from, resolved once per render.
+ *
+ * Exported because this is the part with an invariant worth holding: the
+ * extra large card spends two rows per column, so a column list that excludes
+ * a type is a type that can go missing from the card entirely. `deadlines`
+ * carries everything the course owes precisely so that no column is the only
+ * home for anything.
+ */
+export function courseColumns(
+	items: CourseworkItem[],
+	now?: number,
+): {
+	lectures: CourseworkItem[];
+	due: CourseworkItem[];
+	deadlines: CourseworkItem[];
+	readings: CourseworkItem[];
+} {
+	return {
+		lectures: recentLectures(items, now),
+		due: upcoming(items, ASSIGNMENT_TYPES, now),
+		deadlines: upcoming(items, DEADLINE_TYPES, now),
+		readings: upcoming(items, ["reading"], now),
+	};
+}
+
 export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElement): void {
 	// Switching course redraws this card in place rather than the whole board:
 	// the same self-refresh every stateful card here uses (see the tasks card).
@@ -57,26 +88,23 @@ export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElem
 
 	const selected = courses.find((c) => c.name === card.course?.selected) ?? courses[0];
 	const items = readCourseItems(view.app, selected.name);
-	const lectures = recentLectures(items);
-	const due = upcoming(items, ASSIGNMENT_TYPES);
-	// The large card's one deadline pane is titled "Assignments & readings", so
-	// it is fed both; `due` (assignments alone) is what the two narrower panes
-	// at extra large split against the readings column.
-	const deadlines = upcoming(items, DEADLINE_TYPES);
-	const readings = upcoming(items, ["reading"]);
+	// Both deadline pane titles promise readings too ("Assignments & readings"
+	// at large, "Upcoming" at extra large), so both are fed DEADLINE_TYPES;
+	// `due` is the narrower assignments column at extra large.
+	const { lectures, due, deadlines, readings } = courseColumns(items);
 
 	switch (card.size) {
 		case "small":
 			renderSmall(view, card, body, courses, selected, lectures, due, redraw);
 			break;
 		case "medium":
-			renderMedium(view, card, body, courses, selected, lectures, redraw);
+			renderMedium(view, card, body, courses, selected, items, lectures, redraw);
 			break;
 		case "large":
-			renderLarge(view, card, body, courses, selected, lectures, deadlines, redraw);
+			renderLarge(view, card, body, courses, selected, items, lectures, deadlines, redraw);
 			break;
 		case "xlarge":
-			renderXLarge(view, card, body, courses, selected, lectures, due, readings, redraw);
+			renderXLarge(view, card, body, courses, selected, items, lectures, deadlines, due, readings, redraw);
 			break;
 	}
 }
@@ -116,10 +144,11 @@ function renderMedium(
 	body: HTMLElement,
 	courses: Course[],
 	course: Course,
+	items: CourseworkItem[],
 	lectures: CourseworkItem[],
 	redraw: () => void,
 ): void {
-	courseHeader(view, card, body, courses, course, "medium", redraw);
+	courseHeader(view, card, body, courses, course, items, "medium", redraw);
 
 	const latest = lectures[0];
 	const block = body.createDiv("sbd-course-latest is-wide");
@@ -142,14 +171,15 @@ function renderLarge(
 	body: HTMLElement,
 	courses: Course[],
 	course: Course,
+	items: CourseworkItem[],
 	lectures: CourseworkItem[],
 	deadlines: CourseworkItem[],
 	redraw: () => void,
 ): void {
-	courseHeader(view, card, body, courses, course, "large", redraw);
+	courseHeader(view, card, body, courses, course, items, "large", redraw);
 	const panes = body.createDiv("sbd-course-panes");
-	pane(view, panes, t().cards.course.recentLectures, lectures.slice(0, ROWS.large), "sheet");
-	pane(view, panes, t().cards.course.assignmentsReadings, deadlines.slice(0, ROWS.large), "glass");
+	pane(view, panes, t().cards.course.recentLectures, lectures, ROWS.large, "sheet");
+	pane(view, panes, t().cards.course.assignmentsReadings, deadlines, ROWS.large, "glass");
 }
 
 function renderXLarge(
@@ -158,25 +188,26 @@ function renderXLarge(
 	body: HTMLElement,
 	courses: Course[],
 	course: Course,
+	items: CourseworkItem[],
 	lectures: CourseworkItem[],
+	deadlines: CourseworkItem[],
 	due: CourseworkItem[],
 	readings: CourseworkItem[],
 	redraw: () => void,
 ): void {
-	courseHeader(view, card, body, courses, course, "xlarge", redraw);
+	courseHeader(view, card, body, courses, course, items, "xlarge", redraw);
 	const cols = body.createDiv("sbd-course-cols");
 	// Reference (Widget Set v2 → COURSE XL): four columns alternating sheet and
 	// glass, so neighbouring panes stay distinguishable at a glance.
-	const assignments = due.filter((i) => i.type !== "revision");
-	pane(view, cols, t().cards.course.recentLectures, lectures.slice(0, ROWS.xlarge), "sheet");
-	// "Upcoming" is every deadline the course has, soonest first — which is
-	// exactly what `upcoming()` already returned. Splitting `due` by type and
-	// concatenating the halves put every revision note above an essay falling
-	// due tomorrow, and with two rows to spend that essay never appeared here
-	// at all.
-	pane(view, cols, t().cards.course.upcoming, due.slice(0, ROWS.xlarge), "glass");
-	pane(view, cols, t().cards.course.assignments, assignments.slice(0, ROWS.xlarge), "sheet");
-	pane(view, cols, t().cards.course.readings, readings.slice(0, ROWS.xlarge), "glass");
+	pane(view, cols, t().cards.course.recentLectures, lectures, ROWS.xlarge, "sheet");
+	// "Upcoming" is every deadline the course has, soonest first — readings
+	// included, which is also what keeps it from redrawing the assignments
+	// column beside it. The assignments column is every assignment type,
+	// revision among them: filtering revision out of it while "Upcoming" ran
+	// two rows deep was enough to make an exam appear in neither.
+	pane(view, cols, t().cards.course.upcoming, deadlines, ROWS.xlarge, "glass");
+	pane(view, cols, t().cards.course.assignments, due, ROWS.xlarge, "sheet");
+	pane(view, cols, t().cards.course.readings, readings, ROWS.xlarge, "glass");
 }
 
 // ---- Pieces ---------------------------------------------------------------
@@ -194,6 +225,7 @@ function courseHeader(
 	body: HTMLElement,
 	courses: Course[],
 	course: Course,
+	items: CourseworkItem[],
 	size: WidgetSize,
 	redraw: () => void,
 ): void {
@@ -201,10 +233,9 @@ function courseHeader(
 	const text = head.createDiv("sbd-course-headtext");
 	if (course.code) text.createDiv({ cls: "sbd-card-eyebrow", text: course.code });
 	text.createDiv({ cls: "sbd-course-name is-large", text: course.name });
-	if (size !== "medium") {
-		const items = readCourseItems(view.app, course.name);
-		text.createDiv({ cls: "sbd-course-meta", text: fullMeta(items) });
-	}
+	// `items` comes down from the caller rather than being re-read here: this
+	// used to walk the whole vault a second time for a line of counts.
+	if (size !== "medium") text.createDiv({ cls: "sbd-course-meta", text: fullMeta(items) });
 	switcher(view, card, head, courses, course, size, redraw);
 }
 
@@ -266,6 +297,7 @@ function pane(
 	parent: HTMLElement,
 	title: string,
 	items: CourseworkItem[],
+	rows: number,
 	surface: "sheet" | "glass",
 ): void {
 	const el = parent.createDiv("sbd-course-pane");
@@ -280,13 +312,18 @@ function pane(
 
 	const list = el.createDiv("sbd-list");
 	list.toggleClass(surface === "sheet" ? "is-sheet" : "is-bare", true);
-	for (const entry of items) {
+	for (const entry of items.slice(0, rows)) {
 		const row = list.createDiv("sbd-list-item");
 		const main = row.createDiv("sbd-course-rowmain");
 		main.createDiv({ cls: "sbd-list-label", text: entry.topic });
 		if (entry.code) main.createDiv({ cls: "sbd-course-code", text: entry.code });
 		if (entry.when) row.createDiv({ cls: "sbd-list-age", text: formatRelativeDate(entry.when) });
 		openOnClick(view, row, entry);
+	}
+	const hidden = items.length - rows;
+	if (hidden > 0) {
+		const more = el.createDiv({ cls: "sbd-course-more", text: t().cards.course.moreCount(hidden) });
+		more.toggleClass("is-on-sheet", surface === "sheet");
 	}
 }
 
@@ -330,7 +367,9 @@ function shortMeta(lectures: number, due: number): string {
 function fullMeta(items: CourseworkItem[]): string {
 	const strings = t().cards.course;
 	const count = (type: string) => items.filter((i) => i.type === type).length;
-	const ahead = upcoming(items, ASSIGNMENT_TYPES).length;
+	// DEADLINE_TYPES, matching the pane below it — counting assignments alone
+	// while the pane listed readings too had the header contradict the card.
+	const ahead = upcoming(items, DEADLINE_TYPES).length;
 	return [
 		strings.lectureCount(count("lecture")),
 		strings.upcomingCount(ahead),
