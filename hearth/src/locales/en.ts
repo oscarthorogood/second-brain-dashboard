@@ -42,24 +42,24 @@ export const en = {
 		couldNotCreateNoteForDay: (day: string) =>
 			`Second Brain Dashboard: couldn't create a note for ${day}.`,
 		couldNotCreateEventNote: "Second Brain Dashboard: couldn't create a note for that event.",
-		filingQueueEmpty: "Second Brain Dashboard: nothing is waiting to be filed.",
-		filingQueueClaudian: (n: number) =>
-			`Second Brain Dashboard: ${n} ${n === 1 ? "item is" : "items are"} waiting in Claude/inbox — ask Claudian to file them.`,
-		filingQueueManual: (n: number) =>
-			`Second Brain Dashboard: ${n} ${n === 1 ? "item is" : "items are"} waiting in Claude/inbox.`,
+		trayEmpty: (folder: string) => `Second Brain Dashboard: ${folder} is empty.`,
+		trayClaudian: (n: number, folder: string) =>
+			`Second Brain Dashboard: ${n} ${n === 1 ? "item is" : "items are"} waiting in ${folder} — ask Claudian to file them.`,
+		trayManual: (n: number, folder: string) =>
+			`Second Brain Dashboard: ${n} ${n === 1 ? "item is" : "items are"} waiting in ${folder}.`,
 		detailNothingToSave: "Second Brain Dashboard: add a file or some notes first.",
 		// Names the next action, not just the failure: the other files in the
 		// drop still went through, so "it didn't work" alone leaves the reader
 		// unsure whether to redo all of them or one.
 		detailAttachmentFailed: (name: string) =>
-			`Second Brain Dashboard: couldn't save ${name} — check Unsorted/attachments is writable, then drop it again.`,
+			`Second Brain Dashboard: couldn't save ${name} — check Claude/unsorted/attachments is writable, then drop it again.`,
 		detailQueued: (n: number) =>
-			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Unsorted and queued for filing.`,
+			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Claude/unsorted.`,
 		calsyncQueued: (n: number) =>
-			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} queued for filing.`,
+			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} written to Claude/inbox.`,
 		calsyncFailed: (n: number) =>
-			`Second Brain Dashboard: couldn't queue ${n} ${n === 1 ? "event" : "events"} — check the vault has room to write, then refresh.`,
-		calsyncForgotten: "Second Brain Dashboard: synced events forgotten — the next refresh will queue them again.",
+			`Second Brain Dashboard: couldn't write ${n} ${n === 1 ? "event" : "events"} to Claude/inbox — check the vault has room to write, then refresh.`,
+		calsyncForgotten: "Second Brain Dashboard: synced events forgotten — the next refresh will write them to Claude/inbox again.",
 		taskNotesCreateFailed: "Second Brain Dashboard: couldn't run TaskNotes: Create new task.",
 		taskChangedOnDisk: "Second Brain Dashboard: that task changed on disk — refreshed.",
 		couldNotOpenTaskNote: "Second Brain Dashboard: couldn't open that task's note.",
@@ -1143,8 +1143,8 @@ export const en = {
 			leaf: "Plugin view (beta)",
 			pet: "Pet",
 			course: "Course overview",
-			calsync: "Calendar sync",
-			detail: "Add detail",
+			calsync: "Sync to inbox",
+			detail: "Add detail to unsorted",
 		},
 		linkTypes: {
 			note: "Note",
@@ -1329,7 +1329,7 @@ export const en = {
 		calsync: {
 			heading: "Calendars",
 			headingDesc:
-				"Subscribe to your class timetable, your assignment deadlines and your own calendar. New events are written to Unsorted and queued in Claude/inbox to be filed — nothing is filed automatically.",
+				"Subscribe to your class timetable, your assignment deadlines and your own calendar. Every new event becomes a note in Claude/inbox, waiting to be filed — nothing is filed automatically.",
 			urlPlaceholder: "https://…/basic.ics",
 			enable: "Watch this calendar",
 			disable: "Stop watching this calendar",
@@ -1337,15 +1337,16 @@ export const en = {
 			refreshDesc: "Minutes between automatic checks. 0 = only refresh by hand.",
 			window: "Days ahead",
 			windowDesc:
-				"How far ahead an event is worth a note. A term's timetable is published months out, so a short window keeps the queue readable.",
+				"How far ahead an event is worth a note. A term's timetable is published months out, so a short window keeps the inbox readable.",
 			forget: "Re-sync everything",
 			forgetDesc:
-				"Forget which events have already been queued, so the next refresh queues them all again. Use this if you deleted a note and want it back.",
+				"Forget which events have already been written, so the next refresh writes them all to Claude/inbox again. Use this if you deleted a note and want it back.",
 			forgetButton: "Forget synced events",
 		},
 		detail: {
 			target: "Default note",
-			targetDesc: "The note this card attaches to unless you pick another in the dialog.",
+			targetDesc:
+				"The note this card attaches to unless you pick another in the dialog. Everything you add lands in Claude/unsorted, naming this note.",
 			targetPlaceholder: "Lectures/Business Economics L03 - Market Structure.md",
 			pickTarget: "Pick a note",
 			clearTarget: "Clear",
@@ -2306,9 +2307,9 @@ export const en = {
 			dueCount: (n: number) => `${n} due`,
 		},
 		calsync: {
-			eyebrow: "Obsidian",
-			sync: "Sync",
-			calendarSync: "Calendar sync",
+			eyebrow: "Claude",
+			toInbox: "To inbox",
+			syncToInbox: "Sync to inbox",
 			slots: {
 				classes: "Classes",
 				assignments: "Assignments",
@@ -2324,21 +2325,23 @@ export const en = {
 			off: "Not watched",
 			neverSynced: "Never synced",
 			syncedAgo: (ago: string) => `Synced ${ago} ago`,
-			eventsTotal: (n: number) => `${n} events total`,
 			eventsTracked: (n: number) => `${n} events tracked`,
 			untitledEvent: "Untitled event",
 			sourceLabel: (calendar: string) => `${calendar} calendar`,
-			pending: (n: number) => `${n} waiting to be filed`,
+			inInbox: (n: number) => `${n} in inbox`,
+			waiting: (n: number, folder: string) =>
+				`${n} ${n === 1 ? "event" : "events"} waiting in ${folder}`,
+			trayEmpty: (folder: string) => `${folder} is empty`,
 			detailWhen: "When",
 			detailCalendar: "Calendar",
 			detailLocation: "Location",
 			detailUrl: "Link",
 		},
 		detail: {
-			eyebrow: "Detail",
+			eyebrow: "Claude",
 			addDetail: "Add detail",
-			headlineLong: "Add detail to a lecture or assignment",
-			pageFilesNotes: "Page · files · notes",
+			toUnsorted: "To unsorted",
+			headlineLong: "Add detail to unsorted",
 			linkPage: "Link a page",
 			linkPageSub: "Search your vault",
 			dropFiles: "Drop files",
@@ -2355,9 +2358,10 @@ export const en = {
 			notesPlaceholder: "Write your own notes…",
 			save: "Save",
 			cancel: "Cancel",
-			pending: (n: number) => `${n} waiting to be filed`,
+			waiting: (n: number, folder: string) =>
+				`${n} ${n === 1 ? "item" : "items"} waiting in ${folder}`,
+			trayEmpty: (folder: string) => `${folder} is empty`,
 			detailTargetNote: "Target note",
-			detailAttachment: "Attachment",
 			detailSize: "Size",
 		},
 		empty: {
@@ -2912,8 +2916,8 @@ export const en = {
 		leaf: "Plugin view (beta)",
 		pet: "Pet",
 		course: "Course overview",
-		calsync: "Calendar sync",
-		detail: "Add detail",
+		calsync: "Sync to inbox",
+		detail: "Add detail to unsorted",
 	},
 
 	/** One line per template, shown under its name in the add-card picker and
@@ -2953,8 +2957,8 @@ export const en = {
 		leaf: "Another plugin's side panel, hosted in a card",
 		pet: "A small companion that lives on your board",
 		course: "One course's recent lectures and what's due next",
-		calsync: "Your class, assignment and personal calendars, kept in step with the vault",
-		detail: "Attach a page, files or notes to a note, and let Claude file them",
+		calsync: "Every event on your calendars, written into Claude/inbox to be filed",
+		detail: "A page, files or notes, dropped into Claude/unsorted for Claude to file",
 	},
 
 	// ---- Add-card picker -----------------------------------------------

@@ -138,17 +138,17 @@ describe("CARD_TEMPLATES (add-card menu)", () => {
 			// ---- Artificial intelligence ----
 			{
 				id: "calsync",
-				icon: "refresh-cw",
+				icon: "inbox",
 				category: "ai",
 				requires: null,
-				build: { kind: "calsync", title: "Calendar sync", calsync: {} },
+				build: { kind: "calsync", title: "Sync to inbox", calsync: {} },
 			},
 			{
 				id: "detail",
-				icon: "paperclip",
+				icon: "folder-input",
 				category: "ai",
 				requires: null,
-				build: { kind: "detail", title: "Add detail", detail: {} },
+				build: { kind: "detail", title: "Add detail to unsorted", detail: {} },
 			},
 
 			// ---- Fun ----

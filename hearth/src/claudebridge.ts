@@ -1,27 +1,34 @@
 /**
  * Handing an unfiled item to Claude, without an API key.
  *
- * The three coursework cards (course overview, calendar sync, add detail) all
- * reach a point where something has to be *decided*: which of the seven note
- * types a calendar event becomes, which course a dropped PDF belongs to, where
- * in a note a paragraph of prose should go. Those decisions need the vault's
- * own rules and a reading of what is already there — `Claude/AGENTS.md` and its
- * three companion files — which is judgement, not parsing.
+ * The three coursework cards (course overview, sync to inbox, add detail to
+ * unsorted) all reach a point where something has to be *decided*: which of the
+ * seven note types a calendar event becomes, which course a dropped PDF belongs
+ * to, where in a note a paragraph of prose should go. Those decisions need the
+ * vault's own rules and a reading of what is already there — `Claude/AGENTS.md`
+ * and its three companion files — which is judgement, not parsing.
  *
  * Second Brain Dashboard does not make those calls itself, and does not ship an
- * Anthropic API key to have them made. Instead every such item takes the same
- * two-step path:
+ * Anthropic API key to have them made. Instead every such item is written
+ * straight into the vault, as one self-describing note in one of Claude's two
+ * trays:
  *
- * 1. **Hold it.** The content is written straight into the vault, in
- *    `Unsorted/`, flagged `needs-filing`. Nothing is ever lost waiting on a
- *    decision, and nothing is ever parked in a typed folder it may not belong
- *    in — a note in `Lectures/` is claiming to be a lecture, and an
- *    unclassified item hasn't earned that claim.
- * 2. **Ask for it to be filed.** A request note goes into `Claude/inbox/`,
- *    naming the item, the holding note, and the four instruction files. Claude
- *    Code — through the Claudian plugin, which runs an agent with the vault as
- *    its working directory, or a headless session on the same folder — drains
- *    that inbox and does the real filing with full read/write access.
+ * - **`Claude/inbox/`** takes everything off the calendars. One note per event,
+ *   carrying the event's own description plus what it would take to file it.
+ * - **`Claude/unsorted/`** takes everything the detail card collects — prose,
+ *   and attachments written to `Claude/unsorted/attachments/`.
+ *
+ * Both trays sit beside the instructions they refer to, so Claude Code —
+ * through the Claudian plugin, which runs an agent with the vault as its
+ * working directory, or a headless session on the same folder — reads the rules
+ * and finds the work in the next folder along.
+ *
+ * One note per item, rather than content in one folder and a request in
+ * another: a tray's depth is then exactly the number of things still to do, and
+ * filing one is moving one note rather than reconciling a pair that can
+ * half-exist. Nothing is ever parked in a typed folder it may not belong in —
+ * a note in `Lectures/` is claiming to be a lecture, and an unclassified item
+ * hasn't earned that claim.
  *
  * Claudian is therefore optional rather than required. With it, ambiguous items
  * get resolved in place; without it, they queue visibly in two folders the user
@@ -31,12 +38,11 @@
 import { Notice, TFile, TFolder, normalizePath, type App } from "obsidian";
 import { t } from "./i18n";
 import {
-	buildFilingRequestNote,
-	HOLDING_FOLDER,
-	INBOX_FOLDER,
+	buildFilingNote,
+	destinationFolder,
 	isIgnoredPath,
-	NEEDS_FILING_KEY,
 	sanitizeNoteTitle,
+	type FilingDestination,
 	type FilingRequest,
 } from "./vaultfiling";
 
@@ -134,92 +140,71 @@ export async function writeAttachment(
 	return null;
 }
 
-/** An item held for filing: the holding note, and the request that asks for it
- * to be filed. Either may be null when a write failed. */
-export interface HeldItem {
-	holding: TFile | null;
-	request: TFile | null;
-}
-
 /**
- * Hold an item and ask for it to be filed.
+ * Write an item into its tray.
  *
- * `holdingBody` is the item's actual content — the event's description, the
- * user's prose — so the holding note is worth reading on its own, not just a
- * pointer. The `sbd-*` frontmatter keys live only here, in `Unsorted/`, which
- * has no template contract; whoever files the note into one of the seven typed
- * folders drops them, because those folders allow no fields beyond their
- * template's (AGENTS.md §3.3).
+ * `req.content` is the item's actual content — the event's description, the
+ * user's prose — so the note is worth reading on its own rather than being a
+ * pointer to something else. The `needs-filing` flag and the `sbd-*` keys live
+ * only in the trays, which have no template contract; whoever files the note
+ * into one of the seven typed folders drops them, because those folders allow
+ * no fields beyond their template's (AGENTS.md §3.3).
+ *
+ * Hands back the note, or null when the write failed — the caller needs to tell
+ * those apart, since an event marked synced but never written is an event lost
+ * (see the `seen` index in the sync card).
  */
-export async function holdForFiling(
+export async function fileForClaude(
 	app: App,
-	req: Omit<FilingRequest, "holdingPath">,
-	holdingBody: string,
+	req: FilingRequest,
 	extraFrontmatter: Record<string, unknown> = {},
-): Promise<HeldItem> {
-	const now = new Date();
-	const holding = await writeNote(
+): Promise<TFile | null> {
+	const note = buildFilingNote(req, new Date());
+	return writeNote(
 		app,
-		HOLDING_FOLDER,
-		req.summary || t().cards.calsync.untitledEvent,
-		{
-			[NEEDS_FILING_KEY]: true,
-			"sbd-source": req.source,
-			...(req.uid ? { "sbd-uid": req.uid } : {}),
-			...extraFrontmatter,
-		},
-		holdingBody,
+		destinationFolder(req.destination),
+		note.filename,
+		{ ...note.frontmatter, ...extraFrontmatter },
+		note.body,
 	);
-	if (!holding) return { holding: null, request: null };
-
-	const note = buildFilingRequestNote({ ...req, holdingPath: holding.path }, now);
-	const request = await writeNote(app, INBOX_FOLDER, note.filename, note.frontmatter, note.body);
-	return { holding, request };
 }
 
-/** How many filing requests are still waiting. Drawn on the sync and detail
- * cards so a queue that nothing is draining is visible rather than silent. */
-export function pendingRequestCount(app: App): number {
-	const inbox = app.vault.getAbstractFileByPath(normalizePath(INBOX_FOLDER));
-	if (!(inbox instanceof TFolder)) return 0;
-	return inbox.children.filter((f) => f instanceof TFile && f.extension === "md").length;
-}
-
-/** Every note still flagged `needs-filing`, cheapest-first: the holding folder
- * is read from the vault index, never by opening files. */
-export function heldNotes(app: App): TFile[] {
-	const folder = app.vault.getAbstractFileByPath(normalizePath(HOLDING_FOLDER));
+/** Every note still waiting in a tray, cheapest-first: the folder is read from
+ * the vault index, never by opening files. */
+export function trayNotes(app: App, destination: FilingDestination): TFile[] {
+	const folder = app.vault.getAbstractFileByPath(normalizePath(destinationFolder(destination)));
 	if (!(folder instanceof TFolder)) return [];
 	return folder.children.filter(
 		(f): f is TFile => f instanceof TFile && f.extension === "md" && !isIgnoredPath(f.path),
 	);
 }
 
+/** How many items a tray is still holding. Drawn on both cards so a tray that
+ * nothing is draining is visible rather than silent. */
+export function trayCount(app: App, destination: FilingDestination): number {
+	return trayNotes(app, destination).length;
+}
+
 /**
- * Show the user where the queue is.
+ * Show the user what is waiting in a tray.
  *
- * Deliberately modest about Claudian: this opens the inbox folder's newest
- * request so there is always something to act on, and says whether Claudian is
- * available to hand it to. It does not drive Claudian's UI — its commands and
- * view types are its own business and could change under us, and a dead
- * "Open in Claudian" button would be worse than an honest pointer to the note.
+ * Deliberately modest about Claudian: this opens the tray's newest note so
+ * there is always something to act on, and says whether Claudian is available
+ * to hand it to. It does not drive Claudian's UI — its commands and view types
+ * are its own business and could change under us, and a dead "Open in Claudian"
+ * button would be worse than an honest pointer to the note.
  */
-export async function revealFilingQueue(app: App): Promise<void> {
-	const inbox = app.vault.getAbstractFileByPath(normalizePath(INBOX_FOLDER));
-	const requests =
-		inbox instanceof TFolder
-			? inbox.children
-					.filter((f): f is TFile => f instanceof TFile && f.extension === "md")
-					.sort((a, b) => b.stat.ctime - a.stat.ctime)
-			: [];
-	if (!requests.length) {
-		new Notice(t().notices.filingQueueEmpty);
+export async function revealTray(app: App, destination: FilingDestination): Promise<void> {
+	const waiting = trayNotes(app, destination).sort((a, b) => b.stat.ctime - a.stat.ctime);
+	const folder = destinationFolder(destination);
+	if (!waiting.length) {
+		new Notice(t().notices.trayEmpty(folder));
 		return;
 	}
-	await app.workspace.getLeaf(false).openFile(requests[0]);
+	await app.workspace.getLeaf(false).openFile(waiting[0]);
 	new Notice(
 		claudianEnabled(app)
-			? t().notices.filingQueueClaudian(requests.length)
-			: t().notices.filingQueueManual(requests.length),
+			? t().notices.trayClaudian(waiting.length, folder)
+			: t().notices.trayManual(waiting.length, folder),
 	);
 }

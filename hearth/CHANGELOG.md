@@ -298,22 +298,26 @@ History begins at 1.5.0. For releases before 1.5.0, see the
   does, resolving the course by exact name so that two similarly-titled courses
   are never collapsed into one.
 
-  **Calendar sync** keeps your class, assignment and personal calendars in step
-  with the vault, noticing which events have no note yet. It tracks each
+  **Sync to inbox** empties your class, assignment and personal calendars into
+  `Claude/inbox`, one note per event that hasn't got one yet. It tracks each
   *occurrence* rather than each event, so a weekly class — one entry with a
   repeat rule — is followed all term instead of only in its first week.
 
-  **Add detail** attaches a page, files or notes to a note.
+  **Add detail to unsorted** drops a page, files or notes into
+  `Claude/unsorted`, attachments included.
 
   **What the last two won't do is guess.** Telling a tutorial from an
   assessment, or finished reference material from an active working file, is a
   reading of your own vault's rules, and getting it wrong silently orphans a
-  note or files it where you won't find it. So both cards write everything into
-  a holding folder the moment it arrives and queue the filing decision in
-  `Claude/inbox`, where Claude makes it with those rules in front of it. They
-  live under **Artificial intelligence** in the add-card picker, and Claude is
-  optional: without it the queue is simply two folders to work through by hand,
-  and nothing is ever lost waiting.
+  note or files it where you won't find it. So each card writes what arrives
+  straight into its own folder beside the rules — one self-describing note
+  carrying the item, what is known about it, and what it would take to file it
+  — and leaves it there for Claude to work through. Both cards name their
+  folder on the card and show how much is still sitting in it, so a tray
+  nobody is draining is visible rather than silent. They live under
+  **Artificial intelligence** in the add-card picker, and Claude is optional:
+  without it the two folders are simply a list to work through by hand, and
+  nothing is ever lost waiting.
 
 - **A launchpad that makes notes: the Templater card.** Hearth's third tile card
   sits beside Links and Commands, but each of its buttons creates a note. A tile

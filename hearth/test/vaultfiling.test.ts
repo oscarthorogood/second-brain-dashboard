@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
 	AGENT_DOCS,
-	buildFilingRequestNote,
+	buildFilingNote,
 	canonicalCourse,
 	courseFromLink,
 	courseLink,
+	destinationFolder,
 	findCourseInText,
 	isIgnoredPath,
 	nextSequence,
@@ -14,7 +15,10 @@ import {
 	noteTypeSpec,
 	orderFrontmatter,
 	padSequence,
-	requestFilename,
+	filingNoteFilename,
+	INBOX_FOLDER,
+	NEEDS_FILING_KEY,
+	UNSORTED_FOLDER,
 	sanitizeNoteTitle,
 	sequenceInTitle,
 	templateFieldOrder,
@@ -299,56 +303,98 @@ describe("topicFromTitle", () => {
 	});
 });
 
-describe("filing requests", () => {
+describe("trays", () => {
+	it("puts both trays inside Claude's own folder, beside the rules", () => {
+		expect(destinationFolder("inbox")).toBe("Claude/inbox");
+		expect(destinationFolder("unsorted")).toBe("Claude/unsorted");
+		// Nothing unfiled sits in a typed folder, where it would claim to be a
+		// lecture (or an essay) before anyone has decided it is one.
+		expect(noteTypeForPath(`${INBOX_FOLDER}/x.md`)).toBeNull();
+		expect(noteTypeForPath(`${UNSORTED_FOLDER}/x.md`)).toBeNull();
+	});
+});
+
+describe("filing notes", () => {
 	const now = new Date("2026-09-15T14:05:09Z");
 
-	it("names a request so it sorts by time and survives as a filename", () => {
-		const name = requestFilename(
-			{ kind: "calendar-event", source: "Classes", summary: "Econ: L14 / Market?", holdingPath: "Unsorted/x.md" },
+	it("names a note so it sorts by time and survives as a filename", () => {
+		const name = filingNoteFilename(
+			{ kind: "calendar-event", destination: "inbox", source: "Classes", summary: "Econ: L14 / Market?" },
 			now,
 		);
 		expect(name.startsWith("2026-09-15-14-05-09")).toBe(true);
 		expect(name).not.toMatch(/[\\/:*?"<>|#^[\]]/);
 	});
 
-	it("points the reader at the vault's own rules", () => {
-		const note = buildFilingRequestNote(
+	it("carries the item itself, and points the reader at the vault's own rules", () => {
+		const note = buildFilingNote(
 			{
 				kind: "calendar-event",
+				destination: "inbox",
 				source: "Classes",
 				summary: "Business Economics L14 - Market Structure",
-				holdingPath: "Unsorted/business-economics-l14.md",
 				courseHint: "Business Economics",
 				uid: "evt-1",
+				content: "Monopoly and monopsony. Read Cabral ch. 4 first.",
 				details: { When: "2026-09-15 10:00", Location: "Appleton Tower", Empty: "" },
 			},
 			now,
 		);
 		for (const doc of AGENT_DOCS) expect(note.body).toContain(doc);
-		expect(note.body).toContain("[[Unsorted/business-economics-l14.md]]");
+		// The note *is* the event: its description is in the body, not behind a
+		// link to a second note in a second folder.
+		expect(note.body).toContain("Monopoly and monopsony");
+		expect(note.body).toContain(INBOX_FOLDER);
 		expect(note.body).toContain("Business Economics");
 		expect(note.body).toContain("Appleton Tower");
 		// Blank details would render as an empty bullet.
 		expect(note.body).not.toContain("**Empty:**");
 		expect(note.frontmatter["sbd-uid"]).toBe("evt-1");
 		expect(note.frontmatter["sbd-request"]).toBe("calendar-event");
+		expect(note.frontmatter["sbd-tray"]).toBe("inbox");
+		expect(note.frontmatter[NEEDS_FILING_KEY]).toBe(true);
 	});
 
-	it("ends every kind with a step that clears the inbox", () => {
+	it("names the unsorted tray, and links an attachment written beside it", () => {
+		const note = buildFilingNote(
+			{
+				kind: "attachment",
+				destination: "unsorted",
+				source: "Lectures/Business Economics L03 - Market Structure.md",
+				summary: "slides.pdf",
+				attachmentPath: "Claude/unsorted/attachments/slides.pdf",
+			},
+			now,
+		);
+		expect(note.body).toContain(UNSORTED_FOLDER);
+		expect(note.body).not.toContain(INBOX_FOLDER);
+		expect(note.body).toContain("[[Claude/unsorted/attachments/slides.pdf]]");
+		expect(note.frontmatter["sbd-attachment"]).toBe("Claude/unsorted/attachments/slides.pdf");
+	});
+
+	it("ends every kind with a step that empties the tray", () => {
 		for (const kind of ["calendar-event", "attachment", "note-detail"] as const) {
-			const note = buildFilingRequestNote(
-				{ kind, source: "s", summary: "x", holdingPath: "Unsorted/x.md" },
+			const note = buildFilingNote(
+				{ kind, destination: "unsorted", source: "s", summary: "x" },
 				now,
 			);
-			expect(note.body).toContain("Delete this request note");
+			expect(note.body).toContain("Move this note out of");
 		}
 	});
 
 	it("omits the course hint when no exact match was found", () => {
-		const note = buildFilingRequestNote(
-			{ kind: "calendar-event", source: "Classes", summary: "Dentist", holdingPath: "Unsorted/d.md" },
+		const note = buildFilingNote(
+			{ kind: "calendar-event", destination: "inbox", source: "Classes", summary: "Dentist" },
 			now,
 		);
 		expect(note.body).not.toContain("exact match");
+	});
+
+	it("leaves out the content section when there is nothing to say", () => {
+		const note = buildFilingNote(
+			{ kind: "calendar-event", destination: "inbox", source: "Classes", summary: "Dentist", content: "  " },
+			now,
+		);
+		expect(note.body).not.toContain("## What it says");
 	});
 });
