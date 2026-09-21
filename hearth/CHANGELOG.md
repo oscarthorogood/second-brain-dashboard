@@ -229,6 +229,48 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Fixed
 
+- **The board is legible on a light wallpaper.** Every card draws white type on
+  white-at-10%, so the wallpaper behind it was carrying the whole of the
+  contrast: over a bright photo a card title measured 1.19:1 and its meta line
+  1.12:1, which is not "low contrast" but unreadable. A dimming layer now sits
+  between the backdrop and the cards — Apple's own answer to the same problem,
+  at the 35% it specifies — taking a title to 4.19:1 and the flat no-wallpaper
+  board from 2.22:1 to 5.46:1. Because nothing white on 10% white can reach the
+  4.5:1 bar over a *bright* backdrop at any tolerable dim, **Reduce
+  Transparency** and **Increase Contrast** now take the card off the wallpaper
+  entirely and give it an opaque surface, which holds about 14:1 whatever is
+  behind it. The dark ink on sheet-backed cards was a second, separate failure:
+  its four secondary tiers ran from 3.28:1 down to 1.93:1 at the 10-11px they
+  are used at, and they are raised to clear 4.5:1.
+
+  Alongside that: every control on the board shows a **visible focus ring**
+  when tabbed to, which none of them did — they were already operable by
+  keyboard and correctly labelled for screen readers, there was simply nothing
+  to see. Four controls that were smaller than the 28×28 minimum (the sync
+  refresh button, the compact course switcher, and the two ✕ buttons that undo
+  a chosen note or a dropped file) now meet it without changing how they look.
+  The small calendar tile's status dots vary by **shape** as well as colour, so
+  synced, working, failed and idle are distinguishable without colour vision.
+
+- **Four defects in the coursework cards, and what the extra-large course card
+  left out.** Its Upcoming column was built by taking the sorted deadline list
+  apart and reassembling it in type order, so an exam a month away pushed out
+  an essay due tomorrow; sorting by date alone fixed that and broke the other
+  half, because the Assignments column beside it filtered revision out — with
+  two rows per column an exam could appear in *none* of the four. The four
+  columns are now distinct, nothing the course owes falls out of all of them,
+  and a column holding more than it can draw says how many rows are hidden
+  instead of silently truncating.
+
+  Calendar sync no longer marks itself "last synced" when nothing was queued,
+  and reports the failures it was swallowing. Editing a feed's URL re-fetches
+  it — the first-sync guard was keyed in a way that meant it never did. A feed
+  switched off in settings is honoured everywhere rather than in most places, a
+  changed refresh interval takes effect without reopening the card, and a
+  half-written filing entry is rolled back rather than left behind. The card
+  also stopped redrawing on every vault event and now watches only the folder
+  it files into.
+
 - **Flat, opaque UI on glass cards.** With the Glass card style actually
   turned on, several pieces still painted a solid background instead of the
   card's own translucent surface — a visible cutout against the frosted card:
