@@ -15,6 +15,15 @@ stylesheet names the values measured out of them.
   Add-a-card picker (nav rail, search field, catalogue tiles) and the card
   settings sheet (tab switcher, dropdown pills, text fields, toggles).
 
+  Two of those have since moved off the artboard deliberately: the **picker**
+  and the **card settings sheet** float in the vault's chrome rather than on
+  the board, so they are drawn in the host theme's vocabulary (its modal
+  surface, radii, controls and motion) rather than this file's white glass —
+  a white sheet in a dark-themed vault is a slab of light in the middle of
+  the screen, and controls re-cut to sit on it disagree with every other
+  dialog in the app. The artboard still governs their *layout* — the rail,
+  the search field, the tile, the tab switcher — just not their material.
+
 ## The four sizes
 
 Widgets are not resizable. A size is chosen when the widget is added, and

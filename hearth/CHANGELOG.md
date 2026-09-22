@@ -15,6 +15,66 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **The course widget's four columns are four different things, and they can
+  be read.** The extra large card's second column was "Upcoming", fed by every
+  deadline type — which is the union of the two columns beside it, so a course
+  with no readings drew its assignments twice on one card while the lectures
+  still to come appeared nowhere on it. It is now **Upcoming lectures**, so
+  the four read: the lectures behind you, the lectures ahead, what is due,
+  what to read. Two things that made the card hard to read went with it. Its
+  glass columns are tinted dark rather than light: on a pale wallpaper the
+  reference's white-18% panel landed around #c4c4c4, where white text measures
+  about 1.6:1 — the column could not be read at all, and now measures 5.4:1.
+  And a row's code and date moved onto their own line under the topic, so the
+  topic gets the column's full width and two lines of it instead of being
+  ellipsised to "S." to keep "Next Tuesday" beside it.
+
+- **The course switcher names the course.** The pill said "Switch course",
+  which the dot and the chevron already said; it now shows the course it is
+  set to, the way a picker should. "Switch course" survives as its tooltip and
+  accessible name.
+
+- **The board's Edit button says "Edit".** Outside arrange mode it shrank to a
+  55%-opacity circle holding a four-way "move" glyph, which named neither the
+  action nor the widgets it acts on. It is a labelled pill in the board's own
+  glass vocabulary in both states — "Edit", then "Done arranging".
+
+- **The add-widget picker, the widget settings dialog and the plugin's
+  settings pane follow your theme.** All three floated above the vault wearing
+  the board's own material — a white-60% frosted sheet with fixed dark ink,
+  taken from the Canvas artboard — on the reasoning that a dialog opened from
+  the board belongs to the board. In a vault themed dark that sheet is a slab
+  of white in the middle of the screen; and because the sheet had to be light,
+  every control on it was re-cut to match, so these dialogs also disagreed
+  with the rest of Obsidian about what a dropdown, a text field, a toggle and
+  a button look like. They now take the theme's own modal surface, ink,
+  radii, grouped-settings shape, interface face and motion curve, and let the
+  theme draw its own controls — so under Cupertino they are Cupertino
+  surfaces, corner shape and all, and under any other theme they are that
+  theme's. Every value is read with a fallback, so a theme that defines none
+  of them is unchanged. The board itself is untouched: it keeps its own
+  fixed palette, as it always has.
+
+- **Adding a widget is one click again: the four sizes are on the tile.**
+  Picking a widget used to open a second step — the catalogue was replaced by
+  a "Choose a size" page, you picked one of four and pressed Add — which cost
+  three clicks and your place in the catalogue to show what a row of four
+  boxes shows. Every tile now carries its sizes as chips drawn at their true
+  footprints (2×2, 4×2, 4×4, 8×4), so one click adds the widget at the size
+  you want; a widget that offers fewer sizes shows fewer chips. Tab still
+  walks the catalogue one widget at a time and the arrow keys walk the chips.
+
+- **Widgets no longer scroll.** A widget's body was set to scroll whatever it
+  held, so anything running a few pixels long turned into a little scrolling
+  window with a scrollbar down the inside of a card — the one thing a fixed
+  footprint is meant to rule out. A widget now shows what fits its size, which
+  is what every widget's per-size content counts (Recent 1/2/5/7, Tasks
+  1/2/6/10, RSS 1/1/4/6) were already for. Widgets that host something
+  genuinely unbounded — an embedded note, a hosted plugin view, the schedule's
+  hour grid — still scroll inside their own pane, and the three launchpad
+  cards stay scrollable while you are arranging them so a tile pushed past the
+  edge can be dragged back.
+
 - **The board is a fixed 16×8 page that scales with the window.** It used to
   keep widgets at a constant size and derive its column count from the pane, so
   every few pixels of resize crossed a column boundary and repacked the whole

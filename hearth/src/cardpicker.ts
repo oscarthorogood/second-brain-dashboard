@@ -48,6 +48,12 @@ type PickerScope = "all" | "request" | CardCategory;
 /** localStorage key for the scope the picker reopens on. */
 const SCOPE_KEY = "sbd-card-picker-scope";
 
+/** Pixels per grid cell in a size chip's footprint box. At 3px the widest
+ * box (8 cells) is 24px, so a row of four chips is ~150px — narrow enough to
+ * sit inside the picker's 210px tile column without the chips' own
+ * min-content width pushing the grid's columns wider than the sheet. */
+const SIZE_CHIP_UNIT = 3;
+
 export interface CardPickerOptions {
 	/** The running Second Brain Dashboard version, stamped into a card request. */
 	sbdVersion: string;
@@ -67,16 +73,18 @@ class CardPickerModal extends Modal {
 	 * the #52 naming hazard documented on `SbdTabbedModal`. */
 	private pickerScope: PickerScope = "all";
 	private query = "";
-	/** The widget whose size is being chosen, or null while the catalogue is
-	 * showing. Picking a widget is step one of two: the size is fixed for the
-	 * widget's life, so it is chosen deliberately rather than defaulted. */
-	private chosen: CardTemplateDef | null = null;
-	/** The size highlighted in the size step. */
-	private chosenSize: WidgetSize = "medium";
 
-	/** The template tiles currently on screen, in visual order — the list arrow
-	 * keys walk. Rebuilt on every results render. */
+	/** Every size chip on screen, in visual order — the flat list Left/Right
+	 * walks. Rebuilt on every results render. */
 	private tiles: HTMLElement[] = [];
+	/** The same chips grouped by tile, so Up/Down can step a whole widget at a
+	 * time rather than four chips at a time. */
+	private tileChips: HTMLElement[][] = [];
+	/** Where each chip sits: [tile index, chip index within that tile]. */
+	private chipPos = new Map<HTMLElement, [number, number]>();
+	/** The chip Enter in the search field activates — the top match at its
+	 * default size. Null while nothing is listed. */
+	private topChoice: HTMLElement | null = null;
 
 	private searchEl: HTMLInputElement | null = null;
 	private railEl: HTMLElement | null = null;
@@ -115,23 +123,10 @@ class CardPickerModal extends Modal {
 		this.contentEl.empty();
 	}
 
-	/** Redraw both panes and switch the frame between the catalogue and the
-	 * size step (the step hides the rail and the search field, which have
-	 * nothing to say once a widget has been picked). */
+	/** Redraw both panes. */
 	private render(): void {
-		this.contentEl.toggleClass("is-choosing-size", this.chosen != null);
-		this.titleEl.setText(
-			this.chosen ? templateName(this.chosen) : t().cardPicker.title,
-		);
 		this.renderRail();
 		this.renderResults();
-	}
-
-	/** Leave the size step and go back to the catalogue. */
-	private backToCatalogue(): void {
-		this.chosen = null;
-		this.render();
-		if (!Platform.isMobile) this.searchEl?.focus();
 	}
 
 	private isScope(value: string): value is PickerScope {
@@ -178,7 +173,9 @@ class CardPickerModal extends Modal {
 			// point of typing "pet" is to get the pet card.
 			if (evt.key === "Enter") {
 				evt.preventDefault();
-				this.tiles[0].click();
+				// The top match at the size it prefers — the chip a mouse would
+				// most likely have gone for, not whichever chip is leftmost.
+				(this.topChoice ?? this.tiles[0]).click();
 			} else if (evt.key === "ArrowDown") {
 				evt.preventDefault();
 				this.tiles[0].focus();
@@ -219,11 +216,9 @@ class CardPickerModal extends Modal {
 		if (!results) return;
 		results.empty();
 		this.tiles = [];
-
-		if (this.chosen) {
-			this.renderSizeStep(results, this.chosen);
-			return;
-		}
+		this.tileChips = [];
+		this.chipPos.clear();
+		this.topChoice = null;
 
 		if (this.pickerScope === "request") {
 			this.renderRequest(results);
@@ -235,6 +230,11 @@ class CardPickerModal extends Modal {
 			this.renderNoMatches(results);
 			return;
 		}
+
+		// Said once, above the chips that act on it: a size is chosen when the
+		// widget is added and kept for its life, so the row of four is a
+		// decision rather than a preview.
+		results.createDiv({ cls: "sbd-picker-hint", text: t().cardPicker.size.note });
 
 		// Sections are the point of the redesign, so keep them whenever there is
 		// more than one to show; a single-category scope needs no heading, and a
@@ -264,78 +264,17 @@ class CardPickerModal extends Modal {
 		link.addEventListener("click", () => this.setScope("request"));
 	}
 
-	// ---- Size step ------------------------------------------------------
+	// ---- Adding a widget -------------------------------------------------
 
-	/**
-	 * Step two: which of the four fixed sizes to add the widget at.
-	 *
-	 * Each option is drawn at its true proportions — a small widget really is a
-	 * quarter the width of an extra-large one — so the choice is made by eye
-	 * rather than by reading four labels. The reference's own captions (`S ·
-	 * 158×158` and friends) are the model for the cell count under each name.
-	 */
-	private renderSizeStep(containerEl: HTMLElement, template: CardTemplateDef): void {
-		const strings = t().cardPicker.size;
-		const step = containerEl.createDiv("sbd-size-step");
-
-		const back = step.createEl("button", { cls: "sbd-size-back" });
-		setIcon(back.createSpan("sbd-size-back-icon"), "arrow-left");
-		back.createSpan({ text: strings.back });
-		back.addEventListener("click", () => this.backToCatalogue());
-
-		step.createDiv({ cls: "sbd-size-heading", text: strings.heading });
-
-		const options = step.createDiv("sbd-size-options");
-		const offered = templateSizes(template);
-		for (const size of offered) {
-			const spec = sizeSpec(template.build().kind, size);
-			const option = options.createEl("button", { cls: "sbd-size-option" });
-			option.toggleClass("is-active", size === this.chosenSize);
-			option.setAttribute("aria-pressed", String(size === this.chosenSize));
-
-			// The preview keeps the size's real aspect ratio, and its width is
-			// proportional to the widest option offered, so the four previews
-			// read as the four footprints rather than four equal boxes.
-			const frame = option.createDiv("sbd-size-preview-frame");
-			const preview = frame.createDiv("sbd-size-preview");
-			const widest = offered.reduce(
-				(max, s) => Math.max(max, sizeSpec(template.build().kind, s).cols),
-				1,
-			);
-			preview.style.width = `${(spec.cols / widest) * 100}%`;
-			preview.style.aspectRatio = `${spec.cols} / ${spec.rows}`;
-			preview.style.borderRadius = `${Math.round(spec.radius / 3)}px`;
-			setIcon(preview.createSpan("sbd-size-preview-icon"), template.icon);
-
-			option.createDiv({ cls: "sbd-size-name", text: strings.names[size] });
-			option.createDiv({
-				cls: "sbd-size-cells",
-				text: strings.cells(spec.cols, spec.rows),
-			});
-
-			option.addEventListener("click", () => {
-				this.chosenSize = size;
-				this.render();
-			});
-			option.addEventListener("dblclick", () => this.commitSize(template));
-			this.tiles.push(option);
-		}
-
-		step.createDiv({ cls: "sbd-size-note", text: strings.note });
-
-		const add = step.createEl("button", { cls: "sbd-size-add", text: strings.add });
-		add.addEventListener("click", () => this.commitSize(template));
-	}
-
-	/** Add the chosen widget at the chosen size and close. */
-	private commitSize(template: CardTemplateDef): void {
+	/** Add the widget at the given size and close. */
+	private addWidget(template: CardTemplateDef, size: WidgetSize): void {
 		const missing = unmetRequirement(this.app, template);
 		this.close();
 		// The widget is added either way — it renders its own "install X" prompt
 		// in place, which is a far better teacher than a missing menu entry —
 		// but say so, with a one-click way to fix it.
 		if (missing) this.noticeMissing(missing.name, missing.pluginId);
-		this.opts.onChoose(template, this.chosenSize);
+		this.opts.onChoose(template, size);
 	}
 
 	/** The templates to show, filtered by scope and ranked by the query. */
@@ -370,8 +309,12 @@ class CardPickerModal extends Modal {
 
 	private renderTile(grid: HTMLElement, template: CardTemplateDef): void {
 		const missing = unmetRequirement(this.app, template);
-		const tile = grid.createEl("button", { cls: "sbd-card-tile" });
+		// A div, not a button: the tile is no longer the thing you press — the
+		// four size chips inside it are, and a button may not nest buttons.
+		const tile = grid.createDiv("sbd-card-tile");
 		tile.toggleClass("is-unmet", !!missing);
+		tile.setAttribute("role", "group");
+		tile.setAttribute("aria-label", templateName(template));
 		setIcon(tile.createSpan("sbd-card-tile-icon"), template.icon);
 
 		const text = tile.createDiv("sbd-card-tile-text");
@@ -384,33 +327,113 @@ class CardPickerModal extends Modal {
 			badge.createSpan({ text: t().cardPicker.requires(missing.name) });
 		}
 
-		tile.setAttribute("aria-label", templateName(template));
-		tile.addEventListener("keydown", (evt: KeyboardEvent) => this.onTileKey(evt, tile));
-		tile.addEventListener("click", () => {
-			// Step two: which size. The widget isn't added yet.
-			this.chosen = template;
-			this.chosenSize = templateDefaultSize(template);
-			this.render();
-		});
-		this.tiles.push(tile);
+		this.renderSizeChips(tile, template);
 	}
 
-	/** Arrow-key movement across the tiles, in visual order. Left/Right and
-	 * Up/Down both walk the flat list: the grid reflows with the modal's width,
-	 * so there is no fixed column count to step by. */
-	private onTileKey(evt: KeyboardEvent, tile: HTMLElement): void {
-		const step =
-			evt.key === "ArrowDown" || evt.key === "ArrowRight"
-				? 1
-				: evt.key === "ArrowUp" || evt.key === "ArrowLeft"
-					? -1
-					: 0;
-		if (!step) return;
-		evt.preventDefault();
-		const index = this.tiles.indexOf(tile);
-		const next = index + step;
-		if (next < 0) this.searchEl?.focus();
-		else this.tiles[next]?.focus();
+	/**
+	 * The four sizes, on the tile itself.
+	 *
+	 * Choosing a size used to be a second page: click a widget, the catalogue
+	 * was replaced by a "Choose a size" step, pick one of four, press Add. Three
+	 * clicks and a lost place in the catalogue to add one widget — and the step
+	 * showed nothing the tile could not, because a size is four boxes and four
+	 * names. The four boxes now live on the tile, so adding a widget at the size
+	 * you want is a single click and the catalogue never goes away.
+	 *
+	 * Each box is drawn at its size's true footprint — a small widget really is
+	 * a quarter the width of an extra-large one — so the row is read by eye
+	 * rather than by its labels. A template that offers fewer than four sizes
+	 * (SEARCH, which has no tall tile) shows only the ones it offers.
+	 */
+	private renderSizeChips(tile: HTMLElement, template: CardTemplateDef): void {
+		const strings = t().cardPicker.size;
+		const row = tile.createDiv("sbd-card-tile-sizes");
+		// `build()` is what names the kind, and the kind is what `sizeSpec` reads
+		// for the per-kind footprint overrides. Once per tile, not once per chip.
+		const kind = template.build().kind;
+		const offered = templateSizes(template);
+		const specs = offered.map((size) => sizeSpec(kind, size));
+		// Every box in a row is measured against the same footprint, so the boxes
+		// stay in proportion to each other and the four chips stay the same width.
+		const widest = specs.reduce((max, spec) => Math.max(max, spec.cols), 1);
+		const tallest = specs.reduce((max, spec) => Math.max(max, spec.rows), 1);
+		const preferred = templateDefaultSize(template);
+		const chips: HTMLElement[] = [];
+		const tileIndex = this.tileChips.length;
+
+		offered.forEach((size, index) => {
+			const spec = specs[index];
+			const chip = row.createEl("button", { cls: "sbd-size-chip" });
+			// The name and the cell count are the size step's own caption, kept as
+			// the chip's accessible name — the chip itself has room for "S".
+			const label = `${strings.names[size]} · ${strings.cells(spec.cols, spec.rows)}`;
+			chip.setAttribute("aria-label", label);
+			chip.setAttribute("title", label);
+
+			const frame = chip.createDiv("sbd-size-chip-frame");
+			frame.style.width = `${widest * SIZE_CHIP_UNIT}px`;
+			frame.style.height = `${tallest * SIZE_CHIP_UNIT}px`;
+			const box = frame.createDiv("sbd-size-chip-box");
+			box.style.width = `${spec.cols * SIZE_CHIP_UNIT}px`;
+			box.style.height = `${spec.rows * SIZE_CHIP_UNIT}px`;
+			chip.createDiv({ cls: "sbd-size-chip-label", text: strings.short[size] });
+
+			// Roving tab stop: Tab walks the catalogue one WIDGET at a time, as
+			// it did when the tile itself was the button, and the arrow keys
+			// walk the chips within. Four tab stops per widget would be ~120
+			// across the catalogue, which is not a catalogue any more.
+			chip.tabIndex = size === preferred ? 0 : -1;
+			chip.addEventListener("keydown", (evt: KeyboardEvent) => this.onChipKey(evt, chip));
+			chip.addEventListener("click", () => this.addWidget(template, size));
+
+			this.chipPos.set(chip, [tileIndex, index]);
+			chips.push(chip);
+			this.tiles.push(chip);
+		});
+
+		this.tileChips.push(chips);
+		// What Enter in the search field adds: the top match, at the size the
+		// template itself prefers rather than the first one offered.
+		if (!this.topChoice) {
+			this.topChoice = chips[offered.indexOf(preferred)] ?? chips[0] ?? null;
+		}
+	}
+
+	/**
+	 * Arrow-key movement across the size chips.
+	 *
+	 * Left/Right walk the flat list, so they cross from a tile's last chip to
+	 * the next tile's first. Up/Down step a whole tile at a time, holding the
+	 * chip's position within its tile — four presses to leave a widget would be
+	 * three too many, and the grid reflows with the modal's width, so there is
+	 * no fixed column count to step by either.
+	 */
+	private onChipKey(evt: KeyboardEvent, chip: HTMLElement): void {
+		const pos = this.chipPos.get(chip);
+		if (!pos) return;
+		const [tileIndex, chipIndex] = pos;
+
+		if (evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
+			evt.preventDefault();
+			const next = this.tiles.indexOf(chip) + (evt.key === "ArrowRight" ? 1 : -1);
+			if (next < 0) this.searchEl?.focus();
+			else this.tiles[next]?.focus();
+			return;
+		}
+
+		if (evt.key === "ArrowUp" || evt.key === "ArrowDown") {
+			evt.preventDefault();
+			const nextTile = tileIndex + (evt.key === "ArrowDown" ? 1 : -1);
+			if (nextTile < 0) {
+				this.searchEl?.focus();
+				return;
+			}
+			const row = this.tileChips[nextTile];
+			if (!row?.length) return;
+			// A row may be shorter than the one you came from (SEARCH offers two
+			// sizes), so hold the column where it exists and clamp where it doesn't.
+			row[Math.min(chipIndex, row.length - 1)].focus();
+		}
 	}
 
 	private noticeMissing(name: string, pluginId?: string): void {

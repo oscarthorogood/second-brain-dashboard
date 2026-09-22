@@ -449,19 +449,19 @@ function renderToolbar(view: HomeView, container: HTMLElement): void {
 	);
 	const arrange = arrangeZone.createEl("button", { cls: "sbd-tool-btn" });
 	arrange.toggleClass("is-active", view.arrangeMode);
-	// Outside arrange mode keep it as a small, unobtrusive icon button; while
-	// arranging, show the labelled "Done arranging" action.
-	arrange.toggleClass("is-icon", !view.arrangeMode);
+	// A labelled pill in both states, in the board's own glass vocabulary.
+	// Outside arrange mode this was an icon-only circle holding the "move"
+	// glyph at 55% opacity — a faded ⤧ floating on the wallpaper, which says
+	// nothing about what pressing it does and nothing about the widgets it
+	// belongs to. It says "Edit".
 	setIcon(
 		arrange.createSpan("sbd-tool-icon"),
-		view.arrangeMode ? "check" : "move",
+		view.arrangeMode ? "check" : "pencil",
 	);
-	if (view.arrangeMode) {
-		arrange.createSpan({
-			cls: "sbd-tool-label",
-			text: t().dashboard.doneArranging,
-		});
-	}
+	arrange.createSpan({
+		cls: "sbd-tool-label",
+		text: view.arrangeMode ? t().dashboard.doneArranging : t().dashboard.edit,
+	});
 	{
 		const arrangeLabel = view.arrangeMode
 			? t().dashboard.finishArranging

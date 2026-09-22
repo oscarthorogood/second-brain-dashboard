@@ -437,6 +437,8 @@ export const en = {
 		hideCardHeaders: "Hide card headers",
 		doneArranging: "Done arranging",
 		finishArranging: "Finish arranging cards",
+		/** The toolbar pill that enters arrange mode. */
+		edit: "Edit",
 		moveResize: "Rearrange widgets",
 		cardSettings: "Card settings",
 		removeCard: "Remove card",
@@ -2290,7 +2292,8 @@ export const en = {
 			recent: "Recent",
 			recentWithCode: (code: string) => `Recent · ${code}`,
 			recentLectures: "Recent lectures",
-			upcoming: "Upcoming",
+			/** The extra large card's second column: the lectures still ahead. */
+			upcomingLectures: "Upcoming lectures",
 			assignments: "Assignments",
 			assignmentsReadings: "Assignments & readings",
 			readings: "Readings",
@@ -2298,7 +2301,8 @@ export const en = {
 			nothingHere: "Nothing due",
 			moreCount: (n: number) => `+${n} more`,
 			openNote: "Open note",
-			switchShort: "Switch",
+			/** The switcher pill's accessible name and tooltip. The pill itself
+			 * is labelled with the current course, so the verb lives here. */
 			switchLong: "Switch course",
 			lectureCount: (n: number) => `${n} ${n === 1 ? "lecture" : "lectures"}`,
 			upcomingCount: (n: number) => `${n} upcoming`,
@@ -2967,20 +2971,27 @@ export const en = {
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
 		noMatches: "No card matches that.",
-		/** The second step: which of the four fixed sizes the widget is added at. */
+		/** The row of size chips on every card tile: which of the four fixed
+		 * sizes the widget is added at. */
 		size: {
-			heading: "Choose a size",
-			/** Sizes can't be changed later, so the step says so once, here. */
+			/** Sizes can't be changed later, so the picker says so once, above
+			 * the chips. */
 			note: "A widget's size is fixed. To change it, remove the widget and add it again.",
-			back: "Back to all cards",
-			add: "Add widget",
+			/** A chip's accessible name and tooltip, e.g. "Small · 2 × 2". */
 			names: {
 				small: "Small",
 				medium: "Medium",
 				large: "Large",
 				xlarge: "Extra large",
 			},
-			/** Caption under each option, e.g. "2 × 2". */
+			/** What a chip itself is labelled — a chip is too small for a word. */
+			short: {
+				small: "S",
+				medium: "M",
+				large: "L",
+				xlarge: "XL",
+			},
+			/** The footprint in the chip's tooltip, e.g. "2 × 2". */
 			cells: (cols: number, rows: number) => `${cols} × ${rows}`,
 		},
 		/** Badge on a card whose plugin (or other dependency) is missing. */

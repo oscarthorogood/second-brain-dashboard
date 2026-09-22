@@ -75,10 +75,20 @@ chrome was built against it in an earlier pass, so most of it already matched.
 What changed or is worth noting:
 
 - **Add-a-card picker** — the reference's frame, rail, search field and tiles
-  are unchanged. A second step is new: after picking a widget the sheet hides
-  the rail and search and offers the four sizes, drawn at their true relative
-  widths and aspect ratios so the choice is made by eye. It says once, there,
-  that the choice is final.
+  are unchanged in layout. Each tile now carries the four sizes as a row of
+  chips, drawn at their true relative footprints so the choice is made by eye;
+  adding a widget at the size you want is one click. This replaced a second
+  step (pick a widget → the sheet hid the rail and search and offered the four
+  sizes → press Add), which cost three clicks and your place in the catalogue
+  to show what a row of four boxes shows. The picker says once, above the
+  grid, that the choice is final.
+- **The picker and the card settings sheet no longer wear the board's glass.**
+  Both float in the vault's chrome rather than on the board, so they take the
+  host THEME's surface, ink, radii, controls and motion (`--modal-*`,
+  `--radius-*`, `--setting-items-*`, `--anim-*`, `--corner-shape`) instead of
+  Canvas.dc.html's white-60% sheet. The artboards still describe the board
+  itself; they no longer describe these two dialogs. The plugin's settings
+  pane follows the same rule.
 - **Card settings modal** — the reference draws Content and Layout tabs. The
   Layout tab held a width and a height field, which is precisely the free-form
   geometry the fixed sizes replace, so it is gone and the size is *stated*

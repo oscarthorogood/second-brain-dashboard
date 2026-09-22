@@ -370,6 +370,17 @@ body.theme-dark {
 	font-family: var(--sbd-font-family);
 }
 
+/* …except the three surfaces that live in the vault's chrome rather than on
+ * the board: the add-widget picker, the widget settings dialog and the
+ * plugin's settings pane. Those follow the THEME's interface face, so they
+ * are set in whatever the vault is set in (Cupertino: SF Pro) instead of the
+ * plugin's own stack. --sbd-font-family stays the fallback, so a theme that
+ * sets no interface font changes nothing. */
+.sbd-settings,
+.sbd-glass-modal {
+	font-family: var(--font-interface, var(--sbd-font-family));
+}
+
 /* A fixed neutral-glass palette, scoped to the dashboard only (not the
  * settings tab or modals, whose outer chrome is painted by Obsidian outside
  * this class and would otherwise mismatch a recoloured inner pane) —
@@ -1913,11 +1924,37 @@ body.theme-dark {
  * 8px/10px, which is most of why every widget read as cramped next to the
  * reference: a 238px card was giving its content 218px of width where the
  * reference gives it 190px, and the content ran right up to the rim. */
+/* A widget does not scroll.
+ *
+ * This was `overflow: auto`, which turned every widget whose content ran a
+ * few pixels long into a little scrolling window — a scrollbar down the
+ * inside of a card, and content you had to drag to read. That is the one
+ * thing a fixed footprint is supposed to rule out: the board's whole premise
+ * (design-ref/README.md, and the `bySize` caps in src/cards/*.ts) is that a
+ * widget shows what fits its size and the module decides how much that is —
+ * RECENT draws 1/2/5/7 files, TASKS 1/2/6/10, RSS 1/1/4/6 — so a widget that
+ * scrolls is a widget whose content wasn't cut to its size.
+ *
+ * Clipping rather than scrolling makes that visible instead of hiding it
+ * behind a scrollbar, and it is what an iOS widget does with content that
+ * overruns its frame. Widgets that host something genuinely unbounded — an
+ * embedded note, a plugin's own view, the schedule's hour grid — still
+ * scroll INSIDE their own pane (.sbd-embed, .sbd-sched-scroll and friends
+ * set their own overflow); it is only the card-level scrollbar that goes. */
 .sbd-card-body {
 	flex: 1;
 	min-height: 0;
-	overflow: auto;
+	overflow: hidden;
 	padding: var(--sbd-card-pad-y) var(--sbd-card-pad-x);
+}
+
+/* The exception, and only while arranging: the three launchpad cards (links,
+ * commands, templater) hold tiles the user places and sizes themselves, so a
+ * tile pushed past the card's edge has to stay reachable long enough to be
+ * dragged back. Outside arrange mode the launchpad clips like every other
+ * widget. */
+.sbd-card-body.sbd-tiles-arrange {
+	overflow: auto;
 }
 
 /* ---- The four sizes -------------------------------------------------
@@ -2968,10 +3005,17 @@ body.theme-dark {
 	max-width: 60ch;
 }
 
+/* A grouped inset list, in the host theme's own shape: Obsidian 1.13 groups
+ * settings into boxes and exposes their fill and corner as --setting-items-*,
+ * which a theme retunes (Cupertino gives them its --radius-m and its own
+ * grouped fill, per platform). Reading those rather than a literal 12px is
+ * what makes the plugin's pane sit in the settings window as if it shipped
+ * with it; the fallbacks are what this box used before. */
 .sbd-section-body {
-	background: var(--background-secondary);
+	background: var(--setting-items-background, var(--background-secondary));
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 12px;
+	border-radius: var(--setting-items-radius, var(--radius-m, 12px));
+	corner-shape: var(--corner-shape, round);
 	padding: 2px 16px;
 }
 
@@ -3031,10 +3075,12 @@ body.theme-dark {
 	color: var(--text-faint);
 }
 
+/* The same grouped-list box as .sbd-section-body, and for the same reason. */
 .sbd-settings-index-rows {
-	background: var(--background-secondary);
+	background: var(--setting-items-background, var(--background-secondary));
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 12px;
+	border-radius: var(--setting-items-radius, var(--radius-m, 12px));
+	corner-shape: var(--corner-shape, round);
 	overflow: hidden;
 }
 
@@ -3047,7 +3093,8 @@ body.theme-dark {
 	gap: 14px;
 	padding: 14px 16px;
 	cursor: pointer;
-	transition: background 110ms ease;
+	transition: background-color var(--anim-duration-fast, 110ms)
+		var(--anim-motion-baseline, ease);
 }
 
 .sbd-settings-index-row:focus-visible {
@@ -3070,7 +3117,8 @@ body.theme-dark {
 	flex-shrink: 0;
 	width: 30px;
 	height: 30px;
-	border-radius: 10px;
+	border-radius: var(--radius-s, 10px);
+	corner-shape: var(--corner-shape, round);
 	background: var(--background-modifier-border);
 	color: var(--text-normal);
 }
@@ -3113,7 +3161,8 @@ body.theme-dark {
 	gap: 4px;
 	margin: 14px 0 0;
 	padding: 5px 10px 5px 6px;
-	border-radius: 9px;
+	border-radius: var(--radius-s, 9px);
+	corner-shape: var(--corner-shape, round);
 	color: var(--text-muted);
 	font-size: var(--font-ui-small);
 	cursor: pointer;
@@ -3234,9 +3283,10 @@ body.theme-dark {
 /* A stray row that belongs to no group still gets the group's box, so it reads
    as deliberate rather than unfinished. */
 .sbd-settings-tabbody > .setting-item {
-	background: var(--background-secondary);
+	background: var(--setting-items-background, var(--background-secondary));
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 12px;
+	border-radius: var(--setting-items-radius, var(--radius-m, 12px));
+	corner-shape: var(--corner-shape, round);
 	padding: 14px 16px;
 }
 
@@ -3249,7 +3299,8 @@ body.theme-dark {
 	padding: 12px 14px;
 	margin: 8px 0;
 	border: 1px solid var(--background-modifier-error);
-	border-radius: 10px;
+	border-radius: var(--radius-s, 10px);
+	corner-shape: var(--corner-shape, round);
 	background: var(--background-modifier-error-hover);
 }
 
@@ -3311,20 +3362,21 @@ body.theme-dark {
 	animation: sbd-tab-fade 140ms ease;
 }
 
-/* ---- Card settings rows — Canvas.dc.html's CARD SETTINGS sheet ------
+/* ---- Widget settings rows -------------------------------------------
  *
- * Obsidian's own .setting-item is a centred flex row underlined along its
- * TOP with the theme's border colour. The reference's row is underlined
- * along its BOTTOM in the panel's own white rule, and its two halves are
- * top-aligned so a two-line description doesn't drag the control down the
- * row with it. Scoped to the glass modal's tab body so the plugin's settings
- * tab (which lives in Obsidian's own chrome) is untouched. */
+ * Only what the dialog's own layout needs. The row's material — its rule,
+ * its label and description type — is the theme's, so a widget's settings
+ * read like every other settings row in the vault; it used to be re-cut to
+ * Canvas.dc.html's light sheet (a bottom rule in white-50%, a 15px/700 name
+ * over a 13px description), which is the look that made these dialogs a
+ * foreign object in a themed vault.
+ *
+ * What stays is the top alignment — a two-line description must not drag
+ * the control down the row with it — and the wrapping, which is load-
+ * bearing: see the two comments below. */
 .sbd-glass-modal .sbd-modal-tabbody .setting-item {
 	align-items: flex-start;
 	gap: 20px;
-	padding: 20px 0;
-	border-top: none;
-	border-bottom: 1px solid var(--sbd-panel-divider);
 	/* A row whose controls are wider than the space left beside its label
 	 * drops them onto their own line instead of pushing the row wider than
 	 * the sheet. Without this, an editor that stacks several fields in one
@@ -3334,10 +3386,10 @@ body.theme-dark {
 	flex-wrap: wrap;
 }
 
-/* The last row in a tab sits directly above the sheet's own edge, so its
- * rule would read as a second, floating border. */
-.sbd-glass-modal .sbd-modal-tabbody .setting-item:last-child {
-	border-bottom: none;
+/* The first row sits directly under the tab ribbon, so the theme's own
+ * top rule on it would read as a second, floating border under the tabs. */
+.sbd-glass-modal .sbd-modal-tabbody .setting-item:first-child {
+	border-top: none;
 }
 
 /* 380px, the reference's own measure: past it a description wraps rather
@@ -3350,43 +3402,12 @@ body.theme-dark {
 	flex: 1 1 auto;
 }
 
-.sbd-glass-modal .sbd-modal-tabbody .setting-item-name {
-	font-size: 0.9375rem;
-	font-weight: 700;
-	color: var(--sbd-ink);
-}
-
-.sbd-glass-modal .sbd-modal-tabbody .setting-item-description {
-	font-size: 0.8125rem;
-	line-height: 1.4;
-	color: var(--sbd-ink-faint);
-}
-
-/* Canvas.dc.html → CARD SETTINGS closes with titled section blocks: a
- * 16px/700 #20242a heading over a 13px/1.45 #8b9198 line, inset 14px above
- * and 16px below its rule. Obsidian's `setHeading()` rows had no styling of
- * their own inside the glass panel, so they were taking the app's default
- * heading treatment and the ordinary row's 15px/#23272b name. */
+/* A heading row needs room around it that an ordinary row does not; the
+ * type itself is the theme's. */
 .sbd-glass-modal .sbd-modal-tabbody .setting-item.setting-item-heading {
 	padding-top: 14px;
 	padding-bottom: 16px;
 	gap: 10px;
-}
-
-.sbd-glass-modal
-	.sbd-modal-tabbody
-	.setting-item.setting-item-heading
-	.setting-item-name {
-	font-size: 1rem;
-	font-weight: 700;
-	color: var(--sbd-ink-strong);
-}
-
-.sbd-glass-modal
-	.sbd-modal-tabbody
-	.setting-item.setting-item-heading
-	.setting-item-description {
-	line-height: 1.45;
 }
 
 /* The control column must not stretch to the row's full height now that the
@@ -7818,28 +7839,10 @@ body.theme-dark {
 	display: flex;
 }
 
-/* Compact icon-only toolbar button (e.g. the Arrange toggle at rest). Circular,
- * matching the round icon-button vocabulary used everywhere else a control
- * floats over the glass (card actions, modal close button). */
-.sbd-tool-btn.is-icon {
-	padding: 8px;
-	border-radius: 50%;
-	opacity: 0.55;
-}
-
-.sbd-tool-btn.is-icon:hover {
-	opacity: 1;
-}
-
-.sbd-tool-btn.is-icon .sbd-tool-icon {
-	width: 15px;
-	height: 15px;
-}
-
-.sbd-tool-btn.is-icon .sbd-tool-icon svg {
-	width: 15px;
-	height: 15px;
-}
+/* (The icon-only variant of this button is gone: the Edit toggle used to
+ * shrink to a 55%-opacity circle holding a "move" glyph when the board was
+ * not being arranged, which named neither the action nor what it acts on.
+ * Both states are labelled pills now — see renderToolbar in dashboard.ts.) */
 
 .sbd-arrange-zone {
 	display: flex;
@@ -11814,269 +11817,133 @@ body.sbd-dv-resizing {
 	}
 }
 
-/* ── Glass modal shell ──────────────────────────────────────────────────
-   The Add-a-card picker and the card settings modal both float above the
-   vault the way a dashboard card floats above the board, so they wear the
-   same frosted-glass material — colour-mixed from Obsidian's *real* theme
-   variables rather than the dashboard's fixed neutral palette, since a modal
-   sits outside .sbd-view and must still fit whatever appearance (and accent)
-   the user actually has chosen. Applied to modalEl (the outer `.modal` box)
-   by both callers, replacing Obsidian's flat modal surface wholesale. */
+/* ── Plugin dialog shell ────────────────────────────────────────────────
+   The Add-a-widget picker and the widget settings dialog. Both float above
+   the vault rather than on the dashboard's board, so they are drawn in the
+   HOST THEME's vocabulary — its surfaces, ink, radii, controls and motion —
+   rather than the board's own fixed light-glass palette.
+
+   They used to wear the board material: a white-60% frosted sheet carrying
+   fixed dark ink, taken from Canvas.dc.html, on the reasoning that a dialog
+   opened from the board belongs to the board. In a vault themed dark that
+   sheet is a slab of white in the middle of the screen; and because the
+   sheet was light, every control on it had to be re-cut to match, so these
+   two dialogs also disagreed with the rest of the app about what a dropdown,
+   a text field and a toggle look like. They now take the theme's modal
+   surface and let the theme draw its own controls. Under Cupertino
+   (aaaaalexis/obsidian-cupertino) that means its modal fill, its --radius-*
+   scale, its superellipse corner, its control shapes and its motion curve.
+
+   Every value is read from the theme with a fallback, so a theme that
+   defines none of them still gets a coherent dialog — and the plugin's own
+   --sbd-* vocabulary is remapped here rather than in the ~60 rules that
+   consume it, which is the token-first move design-ref/README.md asks for
+   when a material changes.
+
+   The class name is historical: it is the hook both modals put on modalEl,
+   and vault CSS snippets target it, so it is kept rather than renamed. */
 .sbd-glass-modal {
-	/* The panel material (Canvas.dc.html's ADD A CARD / CARD SETTINGS
-	 * sheets), from the --sbd-panel-* tokens. */
-	background: var(--sbd-panel-fill);
-	backdrop-filter: var(--sbd-panel-blur);
-	-webkit-backdrop-filter: var(--sbd-panel-blur);
-	border: 1px solid var(--sbd-panel-border);
-	border-radius: var(--sbd-radius-xxl);
-	box-shadow: var(--sbd-panel-shadow);
-	/* Same reasoning as .sbd-view's own fixed palette (see its comment): the
-	 * reference is a light glass-white surface with dark text regardless of
-	 * appearance, not a light/dark pair that follows Obsidian's theme — so
-	 * these two modals get their own small fixed palette here, the same way
-	 * the dashboard itself does, rather than inheriting Obsidian's real
-	 * (possibly dark-mode) --text-normal etc., which would go illegible
-	 * against a background forced to stay light. Every one of these is a
-	 * variable this modal's own content (search field, rail, card tiles,
-	 * Obsidian's native Setting rows) already reads. */
-	--background-modifier-border: var(--sbd-tile-border);
-	--background-modifier-hover: var(--sbd-control-fill-hover);
-	--background-modifier-active-hover: var(--sbd-tile-fill-active);
-	--background-modifier-form-field: var(--sbd-control-fill);
-	--background-secondary: var(--sbd-icon-btn-ink-fill);
-	--background-primary: #ffffff;
-	--text-normal: var(--sbd-ink-strong);
-	--text-muted: var(--sbd-ink-muted);
-	--text-faint: var(--sbd-ink-faint);
-	--text-accent: #2f8ff0;
-	--interactive-accent: var(--sbd-track-pill-fill);
-	--text-on-accent: var(--sbd-ink);
+	background: var(--modal-background, var(--background-secondary));
+	border: 1px solid var(--modal-border-color, var(--background-modifier-border));
+	border-radius: var(--modal-radius, var(--sbd-radius-xl));
+	/* Cupertino rounds its surfaces with a superellipse rather than a
+	 * circular arc. Themes that set nothing fall back to `round`, which is
+	 * the property's initial value, and engines without corner-shape drop
+	 * the declaration entirely. */
+	corner-shape: var(--corner-shape, round);
+	box-shadow: var(--shadow-l, var(--sbd-panel-shadow));
 	color: var(--text-normal);
+
+	/* ---- The board vocabulary, remapped onto the theme ----------------
+	 * Left column: the token the picker's and the dialog's rules are
+	 * written against. Right column: what it means on a theme surface. */
+
+	/* Ink. The board's ladder is five fixed greys for a light sheet; the
+	 * theme's is three that already invert with appearance. --sbd-ink-faint
+	 * takes --text-muted rather than --text-faint: it carries tile
+	 * descriptions and a field's magnifier, which are content, not
+	 * decoration. */
+	--sbd-ink-strong: var(--text-normal);
+	--sbd-ink: var(--text-normal);
+	--sbd-ink-muted: var(--text-muted);
+	--sbd-ink-faint: var(--text-muted);
+	--sbd-ink-label: var(--text-faint);
+	--sbd-ink-icon: var(--text-muted);
+	--sbd-ink-rail: var(--text-normal);
+
+	/* Surfaces. A tile is a raised thing sitting on the dialog's own fill,
+	 * so it takes --background-primary against the modal's secondary. Its
+	 * hover steps are mixed toward the ink rather than layered as a
+	 * translucent overlay, so they darken in a light theme and lighten in a
+	 * dark one without either needing its own block. */
+	--sbd-tile-fill: var(--background-primary);
+	--sbd-tile-fill-hover: color-mix(in srgb, var(--background-primary) 93%, var(--text-normal));
+	--sbd-tile-fill-active: color-mix(in srgb, var(--background-primary) 86%, var(--text-normal));
+	--sbd-tile-border: var(--background-modifier-border);
+	--sbd-tile-border-hover: var(--background-modifier-border-hover);
+
+	/* Rails and rules. A rail row is transparent at rest, so its hover can
+	 * be the theme's translucent overlay directly. */
+	--sbd-rail-fill-hover: var(--background-modifier-hover);
+	--sbd-rail-fill-active: var(--background-modifier-active-hover);
+	--sbd-panel-divider: var(--background-modifier-border);
+
+	/* Controls the plugin composes itself (the picker's search field). The
+	 * ones Obsidian and the theme draw — dropdowns, text fields, toggles,
+	 * buttons — are no longer re-cut at all. */
+	--sbd-control-fill: var(--interactive-normal);
+	--sbd-control-fill-hover: var(--interactive-hover);
+	--sbd-control-fill-active: var(--background-modifier-active-hover);
+	--sbd-control-border: var(--background-modifier-border);
+	--sbd-control-fill-quiet: var(--background-modifier-form-field);
+	--sbd-control-border-quiet: var(--background-modifier-border);
+	--sbd-control-fill-search: var(--background-modifier-form-field);
+
+	/* The tab switcher's track and its pill (the widget dialog's ribbon). */
+	--sbd-track-fill: var(--background-modifier-hover);
+	--sbd-track-pill-fill: var(--background-primary);
+	--sbd-track-tab-fill-hover: var(--background-modifier-hover);
+	--sbd-track-tab-fill-active: var(--background-modifier-active-hover);
+
+	/* The translucent middle tier the board stacks on a card. On a theme
+	 * surface the equivalent is the theme's own overlay pair. */
+	--sbd-panel-tier-fill: var(--background-modifier-active-hover);
+	--sbd-panel-tier-fill-quiet: var(--background-modifier-hover);
+	--sbd-panel-tier-fill-hover: var(--background-modifier-active-hover);
+
+	/* Shape. The board's radii are drawn from Canvas.dc.html; a dialog in
+	 * the vault's chrome takes the theme's scale instead, so a Cupertino
+	 * vault gets Cupertino's corners and a square-cornered theme gets its
+	 * own. The fallbacks are the board's own values. */
+	--sbd-radius-s: var(--radius-s, 10px);
+	--sbd-radius-l: var(--radius-l, 18px);
+	--sbd-radius-control: var(--input-radius, 12px);
+	--sbd-radius-field: var(--input-radius, 14px);
+	--sbd-radius-track: var(--radius-m, 16px);
+	--sbd-radius-pill: var(--button-radius, 20px);
+
+	/* Motion. Cupertino moves everything on one curve at three durations;
+	 * the fallbacks are what this file used before. */
+	--sbd-transition-interactive: background-color
+			var(--anim-duration-fast, 150ms) var(--anim-motion-baseline, ease),
+		border-color var(--anim-duration-fast, 150ms) var(--anim-motion-baseline, ease),
+		color var(--anim-duration-fast, 150ms) var(--anim-motion-baseline, ease),
+		box-shadow var(--anim-duration-fast, 150ms) var(--anim-motion-baseline, ease),
+		transform var(--anim-duration-superfast, 100ms) var(--anim-motion-baseline, ease);
 }
 
-/* ---- The panel's own controls ----------------------------------------
-   Obsidian draws a Setting row's dropdown, text field and toggle with its
-   app chrome, which lands as flat grey boxes inside a light glass panel.
-   These rules re-cut those three (plus the modal's title and close button)
-   in the reference's control vocabulary — a pill on a translucent white
-   fill — and are scoped to .sbd-glass-modal, so nothing outside the
-   plugin's own modals is touched.
-
-   Doubled class for specificity: Obsidian's own rules for these controls
-   are themselves written at two classes deep, and a single class here
-   loses to them. */
-
-/* The dialog's name: the reference sets it much larger and heavier than
-   Obsidian's default modal title, which is the main thing that makes the
-   panel read as a sheet rather than a dialog box. */
-.sbd-glass-modal.sbd-glass-modal .modal-title {
-	/* 26px exactly, as both reference sheets set it ("Add a card", "Card
-	 * settings") — 1.6rem landed at 25.6px. */
-	font-size: 1.625rem;
-	font-weight: 700;
-	line-height: 1.2;
-	color: var(--sbd-ink-strong);
-}
-
-/* Circular icon button on a light surface. Obsidian ships this as a bare
-   glyph in the corner; the reference gives it a chip to sit in. */
-.sbd-glass-modal.sbd-glass-modal .modal-close-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border-radius: 50%;
-	background: var(--sbd-icon-btn-fill);
-	color: var(--sbd-ink-icon);
-	cursor: pointer;
-	transition: var(--sbd-transition-interactive);
-}
-
-/* Fill only — the reference's close button darkens its chip on hover and
- * leaves the glyph alone. */
-.sbd-glass-modal.sbd-glass-modal .modal-close-button:hover {
-	background: var(--sbd-icon-btn-fill-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal .modal-close-button:active {
-	background: var(--sbd-icon-btn-fill-active);
-	transform: var(--sbd-press-icon);
-}
-
-/* Dropdown pill. The chevron is a double caret (up over down) drawn inline
-   as a data URI rather than borrowed from Obsidian's own arrow, which is a
-   single caret in the app's text colour and reads as a different control
-   next to the reference's. background-image is set on the element itself
-   because a <select> cannot carry a pseudo-element. */
-.sbd-glass-modal.sbd-glass-modal select.dropdown {
-	/* Obsidian already clears the native control, but say so here too: the
-	 * rule is worthless if the platform arrow is left drawn on top of the
-	 * caret below. */
-	appearance: none;
-	-webkit-appearance: none;
-	height: auto;
-	padding: 9px 34px 9px 14px;
-	border: 1px solid var(--sbd-control-border);
-	border-radius: var(--sbd-radius-control);
-	background-color: var(--sbd-control-fill);
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b9198' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 9l5-5 5 5M7 15l5 5 5-5'/%3E%3C/svg%3E");
-	background-repeat: no-repeat;
-	background-position: right 12px center;
-	background-size: 12px 12px;
-	box-shadow: none;
-	color: var(--sbd-ink);
-	/* 14px, the reference's control size. --font-ui-small is Obsidian's 13px
-	 * and left every pill a step small next to the 15px row label. */
-	font-size: 0.875rem;
-	cursor: pointer;
-	transition: var(--sbd-transition-interactive);
-}
-
-.sbd-glass-modal.sbd-glass-modal select.dropdown:hover {
-	background-color: var(--sbd-control-fill-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal select.dropdown:active {
-	background-color: var(--sbd-control-fill-active);
-}
-
-.sbd-glass-modal.sbd-glass-modal select.dropdown:focus-visible {
-	outline: 2px solid var(--sbd-control-border);
-	outline-offset: 1px;
-}
-
-/* Text/number fields and textareas: the quieter tier of the same pill, so a
-   field at rest doesn't compete with an actionable dropdown beside it. */
-.sbd-glass-modal.sbd-glass-modal input[type="text"],
-.sbd-glass-modal.sbd-glass-modal input[type="search"],
-.sbd-glass-modal.sbd-glass-modal input[type="number"],
-.sbd-glass-modal.sbd-glass-modal input[type="password"],
-.sbd-glass-modal.sbd-glass-modal textarea {
-	padding: 9px 14px;
-	border: 1px solid var(--sbd-control-border-quiet);
-	border-radius: var(--sbd-radius-control);
-	background: var(--sbd-control-fill-quiet);
-	box-shadow: none;
-	color: var(--sbd-ink);
-	font-size: 0.875rem;
-	transition: var(--sbd-transition-interactive);
-}
-
-.sbd-glass-modal.sbd-glass-modal input[type="text"]:hover,
-.sbd-glass-modal.sbd-glass-modal input[type="search"]:hover,
-.sbd-glass-modal.sbd-glass-modal input[type="number"]:hover,
-.sbd-glass-modal.sbd-glass-modal input[type="password"]:hover,
-.sbd-glass-modal.sbd-glass-modal textarea:hover {
-	background: var(--sbd-control-fill);
-}
-
-.sbd-glass-modal.sbd-glass-modal input[type="text"]:focus,
-.sbd-glass-modal.sbd-glass-modal input[type="search"]:focus,
-.sbd-glass-modal.sbd-glass-modal input[type="number"]:focus,
-.sbd-glass-modal.sbd-glass-modal input[type="password"]:focus,
-.sbd-glass-modal.sbd-glass-modal textarea:focus {
-	background: var(--sbd-control-fill-hover);
-	border-color: var(--sbd-control-border);
-	box-shadow: none;
-}
-
-/* The picker's search box is its own composed field (icon + bare input), so
-   exempt that input from the pill above — it *is* the pill's interior. */
-.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input,
-.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input:hover,
-.sbd-glass-modal.sbd-glass-modal .sbd-picker-search-input:focus {
+/* The one control the plugin composes rather than borrows: the picker's
+   search field is an icon and a bare input inside a box that IS the field, so
+   the input must carry no frame of its own. Two classes deep to outrank
+   Obsidian's own element-plus-attribute rules for `input[type="text"]` and
+   the theme's inset --input-shadow. */
+.sbd-glass-modal .sbd-picker-search-input,
+.sbd-glass-modal .sbd-picker-search-input:hover,
+.sbd-glass-modal .sbd-picker-search-input:focus {
 	padding: 8px 0;
 	border: none;
 	background: transparent;
 	box-shadow: none;
-}
-
-/* Toggle. Sized from the reference (44x26 track, 20px thumb) rather than
-   left on Obsidian's --toggle-* scale, which is narrower and squarer. The
-   thumb is Obsidian's ::after on the container. */
-.sbd-glass-modal.sbd-glass-modal .checkbox-container {
-	width: 44px;
-	height: 26px;
-	border: 1px solid var(--sbd-control-border-quiet);
-	border-radius: var(--sbd-radius-field);
-	background: var(--sbd-toggle-track);
-	box-shadow: none;
-	cursor: pointer;
-	transition: var(--sbd-transition-interactive);
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container:hover {
-	background: var(--sbd-toggle-track-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container::after {
-	width: 20px;
-	height: 20px;
-	top: 2px;
-	left: 2px;
-	border-radius: 50%;
-	background: var(--sbd-toggle-thumb);
-	box-shadow: var(--sbd-toggle-thumb-shadow);
-	transition: transform 150ms ease;
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled {
-	background: var(--sbd-toggle-track-on);
-	border-color: transparent;
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled:hover {
-	background: var(--sbd-toggle-track-on-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container.is-enabled::after {
-	transform: translateX(18px);
-}
-
-.sbd-glass-modal.sbd-glass-modal .checkbox-container:active {
-	transform: var(--sbd-press-tile);
-}
-
-/* Action buttons in a panel footer: the same two pills as the board's
-   toolbar — a light one for the confirm, a quiet glass one for the rest. */
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button {
-	padding: 11px 18px;
-	border: 1px solid var(--sbd-control-border);
-	border-radius: var(--sbd-radius-pill);
-	background: var(--sbd-control-fill);
-	box-shadow: none;
-	color: var(--sbd-ink);
-	font-weight: 600;
-	cursor: pointer;
-	transition: var(--sbd-transition-interactive);
-}
-
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button:hover {
-	background: var(--sbd-control-fill-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button:active {
-	background: var(--sbd-control-fill-active);
-	transform: var(--sbd-press);
-}
-
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta {
-	border-color: transparent;
-	background: var(--sbd-btn-light-fill);
-	box-shadow: var(--sbd-btn-light-shadow);
-	color: var(--sbd-ink);
-}
-
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta:hover {
-	background: var(--sbd-btn-light-fill-hover);
-	box-shadow: var(--sbd-btn-light-shadow-hover);
-}
-
-.sbd-glass-modal.sbd-glass-modal .sbd-modal-footer button.mod-cta:active {
-	background: var(--sbd-btn-light-fill-active);
-	transform: var(--sbd-press);
 }
 
 /* ── Add-card picker ───────────────────────────────────────────────────
@@ -12157,166 +12024,6 @@ body.sbd-dv-resizing {
 
 .sbd-picker-search-input:focus {
 	box-shadow: none;
-}
-
-/* ---- Size step ------------------------------------------------------
- *
- * Step two of adding a widget: which of the four fixed footprints. The rail
- * and the search field have nothing to say once a widget has been picked, so
- * the frame hides both and gives the whole sheet to the choice.
- */
-.sbd-card-picker.is-choosing-size .sbd-picker-rail,
-.sbd-card-picker.is-choosing-size .sbd-picker-search {
-	display: none;
-}
-
-.sbd-card-picker.is-choosing-size .sbd-picker-body {
-	border-top: none;
-}
-
-.sbd-size-step {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 18px;
-	padding: 4px 4px 8px;
-}
-
-.sbd-size-back {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 7px 14px 7px 10px;
-	border-radius: 12px;
-	border: none;
-	background: var(--sbd-panel-tier-fill-quiet);
-	color: var(--text-muted);
-	font-size: 0.875rem;
-	cursor: pointer;
-	box-shadow: none;
-}
-
-.sbd-size-back:hover {
-	background: var(--sbd-panel-tier-fill);
-	color: var(--text-normal);
-}
-
-.sbd-size-back-icon {
-	display: flex;
-}
-
-.sbd-size-back-icon .svg-icon {
-	width: 15px;
-	height: 15px;
-}
-
-.sbd-size-heading {
-	font-size: 1.25rem;
-	font-weight: 700;
-	color: var(--text-normal);
-}
-
-/* The four options in a row, each as wide as it needs to be. Bottom-aligned,
- * so the previews sit on one baseline and step UP in height the way the
- * reference's own row of four tiles does. */
-.sbd-size-options {
-	display: flex;
-	align-items: flex-end;
-	gap: 18px;
-	width: 100%;
-	flex-wrap: wrap;
-}
-
-.sbd-size-option {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 10px;
-	flex: 1 1 0;
-	min-width: 108px;
-	padding: 14px 12px 12px;
-	border-radius: 18px;
-	border: 1px solid transparent;
-	background: none;
-	cursor: pointer;
-	box-shadow: none;
-}
-
-.sbd-size-option:hover {
-	background: var(--sbd-panel-tier-fill-quiet);
-}
-
-.sbd-size-option.is-active {
-	background: var(--sbd-panel-tier-fill);
-	border-color: var(--interactive-accent);
-}
-
-/* The preview frame reserves the tallest option's height so the row doesn't
- * jump as the previews change shape; the preview itself is drawn at the
- * size's true aspect ratio and true relative width (set inline). */
-.sbd-size-preview-frame {
-	display: flex;
-	align-items: flex-end;
-	justify-content: center;
-	width: 100%;
-	height: 92px;
-}
-
-.sbd-size-preview {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	max-height: 100%;
-	/* The widget material, at the picker's smaller scale: the reference's
-	 * white-10% glass under its white-42% rim. */
-	background: rgba(255, 255, 255, 0.1);
-	border: 1px solid var(--background-modifier-border);
-	color: var(--text-muted);
-}
-
-.sbd-size-option.is-active .sbd-size-preview {
-	background: var(--sbd-panel-tier-fill);
-	color: var(--text-normal);
-}
-
-.sbd-size-preview-icon {
-	display: flex;
-}
-
-.sbd-size-preview-icon .svg-icon {
-	width: 18px;
-	height: 18px;
-}
-
-.sbd-size-name {
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: var(--text-normal);
-}
-
-.sbd-size-cells {
-	font-family: var(--sbd-font-mono);
-	font-size: 0.75rem;
-	color: var(--text-muted);
-}
-
-/* Said once, here, because it is the one thing about the choice that can't be
- * undone later. */
-.sbd-size-note {
-	font-size: 0.8125rem;
-	color: var(--text-muted);
-	line-height: 1.5;
-}
-
-.sbd-size-add {
-	align-self: flex-end;
-	padding: 11px 22px;
-	border-radius: 20px;
-	font-size: 0.9375rem;
-	font-weight: 600;
-	cursor: pointer;
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
 }
 
 /* The settings modal's read-only statement of a placed widget's size. */
@@ -12450,6 +12157,15 @@ body.sbd-dv-resizing {
 	margin-top: 22px;
 }
 
+/* Said once, at the top of the catalogue: the size chips below are a
+ * decision, not a preview. */
+.sbd-picker-hint {
+	margin: 0 0 14px;
+	font-size: var(--font-ui-smaller);
+	color: var(--sbd-ink-muted);
+	line-height: 1.45;
+}
+
 /* auto-fill, not auto-fit: a category with one card (Fun) keeps a card-sized
    tile instead of stretching it across the whole row. */
 .sbd-picker-grid {
@@ -12482,26 +12198,22 @@ body.sbd-dv-resizing {
 	padding: 14px 16px;
 	border: 1px solid var(--sbd-tile-border);
 	border-radius: var(--sbd-radius-l);
+	corner-shape: var(--corner-shape, round);
 	background: var(--sbd-tile-fill);
 	box-shadow: none;
 	text-align: left;
-	cursor: pointer;
 	transition: var(--sbd-transition-interactive);
 }
 
-.sbd-card-tile:hover {
+/* The tile is a group now, not a control — the four size chips inside it are
+ * what you press — so it lifts to say "this widget", and does not press in.
+ * :focus-within rather than :focus-visible for the same reason: the focus
+ * lands on a chip, and the tile around it is what tells you which widget that
+ * chip belongs to. */
+.sbd-card-tile:hover,
+.sbd-card-tile:focus-within {
 	background: var(--sbd-tile-fill-hover);
 	border-color: var(--sbd-tile-border-hover);
-}
-
-.sbd-card-tile:active {
-	background: var(--sbd-tile-fill-active);
-	transform: var(--sbd-press-tile);
-}
-
-.sbd-card-tile:focus-visible {
-	outline: 2px solid var(--interactive-accent);
-	outline-offset: 1px;
 }
 
 .sbd-card-tile-icon {
@@ -12567,6 +12279,105 @@ body.sbd-dv-resizing {
 
 .sbd-card-tile.is-unmet .sbd-card-tile-icon {
 	color: var(--text-muted);
+}
+
+/* ---- The four sizes, on the tile ------------------------------------
+ *
+ * Adding a widget is one click: pick the footprint you want it at, here,
+ * instead of clicking the tile, reading a "Choose a size" page and pressing
+ * Add. Each chip draws its size's real footprint — 2×2, 4×2, 4×4, 8×4 at
+ * SIZE_CHIP_UNIT pixels a cell (see cardpicker.ts) — so the row is read by
+ * eye, and a template offering fewer than four sizes simply shows fewer
+ * chips. */
+.sbd-card-tile-sizes {
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-start;
+	gap: 6px;
+	width: 100%;
+	margin-top: 2px;
+	padding-top: 10px;
+	border-top: 1px solid var(--sbd-tile-border);
+}
+
+.sbd-size-chip {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 5px;
+	/* Share the row, but never grow past a chip's own size: SEARCH offers two
+	 * sizes, and two chips stretched across the whole row read as two buttons
+	 * rather than as two of the four footprints. */
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 72px;
+	/* Chips are small and sit four in a row inside a tile inside a grid, so
+	 * the padding is the smallest that still gives a comfortable target. */
+	padding: 7px 4px 5px;
+	border: 1px solid transparent;
+	border-radius: var(--sbd-radius-s);
+	corner-shape: var(--corner-shape, round);
+	background: transparent;
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-size-chip:hover {
+	background: var(--sbd-tile-fill-active);
+	border-color: var(--sbd-tile-border-hover);
+}
+
+.sbd-size-chip:active {
+	transform: var(--sbd-press-tile);
+}
+
+.sbd-size-chip:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
+}
+
+/* The frame reserves the widest and tallest footprint in the row (set
+ * inline), so the four boxes sit on one baseline and step up in size rather
+ * than each centring in its own box. */
+.sbd-size-chip-frame {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	flex: none;
+	max-width: 100%;
+}
+
+.sbd-size-chip-box {
+	border: 1px solid var(--sbd-ink-faint);
+	border-radius: 2px;
+	background: var(--sbd-tile-fill-hover);
+	transition: var(--sbd-transition-interactive);
+}
+
+.sbd-size-chip:hover .sbd-size-chip-box {
+	border-color: var(--sbd-ink);
+	background: var(--sbd-ink-faint);
+}
+
+.sbd-size-chip-label {
+	font-family: var(--sbd-font-mono);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: var(--sbd-label-tracking-tight);
+	color: var(--sbd-ink-muted);
+	line-height: 1;
+}
+
+.sbd-size-chip:hover .sbd-size-chip-label {
+	color: var(--sbd-ink);
+}
+
+/* A widget whose plugin is missing can still be added — the card explains
+ * itself in place — so its chips stay live and only recede. */
+.sbd-card-tile.is-unmet .sbd-size-chip-box {
+	border-color: var(--sbd-ink-label);
 }
 
 /* ---- Empty result & the footer prompt ---- */
@@ -13362,7 +13173,10 @@ body.sbd-dv-resizing {
 	display: flex;
 	align-items: center;
 	gap: 7px;
-	flex: none;
+	/* Shrinkable, not `flex: none`: it holds a course name now, and a long
+	 * one must give way to the header's own title rather than push it out. */
+	flex: 0 1 auto;
+	min-width: 0;
 	padding: 6px 10px;
 	border-radius: var(--sbd-radius-s);
 	background: rgba(255, 255, 255, 0.22);
@@ -13391,11 +13205,18 @@ body.sbd-dv-resizing {
 	background: rgba(255, 255, 255, 0.4);
 }
 
+/* The pill now carries the course's own name, which can be anything, so it
+ * truncates rather than pushing the header's title column out of the card.
+ * 18 characters is where a name stops reading as a label and starts reading
+ * as a sentence; past it the full name is still in the tooltip. */
 .sbd-course-switch-label {
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: rgba(255, 255, 255, 0.92);
 	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 18ch;
 }
 
 .sbd-course-switch-icon {
@@ -13443,8 +13264,42 @@ body.sbd-dv-resizing {
 	text-shadow: none;
 }
 
+/* The glass pane is SMOKED, not frosted.
+ *
+ * The reference alternates a white sheet with a white-18% panel, and on the
+ * artboard's dark wallpaper that panel is a dark grey carrying white text. On
+ * a light wallpaper it is not: white at 18% over a white-10% card over a
+ * backdrop dimmed 35% lands around #c4c4c4, and white text on that measures
+ * about 1.6:1 — the column simply cannot be read, which is what a pale
+ * wallpaper actually does to this card.
+ *
+ * Tinting the panel DOWN instead of up keeps the alternation the reference is
+ * after (a light column, then a dark one) and makes it hold on any wallpaper:
+ * black at 42% over the same stack is around #626262, where white text
+ * measures 5.4:1. This is the one place the board tints a surface dark, and
+ * the reason is contrast rather than taste. */
 .sbd-course-pane.is-glass {
-	background: rgba(255, 255, 255, 0.18);
+	background: rgba(0, 0, 0, 0.42);
+}
+
+/* The secondary tiers inside it are raised to match: white at 55% on the old
+ * pale panel was already the weakest thing on the card, and on the smoked one
+ * there is room to bring them up rather than leave the date and the empty
+ * line fainter than they need to be. */
+.sbd-course-pane.is-glass .sbd-list-age {
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.sbd-course-pane.is-glass .sbd-course-code {
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-course-pane.is-glass .sbd-course-none {
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.sbd-course-pane.is-glass .sbd-card-eyebrow {
+	color: rgba(255, 255, 255, 0.88);
 }
 
 /* Rows inside a sheet pane sit directly on the white, so the shared
@@ -13485,6 +13340,40 @@ body.sbd-dv-resizing {
 	flex-direction: column;
 	gap: 1px;
 	flex: 1;
+	min-width: 0;
+}
+
+/* The topic gets the pane's full width and up to two lines of it. A course
+ * column is a quarter of an extra large card, so a good many real topics
+ * ("Lecture 1 — Foundations") are wider than it; clipping them to an
+ * ellipsis threw away the words that tell them apart while the pane sat
+ * half empty below. Two lines, then the ellipsis. */
+.sbd-course-pane .sbd-list-label {
+	white-space: normal;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	line-height: 1.25;
+}
+
+/* The row's two short facts — its code and when it falls — on one line under
+ * the topic (see `pane` in cards/course.ts for why they moved off the
+ * topic's own line). They wrap rather than truncate: both are short, and a
+ * clipped date is worse than a second line. */
+.sbd-course-rowmeta {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 2px 8px;
+	min-width: 0;
+}
+
+/* The date is no longer a right-aligned column of its own, so it must not
+ * keep the `flex: none` that made it one. */
+.sbd-course-rowmeta .sbd-list-age {
+	flex: 0 1 auto;
 	min-width: 0;
 }
 
