@@ -15,6 +15,20 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Fixed
 
+- **A short widget can no longer hide its own top rows.** The small and medium
+  tiles centre what they hold, and they also clip — so a widget whose content
+  ran over lost half the overflow off the *top* edge, where no amount of
+  scrolling could reach it. The sync widget at medium was 27px over and dropped
+  its own "Sync to inbox" title off the top while dropping its tray line off the
+  bottom, leaving a tile that named neither itself nor its folder's depth.
+  Centring is now `safe`, so it gives way to top-alignment the moment content
+  overflows and anything cut is at least cut where you can see it. The sync
+  widget also stops drawing its tray line at medium, which is the 27px: a
+  338×158 tile holds its header and its three feeds and nothing more, and the
+  header's chip already names the folder. Large and extra large are unchanged,
+  and the unsorted widget — whose header is one line, not three — keeps its tray
+  line at every size it had it.
+
 - **An update can no longer cost you your dashboard.** Two paths could throw
   away a board that `data.json` still held. One bad widget — a save interrupted
   part-way, a beta that wrote a size this build doesn't know, one hand-edited

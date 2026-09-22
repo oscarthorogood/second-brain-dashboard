@@ -52,8 +52,9 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * Reference (Widget Set v2 → SYNC), with the destination added at each size:
  * small is three status dots, a refresh and the inbox's depth as its one
  * figure; medium three tiles under the destination chip; large three sheet
- * rows; extra large three sheet columns carrying the event counts. Every size
- * but small closes with the tray line.
+ * rows; extra large three sheet columns carrying the event counts. Large and
+ * extra large close with the tray line; medium has no room for it and names the
+ * folder in its header chip instead.
  */
 
 /** The three feeds, in the order every size draws them. */
@@ -186,10 +187,19 @@ function paintCalSync(
 			break;
 	}
 
-	// The tray line is drawn at every size but small, empty or not: this card's
+	// The tray line is drawn at large and extra large, empty or not: this card's
 	// whole job is moving events into one folder, so the folder's name and depth
 	// are the result, not an exception worth surfacing only when it goes wrong.
-	if (card.size !== "small") trayLine(view, body);
+	//
+	// Not at medium, where it does not fit. A 338×158 tile holds this card's
+	// header and its three feed tiles and nothing else — measured, the tray line
+	// ran 27px past the bottom edge — and a clipped status line is worse than an
+	// absent one, because the folder's name is still half-drawn under the rim.
+	// The destination chip in the header names the same folder at that size; what
+	// is lost is the count, which large is one drag away. (The unsorted card's
+	// own tray line does fit at medium, so it keeps it — its header is one line,
+	// not three.)
+	if (card.size === "large" || card.size === "xlarge") trayLine(view, body);
 }
 
 /** Where the events went, and how many are still sitting there. */

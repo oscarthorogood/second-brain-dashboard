@@ -2010,10 +2010,21 @@ body.theme-dark {
 /* The two short tiles hold one or two rows in 158px of height, so the
  * reference centres them rather than letting them sit against the top edge
  * with a band of empty glass beneath (`justify-content:center` on both the
- * S and M tile of RECENT, LEAF, BOOKMARKS, FAVORITES, TEXT and the rest). */
+ * S and M tile of RECENT, LEAF, BOOKMARKS, FAVORITES, TEXT and the rest).
+ *
+ * `safe`, because the body also clips (`overflow: hidden`). A plain `center`
+ * splits any overflow between BOTH edges, and the half above the box is
+ * unreachable — there is no scroll position that reveals it. A widget whose
+ * content ran over therefore lost its top rows silently: the sync widget at
+ * this size overflowed by 27px and dropped its own title off the top edge
+ * while also dropping its tray line off the bottom. `safe center` centres
+ * while the content fits and falls back to flex-start the moment it doesn't,
+ * so overflow can only ever run off the bottom, where it is at least visible
+ * as something cut off. It does not make more room — a widget that overflows
+ * still needs to show less (see `bySize`) — it makes the overflow honest. */
 .sbd-card.is-size-small > .sbd-card-body,
 .sbd-card.is-size-medium > .sbd-card-body {
-	justify-content: center;
+	justify-content: safe center;
 }
 
 /* A medium tile drops the eyebrow: at 338×158 the two rows it can show are
