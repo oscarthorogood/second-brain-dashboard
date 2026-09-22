@@ -7,7 +7,7 @@ import {
 	skyGroupCode,
 } from "./sky";
 import type { HomeView } from "./view";
-import { type BackgroundConfig, effectiveBackground, effectiveMaxWidth } from "./types";
+import { type BackgroundConfig, contentWidthIsFull, effectiveBackground, effectiveMaxWidth } from "./types";
 import { cachedWeather, loadWeather, type WeatherRequest } from "./weather";
 
 /**
@@ -69,7 +69,9 @@ export function renderBanner(
 	// Full width means "as wide as the pane"; otherwise the banner lines up with
 	// the content column, which is the same max-width `.sbd-inner` uses.
 	banner.toggleClass("is-full-width", bg.bannerFullWidth);
-	if (!bg.bannerFullWidth) {
+	// A content column with no cap leaves the banner none either, or the strip
+	// would stop short of the board it sits above.
+	if (!bg.bannerFullWidth && !contentWidthIsFull(view.plugin.settings)) {
 		banner.style.maxWidth = `${effectiveMaxWidth(view.plugin.settings)}px`;
 	}
 

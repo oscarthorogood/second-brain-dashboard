@@ -43,6 +43,17 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **The board can fill the window.** Content width stopped at 1600px — which was
+  also its default, so on any wider display everything past 1600px was side
+  margin and no setting could close it: the ceiling *was* the value. The slider
+  now runs to 2600, and its top position drops the cap entirely so the board
+  takes the whole pane, leaving only the small gutter at each edge. The board is
+  a fixed 16-column page, so a wider column is also a larger cell: widgets are
+  drawn bigger to match, and Widget size dials them back without bringing the
+  margins with them. The setting now says which of the two it is doing. Nothing
+  moves on upgrade — 1600 is a mid-range value now rather than the end stop, and
+  still means 1600px.
+
 - **Both menus wear the settings window's own colours.** The settings index and
   the add-card picker's rail drew flat monochrome glyphs beside Obsidian's own
   tinted ones, which read as a different app bolted into the window. Every row

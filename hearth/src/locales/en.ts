@@ -611,7 +611,15 @@ export const en = {
 			newNoteButtonModeNewNote: "New note",
 			newNoteButtonModeSearchOnline: "Search online",
 			contentWidth: "Content width",
-			contentWidthDesc: "Maximum width of the home content, in pixels.",
+			contentWidthDesc: (px: number) =>
+				`How wide the board is allowed to get: ${px}px. The board is a fixed 16-column ` +
+				"page, so this also sets how large the widgets are drawn — a wider column fits " +
+				"the same sixteen columns at a larger cell. Drag it all the way up to fill the " +
+				"window.",
+			contentWidthFull:
+				"Full width — the board fills the window, leaving only a small gutter at each " +
+				"edge. Widgets are drawn as large as that allows; use Widget size below to dial " +
+				"them back down without bringing the margins back.",
 		},
 		lowPower: {
 			enable: "Low power mode",

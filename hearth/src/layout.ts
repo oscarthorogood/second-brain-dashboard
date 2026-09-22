@@ -39,6 +39,8 @@ import {
 	type TasksConfig,
 	CARD_BORDER_WIDTH_MAX,
 	clampBannerHeight,
+	CONTENT_WIDTH_MAX,
+	CONTENT_WIDTH_MIN,
 	clampWidgetScale,
 } from "./types";
 import { CARD_KINDS } from "./cards";
@@ -92,7 +94,7 @@ export interface LayoutExport {
 /** Value ranges enforced on import so a malformed/hostile layout can't set
  * values the settings UI could never produce. Mirror the sliders in settings. */
 const RANGE = {
-	maxWidth: { min: 700, max: 1600 },
+	maxWidth: { min: CONTENT_WIDTH_MIN, max: CONTENT_WIDTH_MAX },
 	cardBlur: { min: 0, max: 24 },
 	cardRadius: { min: 0, max: 14 },
 	cardBorderWidth: { min: 0, max: CARD_BORDER_WIDTH_MAX },

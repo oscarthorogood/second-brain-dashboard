@@ -2112,7 +2112,38 @@ export function effectiveHeaderSpacingBelow(_s: HomeSettings): number | undefine
 	return undefined;
 }
 
-/** Effective content max-width for the board. */
+/**
+ * The content column's slider bounds.
+ *
+ * The maximum is not a width anybody wants applied literally — it is the
+ * "fill the pane" position. The slider used to stop at 1600, which is narrower
+ * than a great many displays, so on a wide window everything past 1600px became
+ * side margin and there was no setting that could close it: the ceiling *was*
+ * the default. Past {@link CONTENT_WIDTH_MAX} the cap is dropped entirely and
+ * the board takes whatever the pane gives it.
+ *
+ * Raising the ceiling is deliberately not a change of default. A vault that
+ * has never touched this keeps its 1600, which is now a mid-range value rather
+ * than the end stop, so no existing board moves on upgrade — the user opts into
+ * a wider one.
+ */
+export const CONTENT_WIDTH_MIN = 700;
+export const CONTENT_WIDTH_MAX = 2600;
+
+/**
+ * Whether the board ignores the cap and uses the pane's full width.
+ *
+ * `>=`, not `===`: a settings file written by hand, or by a future build with a
+ * higher ceiling, must not fall back to a *narrower* board than it asked for.
+ */
+export function contentWidthIsFull(s: HomeSettings): boolean {
+	return s.maxWidth >= CONTENT_WIDTH_MAX;
+}
+
+/** Effective content max-width for the board, in pixels. Only meaningful when
+ * {@link contentWidthIsFull} is false — at the top of the range the column
+ * carries no max-width at all, and this is merely the seed the first fit uses
+ * before the pane has been measured. */
 export function effectiveMaxWidth(s: HomeSettings): number {
 	return s.maxWidth;
 }

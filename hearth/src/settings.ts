@@ -7,7 +7,7 @@ import { glyphTile, type TileTint } from "./glyphtile";
 import { addIconPicker } from "./lucide";
 import { CommandPickerModal, FolderPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, CONTENT_WIDTH_MAX, CONTENT_WIDTH_MIN, contentWidthIsFull, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
 import { INBOX_FOLDER, UNSORTED_FOLDER } from "./vaultfiling";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
@@ -668,15 +668,23 @@ export class HomeSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const width = new Setting(containerEl)
-			.setName(t().settings.appearance.contentWidth)
-			.setDesc(t().settings.appearance.contentWidthDesc);
+		const width = new Setting(containerEl).setName(t().settings.appearance.contentWidth);
+		// The description carries the current value, because the slider's own
+		// dynamic tooltip can only show the raw number — and at the top of the
+		// range the number is not what the setting means ("2600" reads as a
+		// literal width; it is "fill the pane").
+		const widthDesc = () =>
+			contentWidthIsFull(s)
+				? t().settings.appearance.contentWidthFull
+				: t().settings.appearance.contentWidthDesc(s.maxWidth);
+		width.setDesc(widthDesc());
 		width.addSlider((sl) => {
-			sl.setLimits(700, 1600, 20)
+			sl.setLimits(CONTENT_WIDTH_MIN, CONTENT_WIDTH_MAX, 20)
 				.setValue(s.maxWidth)
 				.setDynamicTooltip()
 				.onChange(async (v) => {
 					s.maxWidth = v;
+					width.setDesc(widthDesc());
 					await this.save();
 				});
 			this.addSliderReset(width, sl, "maxWidth");
