@@ -3714,14 +3714,26 @@ body.theme-dark {
  * measurements: Widget Set → TASKS draws a 10px column of rows inset
  * 12px 16px with a 12px gutter, and titles them at 15px/500 rather than the
  * 14px/600 a search result takes. */
+/* The reference's 10px gutter and 12x16 inset were measured on a row that
+ * fits on one line. These rows routinely do not: in a narrow tile the chip
+ * group wraps below the title (deliberately — see .sbd-task-metas), which makes
+ * a row half again as tall, and at that height a large tile shows barely two of
+ * the six tasks it draws. Tightening both reclaims roughly a row per tile
+ * without touching the type, which is what carries the reference's look. */
 .sbd-list.is-sheet.sbd-tasks {
-	gap: 10px;
+	gap: 6px;
 }
 
 .sbd-list.is-sheet.sbd-tasks > .sbd-list-item {
 	align-items: center;
-	padding: 12px 16px;
-	gap: 12px;
+	padding: 9px 13px;
+	gap: 10px;
+}
+
+/* A wrapped chip group sits tight under the title rather than a full row-gap
+ * below it: the group is the title's own trailing detail, not a second row. */
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-task-metas {
+	row-gap: 4px;
 }
 
 .sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-list-label,
@@ -8386,6 +8398,26 @@ body.theme-dark {
 .sbd-tasks-wrap > .sbd-kanban {
 	flex: 1;
 	min-height: 0;
+}
+
+/* ...and let the list scroll inside it.
+ *
+ * The card draws up to six tasks at large and ten at extra large, which is
+ * more than either tile's height holds once a row wraps its chips onto a
+ * second line — so the last rows were simply clipped by the body's
+ * `overflow: hidden`, with no way to reach them. The kanban has scrolled per
+ * column since it was written; list mode was the one layout whose overflow had
+ * nowhere to go.
+ *
+ * `auto`, not `scroll`, so a list that fits shows no track at all — and the
+ * scrollbar is left visible rather than hidden (as the RSS tab strip and the
+ * weather hours hide theirs), because here it is the only thing saying there
+ * are more tasks below. The inline-end padding keeps a row's chips from
+ * sitting under it. */
+.sbd-tasks-wrap > .sbd-list {
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-inline-end: 4px;
 }
 
 /* The "new task" button floats over the board's top-right corner so it never

@@ -15,6 +15,17 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Fixed
 
+- **The tasks widget scrolls, and its rows are shorter.** A tasks widget draws
+  up to six tasks at large and ten at extra large — more than either tile holds
+  — and the surplus was simply clipped, with no way to reach it. The Kanban
+  layout has scrolled per column since it was written; the list was the one
+  layout whose overflow had nowhere to go. It scrolls now. Rows also lost some
+  padding and gutter: 66px to 58px each, which is one more task on screen before
+  you have to scroll, and the type is untouched. If rows still feel tall, they
+  are wrapping their chips onto a second line — show fewer fields per task
+  (Settings → Integrations → Fields shown on a task, or the card's own settings)
+  and the row goes back to one line.
+
 - **A short widget can no longer hide its own top rows.** The small and medium
   tiles centre what they hold, and they also clip — so a widget whose content
   ran over lost half the overflow off the *top* edge, where no amount of
