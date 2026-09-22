@@ -13,7 +13,29 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ## [2.1.0]
 
+### Fixed
+
+- **An update can no longer cost you your dashboard.** Two paths could throw
+  away a board that `data.json` still held. One bad widget — a save interrupted
+  part-way, a beta that wrote a size this build doesn't know, one hand-edited
+  entry — used to empty the *whole* board on load, silently; now only that
+  widget is dropped. And a `data.json` that is on disk but can't be read (its
+  files replaced under a running app, a sync client mid-write, a truncated file
+  from an earlier crash) used to look exactly like a fresh install: Second Brain
+  Dashboard would seed the starter board and the next autosave would put it over
+  the real file. It now tells the two apart by asking the vault whether the file
+  is there, and when it is, refuses every write for the session and says so, so
+  the file survives untouched and a reload picks it back up.
+
 ### Changed
+
+- **Both menus wear the settings window's own colours.** The settings index and
+  the add-card picker's rail drew flat monochrome glyphs beside Obsidian's own
+  tinted ones, which read as a different app bolted into the window. Every row
+  in both now carries the same tinted rounded-square tile Obsidian gives its own
+  settings list, and the picker's rail is grouped into inset boxes with hairline
+  separators and a "Categories" label to match. The tints are the theme's own
+  `--color-*` hues, so a theme that retunes them retunes these too.
 
 - **Claude's two trays are set up once, in settings, not on every widget.**
   Where the inbox and unsorted folders are, how far ahead and back the calendar

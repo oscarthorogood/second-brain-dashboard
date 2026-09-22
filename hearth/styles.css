@@ -3141,22 +3141,71 @@ body.theme-dark {
 	background: var(--background-modifier-hover);
 }
 
-.sbd-settings-index-glyph {
+/* ---- The tinted glyph tile ------------------------------------------
+   Obsidian 1.13 draws every row of its own settings list as a coloured
+   rounded square with a white glyph, and Cupertino leans the whole window on
+   that shape. A plugin's pane renders inside that same window, so a
+   monochrome glyph beside a native tinted one reads as a different app.
+
+   Shared by the settings index and the add-card rail (see glyphtile.ts), so
+   the two menus are the same menu in two places.
+
+   Every fill is one of the eight --color-* hues Obsidian defines and a theme
+   retunes, darkened a touch so a white glyph clears AA on the light ones
+   (--color-yellow and --color-orange are bright enough to fail undarkened).
+   The fallbacks are for a theme that drops a hue entirely. */
+
+.sbd-glyph-tile {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	width: 30px;
-	height: 30px;
-	border-radius: var(--radius-s, 10px);
+	width: 29px;
+	height: 29px;
+	border-radius: 8px;
 	corner-shape: var(--corner-shape, round);
-	background: var(--background-modifier-border);
-	color: var(--text-normal);
+	/* Named --sbd-glyph-fill, not --sbd-tile-fill: the latter is already a
+	   :root token for the picker's translucent catalogue chips, and a custom
+	   property set here would cascade into anything nested inside. */
+	background: var(--sbd-glyph-fill);
+	/* Not --text-on-accent: that follows the accent's own contrast, which has
+	   nothing to do with these eight fills. */
+	color: #fff;
+	/* The top-edge sheen Obsidian's tiles carry. Inset so it never bleeds past
+	   the corner radius. */
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
 }
 
-.sbd-settings-index-glyph .svg-icon {
+.sbd-glyph-tile .svg-icon {
 	width: 16px;
 	height: 16px;
+	color: #fff;
+	stroke-width: 2.1px;
+}
+
+.sbd-glyph-tile.is-grey {
+	--sbd-glyph-fill: color-mix(in srgb, var(--text-muted) 78%, var(--background-secondary));
+}
+.sbd-glyph-tile.is-red {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-red, #e5534b) 90%, #000);
+}
+.sbd-glyph-tile.is-orange {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-orange, #d2812a) 84%, #000);
+}
+.sbd-glyph-tile.is-green {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-green, #3aa657) 84%, #000);
+}
+.sbd-glyph-tile.is-cyan {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-cyan, #27a5b4) 86%, #000);
+}
+.sbd-glyph-tile.is-blue {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-blue, #3a7bd5) 92%, #000);
+}
+.sbd-glyph-tile.is-purple {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-purple, #9065d0) 92%, #000);
+}
+.sbd-glyph-tile.is-pink {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-pink, #d44c85) 90%, #000);
 }
 
 .sbd-settings-index-rowtext {
@@ -3219,7 +3268,13 @@ body.theme-dark {
 }
 
 .sbd-settings-page-title {
+	display: flex;
+	align-items: center;
+	gap: 11px;
 	padding: 10px 4px 0;
+}
+
+.sbd-settings-page-titletext {
 	font-size: var(--font-ui-larger);
 	font-weight: 600;
 	color: var(--text-normal);
@@ -12147,9 +12202,11 @@ body.sbd-dv-resizing {
 	justify-content: flex-start;
 	gap: 11px;
 	width: 100%;
-	padding: 10px 12px;
+	padding: 9px 12px;
 	border: none;
-	border-radius: var(--sbd-radius-s);
+	/* Square: the group box owns the radius, so a row's own corners would
+	   round *inside* it and leave four notches down each edge. */
+	border-radius: 0;
 	background: transparent;
 	box-shadow: none;
 	/* Darker than the panel's --text-muted: in the reference an unselected
@@ -12186,26 +12243,50 @@ body.sbd-dv-resizing {
 	background: var(--sbd-rail-fill-active);
 }
 
-.sbd-picker-rail-icon {
-	display: inline-flex;
-	flex: none;
-}
-
-.sbd-picker-rail-icon .svg-icon {
-	width: 16px;
-	height: 16px;
-}
-
 .sbd-picker-rail-label {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.sbd-picker-rail-sep {
-	height: 1px;
-	margin: 10px 10px;
-	background: var(--sbd-panel-divider);
+/* The heading over a group of rail rows — "Categories", the way the settings
+   window labels the groups in its own list. Same treatment as the settings
+   index's group label, so the two menus share a voice. */
+.sbd-picker-rail-label-group {
+	padding: 14px 10px 6px;
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: var(--sbd-label-tracking);
+	color: var(--text-faint);
+}
+
+.sbd-picker-rail-label-group:first-child {
+	padding-top: 0;
+}
+
+/* One inset box of rows. Rows round with the box rather than each carrying
+   its own radius, which is what makes a group read as one list instead of a
+   stack of separate buttons — Obsidian's settings list, and the screenshot's
+   sidebar, both do this. */
+.sbd-picker-rail-group {
+	/* The sheet's own translucent vocabulary, not the settings window's opaque
+	   grouped fill: this box floats on a frosted panel, and an opaque one would
+	   punch a flat rectangle through the blur. */
+	background: var(--sbd-tile-fill);
+	border: 1px solid var(--sbd-tile-border);
+	border-radius: var(--sbd-radius-m);
+	corner-shape: var(--corner-shape, round);
+	overflow: hidden;
+}
+
+.sbd-picker-rail-group + .sbd-picker-rail-group {
+	margin-top: 14px;
+}
+
+.sbd-picker-rail-btn + .sbd-picker-rail-btn {
+	border-top: 1px solid var(--sbd-panel-divider);
 }
 
 .sbd-picker-rail-btn.is-request {
@@ -12583,6 +12664,23 @@ body.sbd-dv-resizing {
 		border-bottom: 1px solid var(--background-modifier-border);
 	}
 
+	/* The rail is a horizontal strip of pills at this width, so each row goes
+	   back to carrying its own border and radius and the group box stands
+	   down to a plain flex run. */
+	.sbd-picker-rail-group {
+		display: flex;
+		gap: 6px;
+		background: none;
+		border: none;
+		border-radius: 0;
+		overflow: visible;
+	}
+
+	.sbd-picker-rail-group + .sbd-picker-rail-group {
+		margin-top: 0;
+		margin-left: 6px;
+	}
+
 	.sbd-picker-rail-btn {
 		width: auto;
 		flex: none;
@@ -12591,8 +12689,28 @@ body.sbd-dv-resizing {
 		white-space: nowrap;
 	}
 
-	.sbd-picker-rail-sep {
+	.sbd-picker-rail-btn + .sbd-picker-rail-btn {
+		border-top: 1px solid var(--background-modifier-border);
+	}
+
+	/* The label would break the strip onto a second line, and the pills name
+	   their own categories anyway. */
+	.sbd-picker-rail-label-group {
 		display: none;
+	}
+
+	/* A 29px tile in a pill makes the strip two rows tall; at this width the
+	   glyph carries the meaning on its own. */
+	.sbd-glyph-tile {
+		width: 20px;
+		height: 20px;
+		border-radius: 6px;
+		box-shadow: none;
+	}
+
+	.sbd-glyph-tile .svg-icon {
+		width: 13px;
+		height: 13px;
 	}
 
 	.sbd-picker-grid {

@@ -63,6 +63,10 @@ export const en = {
 			`Second Brain Dashboard: couldn't write ${n} ${n === 1 ? "event" : "events"} to ${folder} — check the vault has room to write, then refresh.`,
 		calsyncForgotten: (folder: string) =>
 			`Second Brain Dashboard: synced events forgotten — the next refresh will write them to ${folder} again.`,
+		settingsUnreadable:
+			"Second Brain Dashboard: your settings file couldn't be read, so your dashboard and settings " +
+			"are not loaded. Nothing has been changed and nothing will be saved over it — reload Obsidian " +
+			"to try again. If this keeps happening, check data.json in the plugin's folder.",
 		taskNotesCreateFailed: "Second Brain Dashboard: couldn't run TaskNotes: Create new task.",
 		taskChangedOnDisk: "Second Brain Dashboard: that task changed on disk — refreshed.",
 		couldNotOpenTaskNote: "Second Brain Dashboard: couldn't open that task's note.",
@@ -3046,6 +3050,9 @@ export const en = {
 		title: "Add a card",
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
+		/** The heading over the rail's category rows, the way the settings
+		 * window labels the groups in its own list. */
+		categoriesLabel: "Categories",
 		noMatches: "No card matches that.",
 		/** The row of size chips on every card tile: which of the four fixed
 		 * sizes the widget is added at. */

@@ -2001,6 +2001,40 @@ export function activeCards(s: HomeSettings): DashboardCard[] {
 }
 
 /**
+ * What a read of `data.json` actually produced.
+ *
+ * `loadData()` answers `null` both for "this vault has no settings yet" and for
+ * "this vault's settings are there and I could not read them", and those two
+ * need opposite handling: the first is a fresh install and should be given the
+ * starter board, the second must not be touched at all. A plugin update is
+ * exactly when the second happens — the plugin folder's files are replaced
+ * under a running app (BRAT does this on every beta), a sync client is part-way
+ * through writing, or a previous crash left the file truncated — so reading it
+ * as the first hands the user a starter board and then saves that over the one
+ * they had.
+ *
+ * `fileExists` is the vault's own answer about the file, which is what tells
+ * them apart. Pure so the decision can be tested without a running plugin; the
+ * caller in `main.ts` supplies the three inputs.
+ */
+export function settingsAreReadable(
+	loaded: unknown,
+	threw: boolean,
+	fileExists: boolean,
+): boolean {
+	// A parse that threw is unreadable whatever else is true.
+	if (threw) return false;
+	// An array parsed fine but is not settings; so is a string or a number. Only
+	// a plain object can be read.
+	if (loaded && typeof loaded === "object" && !Array.isArray(loaded)) return true;
+	// Nothing usable came back: readable only if there is genuinely no file to
+	// have read. "Can't tell" is resolved as "the file is there" by the caller,
+	// because the cost of that is a refused write the user is told about, and the
+	// cost of the other way round is their dashboard.
+	return !fileExists;
+}
+
+/**
  * Whether a stored widget carries a valid fixed size.
  *
  * The one thing that tells a board saved on the fixed grid apart from one
@@ -2323,10 +2357,20 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	// fx/fy/fw/fh) and no size at all. There is no honest conversion: a widget
 	// dragged to 37% of the board width and 512px tall is not any of the four
 	// footprints, and guessing one for every widget would rearrange the board
-	// into something nobody chose. Such a board is therefore dropped and the
-	// user starts fresh — which is what the four sizes are for.
-	if (Array.isArray(s.cards) && s.cards.some((card) => !isWidgetSized(card))) {
-		s.cards = [];
+	// into something nobody chose. Such a widget is therefore dropped — which is
+	// what the four sizes are for.
+	//
+	// Dropped one at a time, not as a board. This used to empty `cards` outright
+	// the moment *any* one card failed the check, which is a fine reading of a
+	// pre-fixed-grid board (where none of them carry a size) and a catastrophic
+	// one of everything else: a single half-written card — a sync interrupted
+	// mid-save, a beta that wrote a size this build doesn't know, one
+	// hand-edited entry — took every other widget on the board with it, on load,
+	// silently. Per-card is the same outcome for the board this was written for
+	// and a survivable one for every other case.
+	if (Array.isArray(s.cards)) {
+		const sized = s.cards.filter((card) => isWidgetSized(card));
+		if (sized.length !== s.cards.length) s.cards = sized;
 	}
 	s.widgetScale = clampWidgetScale(s.widgetScale);
 	if (typeof s.cardOpacity !== "number") s.cardOpacity = 0.5;

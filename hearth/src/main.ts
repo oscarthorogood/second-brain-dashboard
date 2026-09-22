@@ -1,6 +1,6 @@
-import { addIcon, apiVersion, debounce, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
+import { addIcon, apiVersion, debounce, normalizePath, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
 import { HomeView, VIEW_TYPE_HOME } from "./view";
-import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings } from "./types";
+import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings, settingsAreReadable } from "./types";
 import { HomeSettingTab } from "./settings";
 import {
 	SBD_ICON_ID,
@@ -26,6 +26,18 @@ export default class SbdPlugin extends Plugin {
 	 * as opposed to an existing vault that simply predates a given setting.
 	 * Used so the "What's new" dialog greets upgraders but not first-timers. */
 	isFirstRun = false;
+	/**
+	 * True when this load could not read an existing `data.json`, so nothing may
+	 * be written back over it.
+	 *
+	 * Starts false: the guard exists to protect a file we know is there and
+	 * couldn't read, and until `loadSettings` has looked there is nothing to
+	 * protect. Never cleared during a session — the in-memory settings are the
+	 * defaults plus a starter board, and they never become the right thing to
+	 * write over the user's real file. A reload is the way out, which is what
+	 * the notice says.
+	 */
+	private settingsUnwritable = false;
 	/** The ribbon crystal, kept so the icon can be swapped when the
 	 * themeColorTarget setting changes. */
 	private ribbonEl?: HTMLElement;
@@ -254,7 +266,14 @@ export default class SbdPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		const raw = ((await this.loadData()) ?? {}) as Record<string, unknown>;
+		const { raw, readable } = await this.readSettingsFile();
+		// A data.json that is there but unreadable is the one case where carrying
+		// on normally destroys the vault's setup: everything below would treat it
+		// as a fresh install, seed the starter board, and the next autosave — the
+		// calendar sync writes on every refresh — would put that over the real
+		// file. Refuse to write instead, and say so.
+		this.settingsUnwritable = !readable;
+		if (!readable) new Notice(t().notices.settingsUnreadable, 15_000);
 		// No persisted keys at all => a genuinely fresh install. An existing vault
 		// that merely lacks a newly-added field (like lastSeenVersion) still has
 		// its other settings here, so it is correctly treated as an upgrade.
@@ -275,6 +294,79 @@ export default class SbdPlugin extends Plugin {
 		// retiring the deprecated field. Persist immediately when that happens.
 		const migrated = migrateSettings(this.settings, raw);
 		if (migrated || snapshotted) await this.saveSettings();
+	}
+
+	/**
+	 * Read `data.json`, telling "this vault has none yet" apart from "this vault
+	 * has one and we could not read it".
+	 *
+	 * `loadData()` answers `null` for both, which is the whole problem: a plugin
+	 * update is exactly when the second case happens — the plugin folder's files
+	 * are replaced under a running app (BRAT does this on every beta), a sync
+	 * client is part-way through writing the file, or a previous crash left it
+	 * truncated. Read as "fresh install", that hands the user a starter board and
+	 * then saves it over the one they actually had.
+	 *
+	 * The vault's own file listing is what tells them apart, so this asks it.
+	 * Anything unusable *with* the file present counts as unreadable; a genuinely
+	 * absent file is a fresh install and still gets its starter board.
+	 */
+	private async readSettingsFile(): Promise<{ raw: Record<string, unknown>; readable: boolean }> {
+		let loaded: unknown = null;
+		let threw = false;
+		try {
+			loaded = await this.loadData();
+		} catch {
+			// A corrupt or truncated file: `loadData` parses JSON, so a half-written
+			// one throws rather than returning null.
+			threw = true;
+		}
+		// The file listing is only consulted when the read produced nothing usable,
+		// which is the only case that needs telling apart — an ordinary load never
+		// pays for it.
+		const usable = !threw && loaded && typeof loaded === "object" && !Array.isArray(loaded);
+		const exists = usable ? false : await this.settingsFileExists();
+		if (!settingsAreReadable(loaded, threw, exists)) return { raw: {}, readable: false };
+		return { raw: (usable ? (loaded as Record<string, unknown>) : {}), readable: true };
+	}
+
+	/** Whether this plugin's `data.json` is on disk right now. Defensive: a
+	 * `manifest.dir` Obsidian didn't set, or an adapter that throws, must not
+	 * take the load down — and "we can't tell" is safest read as "it's there",
+	 * which only ever costs a refused write the user is told about. */
+	private async settingsFileExists(): Promise<boolean> {
+		try {
+			const dir = this.manifest.dir;
+			if (!dir) return true;
+			return await this.app.vault.adapter.exists(normalizePath(`${dir}/data.json`));
+		} catch {
+			return true;
+		}
+	}
+
+	/**
+	 * Every write of this plugin's settings, from anywhere.
+	 *
+	 * Overriding `saveData` rather than guarding `saveSettings` is deliberate:
+	 * some twenty call sites across the card modules persist through
+	 * `plugin.saveData(plugin.settings)` directly — a widget's tab, a pet's
+	 * hunger, the calendar sync's index — and any one of them would be enough to
+	 * write a starter board over a real one. One override covers them all, and
+	 * every future one.
+	 *
+	 * The refusal is loud but not repeated: the load already showed a notice, and
+	 * a second one per keystroke of an autosaving widget would be worse than the
+	 * silence it replaced.
+	 */
+	override async saveData(data: unknown): Promise<void> {
+		if (this.settingsUnwritable) {
+			console.warn(
+				"Second Brain Dashboard: refusing to save — this vault's data.json could not be read on load, " +
+					"so saving now would overwrite it. Reload Obsidian to try again.",
+			);
+			return;
+		}
+		return super.saveData(data);
 	}
 
 	/**

@@ -3,6 +3,7 @@ import type SbdPlugin from "./main";
 import { TaskFieldsModal } from "./cards/tasks";
 import { hasFileIconPlugin } from "./fileicons";
 import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
+import { glyphTile, type TileTint } from "./glyphtile";
 import { addIconPicker } from "./lucide";
 import { CommandPickerModal, FolderPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
@@ -62,16 +63,21 @@ const LAYOUT_FILE = "sbd-layout.json";
 const SETTINGS_FILE = "sbd-settings.json";
 
 /** A tab in the settings ribbon: an id (keys `t().settings.tabs`, declared in
- * `integrations.ts` so the catalogue can point at one) and a Lucide icon shown
- * beside the label. */
-const SETTINGS_TABS: { id: SettingsTabId; icon: string }[] = [
-	{ id: "appearance", icon: "palette" },
-	{ id: "search", icon: "search" },
-	{ id: "dashboard", icon: "layout-dashboard" },
-	{ id: "behaviour", icon: "settings-2" },
-	{ id: "integrations", icon: "plug" },
-	{ id: "backup", icon: "archive" },
-	{ id: "about", icon: "info" },
+ * `integrations.ts` so the catalogue can point at one), a Lucide icon shown
+ * beside the label, and the hue its tile wears.
+ *
+ * The hues are chosen the way Obsidian chooses its own — one per row, no two
+ * adjacent rows alike, and the neutral grey reserved for the row that is about
+ * the app rather than a feature (Obsidian gives General its grey; here that is
+ * Behaviour). See `glyphtile.ts` for why these are hue names and not colours. */
+const SETTINGS_TABS: { id: SettingsTabId; icon: string; tint: TileTint }[] = [
+	{ id: "appearance", icon: "palette", tint: "purple" },
+	{ id: "search", icon: "search", tint: "blue" },
+	{ id: "dashboard", icon: "layout-dashboard", tint: "orange" },
+	{ id: "behaviour", icon: "settings-2", tint: "grey" },
+	{ id: "integrations", icon: "plug", tint: "green" },
+	{ id: "backup", icon: "archive", tint: "cyan" },
+	{ id: "about", icon: "info", tint: "pink" },
 ];
 
 /** Where the settings pane currently is: the category index, or one category's
@@ -357,13 +363,16 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * rest of the plugin uses. Obsidian's base `button` style fixes the element's
 	 * height, which a two-line row overflows — its name and description spilled
 	 * straight out of the row's own box. */
-	private indexRow(rowsEl: HTMLElement, entry: { id: SettingsTabId; icon: string }): void {
+	private indexRow(
+		rowsEl: HTMLElement,
+		entry: { id: SettingsTabId; icon: string; tint: TileTint },
+	): void {
 		const s = t().settings;
 		const label = s.tabs[entry.id];
 		const row = rowsEl.createDiv("sbd-settings-index-row");
 		const open = () => this.navigate(entry.id);
 		makeClickable(row, open, label);
-		setIcon(row.createSpan("sbd-settings-index-glyph"), entry.icon);
+		glyphTile(row, entry.icon, entry.tint);
 		const text = row.createDiv("sbd-settings-index-rowtext");
 		text.createDiv({ cls: "sbd-settings-index-rowname", text: label });
 		text.createDiv({ cls: "sbd-settings-index-rowdesc", text: s.tabDescs[entry.id] });
@@ -384,7 +393,12 @@ export class HomeSettingTab extends PluginSettingTab {
 		back.createSpan({ text: this.plugin.manifest.name });
 		back.addEventListener("click", leave);
 
-		containerEl.createDiv({ cls: "sbd-settings-page-title", text: s.tabs[tab] });
+		// The same tile the index row wore, so the page reads as the row you
+		// tapped rather than as somewhere else that happens to share its name.
+		const title = containerEl.createDiv("sbd-settings-page-title");
+		const entry = SETTINGS_TABS.find((e) => e.id === tab);
+		if (entry) glyphTile(title, entry.icon, entry.tint);
+		title.createSpan({ cls: "sbd-settings-page-titletext", text: s.tabs[tab] });
 		containerEl.createDiv({ cls: "sbd-settings-page-desc", text: s.tabDescs[tab] });
 	}
 
