@@ -4,9 +4,10 @@ import { TaskFieldsModal } from "./cards/tasks";
 import { hasFileIconPlugin } from "./fileicons";
 import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
 import { addIconPicker } from "./lucide";
-import { CommandPickerModal } from "./pickers";
+import { CommandPickerModal, FolderPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
+import { INBOX_FOLDER, UNSORTED_FOLDER } from "./vaultfiling";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
 import { isOmnisearchAvailable, OMNISEARCH_PLUGIN_ID } from "./omnisearch";
@@ -428,6 +429,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				this.section(body, s.mobileActions.heading, s.mobileActions.headingDesc, (b) =>
 					this.mobileActionsSection(b),
 				);
+				this.section(body, s.filing.heading, s.filing.headingDesc, (b) => this.filingSection(b));
 				this.section(body, s.sections.privacy, s.sections.privacyDesc, (b) =>
 					this.privacySection(b),
 				);
@@ -1416,6 +1418,137 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * keys its collapsed state. */
 	private integrationSectionTitle(section: IntegrationSectionId): string {
 		return section === "tasks" ? t().settings.tasks.heading : t().settings.fileIcons.heading;
+	}
+
+	// ---- Claude trays -----------------------------------------------------
+
+	/**
+	 * Claude's two trays: where they are, how much calendar the inbox takes, and
+	 * the one button that undoes a sync.
+	 *
+	 * These used to be spread across the two widgets that fill them — the window
+	 * and the re-sync button on every Sync to inbox card, the folders hardcoded —
+	 * which made a board with two sync widgets hold two answers to a question the
+	 * single shared inbox only has one of. They are the filing system's settings,
+	 * not a widget's, so they live here and the widget editors point at them.
+	 */
+	private filingSection(containerEl: HTMLElement): void {
+		const s = this.plugin.settings;
+		const strings = t().settings.filing;
+
+		this.filingFolderRow(
+			containerEl,
+			strings.inboxFolder,
+			strings.inboxFolderDesc,
+			"filingInboxFolder",
+			INBOX_FOLDER,
+		);
+		this.filingFolderRow(
+			containerEl,
+			strings.unsortedFolder,
+			strings.unsortedFolderDesc,
+			"filingUnsortedFolder",
+			UNSORTED_FOLDER,
+		);
+
+		this.filingDaysRow(containerEl, strings.aheadDays, strings.aheadDaysDesc, "filingAheadDays");
+		this.filingDaysRow(containerEl, strings.pastDays, strings.pastDaysDesc, "filingPastDays");
+
+		// A full re-sync is the way out of "I deleted the note and want it back":
+		// the index is what suppresses a second copy, so clearing it is the only
+		// thing that can bring one. Confirmed, because on a drained inbox it
+		// rewrites every event in the window as a fresh unfiled note.
+		new Setting(containerEl)
+			.setName(strings.forget)
+			.setDesc(strings.forgetDesc)
+			.addButton((b) =>
+				b.setButtonText(strings.forgetButton).onClick(() => {
+					confirmAction(this.app, {
+						title: strings.forget,
+						message: strings.forgetConfirm,
+						confirmText: strings.forgetButton,
+						onConfirm: () => {
+							s.calendarSyncSeen = {};
+							void this.save();
+							new Notice(t().notices.calsyncForgotten(effectiveFilingFolders(s).inbox));
+						},
+					});
+				}),
+			);
+	}
+
+	/** One tray's folder: type a path, pick one from the vault, or go back to
+	 * the default. The value is stored as typed and normalised on read (see
+	 * `effectiveFilingFolders`), so a half-typed path never means the tray
+	 * silently moves mid-keystroke. */
+	private filingFolderRow(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		key: "filingInboxFolder" | "filingUnsortedFolder",
+		fallback: string,
+	): void {
+		const s = this.plugin.settings;
+		const strings = t().settings.filing;
+		const row = new Setting(containerEl).setName(name).setDesc(desc);
+		let input: TextComponent | null = null;
+		row.addText((txt) => {
+			input = txt;
+			txt.setPlaceholder(strings.folderPlaceholder)
+				.setValue(s[key])
+				.onChange(async (v) => {
+					s[key] = v;
+					await this.save();
+				});
+		});
+		row.addExtraButton((b) =>
+			b
+				.setIcon("folder-open")
+				.setTooltip(strings.pickFolder)
+				.onClick(() => {
+					new FolderPickerModal(this.app, (folder) => {
+						s[key] = folder.path;
+						input?.setValue(folder.path);
+						void this.save();
+					}).open();
+				}),
+		);
+		row.addExtraButton((b) =>
+			b
+				.setIcon("rotate-ccw")
+				.setTooltip(strings.resetFolder)
+				.onClick(() => {
+					s[key] = fallback;
+					input?.setValue(fallback);
+					void this.save();
+				}),
+		);
+	}
+
+	/** One end of the sync window, in days. */
+	private filingDaysRow(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		key: "filingAheadDays" | "filingPastDays",
+	): void {
+		const s = this.plugin.settings;
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(desc)
+			.addText((txt) => {
+				txt.setValue(String(s[key])).onChange(async (v) => {
+					const n = parseInt(v, 10);
+					// An unparseable or negative entry keeps the stored value rather
+					// than writing a window that would empty the inbox or never end;
+					// the field shows what the user typed until they leave the row.
+					if (!Number.isFinite(n) || n < 0) return;
+					s[key] = n;
+					await this.save();
+				});
+				txt.inputEl.type = "number";
+				txt.inputEl.addClass("sbd-count-input");
+			});
 	}
 
 	// ---- Tasks / TaskNotes ------------------------------------------------

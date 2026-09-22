@@ -349,16 +349,23 @@ export function topicFromTitle(title: string, course: string): string {
 export const CLAUDE_FOLDER = "Claude";
 
 /**
- * The inbox tray: every calendar event the sync card writes.
+ * The inbox tray's default location: every calendar event the sync card writes.
  *
  * One tray per source, not per stage. A calendar event arrives already
  * described — it has a time, a calendar and a summary — so it only ever needs
  * one note, and that note is the item *and* the request to file it.
+ *
+ * A default, not a constant the rest of the plugin reads: the two trays are a
+ * vault-wide choice, so where they actually are lives in settings (see
+ * `effectiveFilingFolders` in `types.ts`) and travels through this module as a
+ * {@link FilingFolders}. This value is only what a vault that has never said
+ * otherwise gets.
  */
 export const INBOX_FOLDER = `${CLAUDE_FOLDER}/inbox`;
 
 /**
- * The unsorted tray: prose and attachments from the detail card.
+ * The unsorted tray's default location: prose and attachments from the detail
+ * card.
  *
  * Separate from the inbox because it is drained differently. An inbox item is
  * a decision about what a thing *is*; an unsorted item usually knows what it
@@ -370,9 +377,59 @@ export const UNSORTED_FOLDER = `${CLAUDE_FOLDER}/unsorted`;
 /** Which tray an item lands in. */
 export type FilingDestination = "inbox" | "unsorted";
 
-/** The folder a destination names. */
-export function destinationFolder(destination: FilingDestination): string {
-	return destination === "inbox" ? INBOX_FOLDER : UNSORTED_FOLDER;
+/**
+ * Where the two trays are in this vault.
+ *
+ * Both cards and every write path take this rather than reading a module
+ * constant, so a vault that keeps its trays somewhere other than `Claude/` —
+ * a different agent folder, a plain `Inbox/` at the root — is configured in
+ * one place instead of being a fork of this file.
+ */
+export interface FilingFolders {
+	inbox: string;
+	unsorted: string;
+}
+
+/** The trays a vault gets until it says otherwise. */
+export const DEFAULT_FILING_FOLDERS: FilingFolders = {
+	inbox: INBOX_FOLDER,
+	unsorted: UNSORTED_FOLDER,
+};
+
+/**
+ * A user-typed folder as a vault path, or the fallback when they typed nothing
+ * usable.
+ *
+ * Leading and trailing slashes, doubled separators and stray whitespace all
+ * come from typing a path by hand or pasting one, and each of them produces a
+ * *different* string for the same folder — which would split a tray in two:
+ * notes written to `Claude/inbox/` and a count read from `/Claude/inbox`. A
+ * path that normalises to nothing falls back rather than writing to the vault
+ * root, since an empty field is a cleared setting, not a request to scatter
+ * filing notes across the vault.
+ */
+export function normalizeFilingFolder(raw: unknown, fallback: string): string {
+	if (typeof raw !== "string") return fallback;
+	const clean = raw
+		.split("/")
+		.map((part) => part.trim())
+		.filter(Boolean)
+		.join("/");
+	return clean || fallback;
+}
+
+/** The folder a destination names, in the vault the folders describe. */
+export function destinationFolder(
+	destination: FilingDestination,
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
+): string {
+	return destination === "inbox" ? folders.inbox : folders.unsorted;
+}
+
+/** Where dropped files wait: a subfolder of the unsorted tray, so an
+ * attachment never sits loose beside the notes that describe it. */
+export function attachmentsFolder(folders: FilingFolders = DEFAULT_FILING_FOLDERS): string {
+	return `${folders.unsorted}/attachments`;
 }
 
 /** Frontmatter flag marking a note as awaiting a filing decision. */
@@ -446,7 +503,11 @@ export function filingNoteFilename(req: FilingRequest, now: Date): string {
  * everything has been filed. The plugin never parses this back; its own state
  * lives in the sync index, which is why the prose can stay prose.
  */
-export function buildFilingNote(req: FilingRequest, now: Date): BuiltFilingNote {
+export function buildFilingNote(
+	req: FilingRequest,
+	now: Date,
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
+): BuiltFilingNote {
 	const details: string[] = [];
 	for (const [label, value] of Object.entries(req.details ?? {})) {
 		if (value != null && String(value).trim()) details.push(`- **${label}:** ${String(value).trim()}`);
@@ -457,7 +518,7 @@ export function buildFilingNote(req: FilingRequest, now: Date): BuiltFilingNote 
 		? `\n\nThe course registry has an exact match for **${req.courseHint}** in this item's text. ` +
 			`Confirm it before using it — it is a lookup, not a decision.`
 		: "";
-	const folder = destinationFolder(req.destination);
+	const folder = destinationFolder(req.destination, folders);
 	const content = (req.content ?? "").trim();
 	const steps = KIND_STEPS[req.kind];
 

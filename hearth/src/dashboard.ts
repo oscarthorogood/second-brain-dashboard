@@ -291,7 +291,7 @@ function mountCardBody(
 			// A folder-scoped tasks card reads nothing outside its folders, so
 			// events that provably can't change its content are skipped instead
 			// of redrawing (and instead of resetting the debounce timer).
-			if (!shouldRedraw || shouldRedraw(card, ev)) redraw();
+			if (!shouldRedraw || shouldRedraw(card, ev, view)) redraw();
 		});
 	}
 	return draw;

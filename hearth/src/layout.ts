@@ -122,8 +122,8 @@ export function exportLayout(s: HomeSettings): string {
 }
 
 /** Serialize every configurable Second Brain Dashboard setting — the full layout plus header,
- * background, behaviour, appearance, filters and TaskNotes field mappings — to a
- * pretty JSON string. Internal bookkeeping (e.g. `lastSeenVersion`) is omitted
+ * background, behaviour, appearance, filters, Claude's trays and TaskNotes field
+ * mappings — to a pretty JSON string. Internal bookkeeping (e.g. `lastSeenVersion`) is omitted
  * so a shared backup can't rewind another vault's "What's new" state. */
 export function exportSettings(s: HomeSettings): string {
 	const data = {
@@ -177,6 +177,15 @@ export function exportSettings(s: HomeSettings): string {
 
 		// Search filters
 		hiddenFilters: s.hiddenFilters,
+
+		// Claude trays: where unfiled items land, and how much calendar the
+		// inbox takes. Travels with the rest because a restored vault that kept
+		// its board but lost its tray folders would silently start filing into
+		// `Claude/` again, beside the notes already waiting somewhere else.
+		filingInboxFolder: s.filingInboxFolder,
+		filingUnsortedFolder: s.filingUnsortedFolder,
+		filingPastDays: s.filingPastDays,
+		filingAheadDays: s.filingAheadDays,
 
 		// Tasks / TaskNotes field mappings
 		taskNotesStatusField: s.taskNotesStatusField,
@@ -1201,6 +1210,24 @@ function applySettings(s: HomeSettings, data: Record<string, unknown>): void {
 		s.hiddenFilters = data.hiddenFilters.filter(
 			(f): f is string => typeof f === "string",
 		);
+	}
+
+	// Claude trays. The folders are taken as strings and left unnormalised, the
+	// same as a typed one: `effectiveFilingFolders` normalises on read, so an
+	// export written by hand can't produce a spelling the plugin then writes to
+	// but never counts.
+	const inboxFolder = str(data.filingInboxFolder);
+	if (inboxFolder !== undefined) s.filingInboxFolder = inboxFolder;
+	const unsortedFolder = str(data.filingUnsortedFolder);
+	if (unsortedFolder !== undefined) s.filingUnsortedFolder = unsortedFolder;
+	// Clamped rather than merely defaulted: a window of a few decades is a
+	// working export, but it would file a note per lecture for every term the
+	// feed publishes.
+	if (data.filingPastDays !== undefined) {
+		s.filingPastDays = clampNum(data.filingPastDays, 0, 3650, s.filingPastDays);
+	}
+	if (data.filingAheadDays !== undefined) {
+		s.filingAheadDays = clampNum(data.filingAheadDays, 0, 3650, s.filingAheadDays);
 	}
 
 	// Tasks / TaskNotes field mappings

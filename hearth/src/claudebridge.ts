@@ -18,6 +18,11 @@
  * - **`Claude/unsorted/`** takes everything the detail card collects — prose,
  *   and attachments written to `Claude/unsorted/attachments/`.
  *
+ * Those two paths are the defaults, not the contract: a vault names its own
+ * trays in settings, and every function here takes the resolved
+ * {@link FilingFolders} so the folder a note is written to and the folder a
+ * card counts are the same string by construction.
+ *
  * Both trays sit beside the instructions they refer to, so Claude Code —
  * through the Claudian plugin, which runs an agent with the vault as its
  * working directory, or a headless session on the same folder — reads the rules
@@ -39,10 +44,12 @@ import { Notice, TFile, TFolder, normalizePath, type App } from "obsidian";
 import { t } from "./i18n";
 import {
 	buildFilingNote,
+	DEFAULT_FILING_FOLDERS,
 	destinationFolder,
 	isIgnoredPath,
 	sanitizeNoteTitle,
 	type FilingDestination,
+	type FilingFolders,
 	type FilingRequest,
 } from "./vaultfiling";
 
@@ -158,11 +165,12 @@ export async function fileForClaude(
 	app: App,
 	req: FilingRequest,
 	extraFrontmatter: Record<string, unknown> = {},
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
 ): Promise<TFile | null> {
-	const note = buildFilingNote(req, new Date());
+	const note = buildFilingNote(req, new Date(), folders);
 	return writeNote(
 		app,
-		destinationFolder(req.destination),
+		destinationFolder(req.destination, folders),
 		note.filename,
 		{ ...note.frontmatter, ...extraFrontmatter },
 		note.body,
@@ -171,8 +179,14 @@ export async function fileForClaude(
 
 /** Every note still waiting in a tray, cheapest-first: the folder is read from
  * the vault index, never by opening files. */
-export function trayNotes(app: App, destination: FilingDestination): TFile[] {
-	const folder = app.vault.getAbstractFileByPath(normalizePath(destinationFolder(destination)));
+export function trayNotes(
+	app: App,
+	destination: FilingDestination,
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
+): TFile[] {
+	const folder = app.vault.getAbstractFileByPath(
+		normalizePath(destinationFolder(destination, folders)),
+	);
 	if (!(folder instanceof TFolder)) return [];
 	return folder.children.filter(
 		(f): f is TFile => f instanceof TFile && f.extension === "md" && !isIgnoredPath(f.path),
@@ -181,8 +195,12 @@ export function trayNotes(app: App, destination: FilingDestination): TFile[] {
 
 /** How many items a tray is still holding. Drawn on both cards so a tray that
  * nothing is draining is visible rather than silent. */
-export function trayCount(app: App, destination: FilingDestination): number {
-	return trayNotes(app, destination).length;
+export function trayCount(
+	app: App,
+	destination: FilingDestination,
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
+): number {
+	return trayNotes(app, destination, folders).length;
 }
 
 /**
@@ -194,9 +212,13 @@ export function trayCount(app: App, destination: FilingDestination): number {
  * are its own business and could change under us, and a dead "Open in Claudian"
  * button would be worse than an honest pointer to the note.
  */
-export async function revealTray(app: App, destination: FilingDestination): Promise<void> {
-	const waiting = trayNotes(app, destination).sort((a, b) => b.stat.ctime - a.stat.ctime);
-	const folder = destinationFolder(destination);
+export async function revealTray(
+	app: App,
+	destination: FilingDestination,
+	folders: FilingFolders = DEFAULT_FILING_FOLDERS,
+): Promise<void> {
+	const waiting = trayNotes(app, destination, folders).sort((a, b) => b.stat.ctime - a.stat.ctime);
+	const folder = destinationFolder(destination, folders);
 	if (!waiting.length) {
 		new Notice(t().notices.trayEmpty(folder));
 		return;

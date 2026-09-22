@@ -7,6 +7,12 @@ import type {
 	GitCommitScope,
 	GitSection,
 } from "./git";
+import {
+	type FilingFolders,
+	INBOX_FOLDER,
+	normalizeFilingFolder,
+	UNSORTED_FOLDER,
+} from "./vaultfiling";
 
 /** The kind of content a dashboard card renders. */
 export type CardKind =
@@ -1236,13 +1242,24 @@ export interface CalendarSyncConfig {
 	classes?: CalendarSyncSlot;
 	assignments?: CalendarSyncSlot;
 	obsidian?: CalendarSyncSlot;
-	/** Minutes between automatic refreshes. Omitted means 60. */
+	/** Minutes between automatic refreshes. Omitted means 60.
+	 *
+	 * Stays per-card: it is this widget's own timer, and two sync cards on one
+	 * board may reasonably want different ones. Everything else the sync used
+	 * to carry describes the *filing system* both trays share, so it moved to
+	 * {@link HomeSettings} — see `filingPastDays` and `filingAheadDays`. */
 	refreshMin?: number;
-	/** How many days back events are still worth a note. Omitted means 7. */
+	/**
+	 * @deprecated Moved to `HomeSettings.filingPastDays` — the window is a
+	 * property of the inbox, not of one widget drawing it. Kept for migration
+	 * only: `migrateSettings` lifts it into settings and deletes it. Remove two
+	 * minor releases after the version that introduced the setting.
+	 */
 	pastDays?: number;
-	/** How far ahead to look. Omitted means 21 — a term's timetable is
-	 * published months out, and a note per lecture for all of it would bury
-	 * the queue. */
+	/**
+	 * @deprecated Moved to `HomeSettings.filingAheadDays`, for the same reason
+	 * as {@link pastDays}. Kept for migration only.
+	 */
 	aheadDays?: number;
 }
 
@@ -1657,6 +1674,33 @@ export interface HomeSettings {
 	/** When the last sync finished (epoch ms), for the card's "synced 6m ago". */
 	calendarSyncLast?: number;
 
+	// ---- Filing trays ----
+	/**
+	 * Where the two trays are, and how wide a window of calendar the inbox
+	 * takes.
+	 *
+	 * These live here rather than on the sync and unsorted widgets because they
+	 * describe one filing *system*, not one widget's appearance: two sync cards
+	 * on a board write into the same inbox and share one `calendarSyncSeen`
+	 * index, and the unsorted card's tray is the folder whoever drains it reads.
+	 * Per-widget copies of that would let one card file into `Claude/inbox` and
+	 * another into `Inbox/`, splitting a queue whose whole value is being one
+	 * place to look. What stays on a widget is what only that widget does: which
+	 * feeds it watches and how often, which note a detail card attaches to.
+	 */
+	/** Vault folder the sync widget writes calendar events into. Empty falls
+	 * back to `Claude/inbox`. */
+	filingInboxFolder: string;
+	/** Vault folder the unsorted widget writes prose and attachments into
+	 * (attachments themselves go in an `attachments/` subfolder of it). Empty
+	 * falls back to `Claude/unsorted`. */
+	filingUnsortedFolder: string;
+	/** How many days back an event is still worth a note. */
+	filingPastDays: number;
+	/** How far ahead to look. 21 by default — a term's timetable is published
+	 * months out, and a note per lecture for all of it would bury the queue. */
+	filingAheadDays: number;
+
 	// ---- Opening notes ----
 	/** Where every note Second Brain Dashboard opens goes by default (#106). `"tab"` is the
 	 * historical behaviour. */
@@ -1816,6 +1860,15 @@ export interface SettingsBackup {
  */
 export type SetupStatus = "pending" | "done" | "skipped";
 
+/**
+ * How far either side of today an event has to fall before it is worth a note.
+ *
+ * A term's timetable is published months ahead; a note per lecture for all of
+ * it would bury the queue, so the window walks forward with the user.
+ */
+export const DEFAULT_FILING_PAST_DAYS = 7;
+export const DEFAULT_FILING_AHEAD_DAYS = 21;
+
 export const DEFAULT_SETTINGS: HomeSettings = {
 	title: "Obsidian",
 	showTitle: true,
@@ -1857,6 +1910,13 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	// and existing vaults aren't silently reset if the list is emptied.
 	mobileActionButtons: [],
 	disableExternalCalls: false,
+
+	// The trays a vault that has never said otherwise gets, and the window that
+	// keeps a term's published timetable from burying the inbox.
+	filingInboxFolder: INBOX_FOLDER,
+	filingUnsortedFolder: UNSORTED_FOLDER,
+	filingPastDays: DEFAULT_FILING_PAST_DAYS,
+	filingAheadDays: DEFAULT_FILING_AHEAD_DAYS,
 
 	// A new tab is what Second Brain Dashboard has always done; existing vaults must not change
 	// behaviour on upgrade, so both the global default and every per-source rule
@@ -2048,6 +2108,37 @@ export function lowPowerBackground(s: HomeSettings): BackgroundConfig {
  */
 export function effectiveAutoRefreshMinutes(s: HomeSettings, minutes: number): number {
 	return lowPowerActive(s) ? 0 : minutes;
+}
+
+/**
+ * Where this vault's two trays actually are.
+ *
+ * Normalised on every read rather than only on write: the fields are plain
+ * strings in `data.json`, so a hand-edited or half-synced settings file can
+ * hold `/Claude/inbox/` or an empty string, and a tray written to one spelling
+ * but counted at another is a queue that silently looks empty.
+ */
+export function effectiveFilingFolders(s: HomeSettings): FilingFolders {
+	return {
+		inbox: normalizeFilingFolder(s.filingInboxFolder, INBOX_FOLDER),
+		unsorted: normalizeFilingFolder(s.filingUnsortedFolder, UNSORTED_FOLDER),
+	};
+}
+
+/** How far either side of today the sync looks, in days. Guards the same way
+ * the folders do: a non-number or a negative from a hand-edited settings file
+ * falls back rather than producing an empty or unbounded window. */
+export function effectiveFilingWindow(s: HomeSettings): { pastDays: number; aheadDays: number } {
+	return {
+		pastDays: filingDays(s.filingPastDays, DEFAULT_FILING_PAST_DAYS),
+		aheadDays: filingDays(s.filingAheadDays, DEFAULT_FILING_AHEAD_DAYS),
+	};
+}
+
+function filingDays(value: unknown, fallback: number): number {
+	return typeof value === "number" && Number.isFinite(value) && value >= 0
+		? Math.trunc(value)
+		: fallback;
 }
 
 /** The card's fixed glass identity (opacity, blur px, radius px, border px) —
@@ -2323,5 +2414,58 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	// The short-lived "split" pill mode was replaced by a plain single button
 	// whose action is chosen here; fall back to the original New-note behaviour.
 	if ((s.newNoteButtonMode as string) === "split") s.newNoteButtonMode = "newNote";
-	return migratedCommandId;
+	const migratedFilingWindow = migrateFilingWindow(s, raw);
+	return migratedCommandId || migratedFilingWindow;
+}
+
+/**
+ * One-way migration: lift the sync window off the widgets and onto the vault.
+ *
+ * The window used to be `card.calsync.aheadDays` / `pastDays`, so a board with
+ * two sync cards could hold two different answers to a question the single
+ * shared inbox only has one of. The first card that states a value wins — later
+ * cards' values are dropped rather than being averaged or maxed, because the
+ * user set them on separate widgets and there is no reading of that which is
+ * more theirs than "the one you configured first".
+ *
+ * Only ever *fills* a setting the user hasn't set: a `filingAheadDays` already
+ * in `data.json` was chosen in the new settings pane and is authoritative over
+ * any leftover card field.
+ *
+ * Remove two minor releases after the version that introduced these settings,
+ * together with the deprecated fields on `CalendarSyncConfig`.
+ */
+function migrateFilingWindow(s: HomeSettings, raw: Record<string, unknown>): boolean {
+	if (!Array.isArray(s.cards)) return false;
+	// "Already answered" starts as whatever `data.json` itself carried, and
+	// flips as soon as a card's value is taken — which is what makes the first
+	// card win over every later one, in one pass and with no module state.
+	let haveAhead = typeof raw.filingAheadDays === "number";
+	let havePast = typeof raw.filingPastDays === "number";
+	let migrated = false;
+	for (const card of s.cards) {
+		const cfg = card.calsync;
+		if (!cfg) continue;
+		// Reading and deleting the deprecated fields intentionally trips
+		// no-deprecated — the repo forbids silencing that rule, so the warning
+		// stays visible until the fields are removed. A migration must touch the
+		// field it is retiring.
+		if (typeof cfg.aheadDays === "number") {
+			if (!haveAhead) {
+				s.filingAheadDays = cfg.aheadDays;
+				haveAhead = true;
+			}
+			delete cfg.aheadDays;
+			migrated = true;
+		}
+		if (typeof cfg.pastDays === "number") {
+			if (!havePast) {
+				s.filingPastDays = cfg.pastDays;
+				havePast = true;
+			}
+			delete cfg.pastDays;
+			migrated = true;
+		}
+	}
+	return migrated;
 }

@@ -5,6 +5,7 @@ import {
 	canonicalCourse,
 	courseFromLink,
 	courseLink,
+	attachmentsFolder,
 	destinationFolder,
 	findCourseInText,
 	isIgnoredPath,
@@ -17,6 +18,7 @@ import {
 	padSequence,
 	filingNoteFilename,
 	INBOX_FOLDER,
+	normalizeFilingFolder,
 	NEEDS_FILING_KEY,
 	UNSORTED_FOLDER,
 	sanitizeNoteTitle,
@@ -312,6 +314,36 @@ describe("trays", () => {
 		expect(noteTypeForPath(`${INBOX_FOLDER}/x.md`)).toBeNull();
 		expect(noteTypeForPath(`${UNSORTED_FOLDER}/x.md`)).toBeNull();
 	});
+
+	it("files into the trays a vault names for itself", () => {
+		const folders = { inbox: "Agent/in", unsorted: "Agent/loose" };
+		expect(destinationFolder("inbox", folders)).toBe("Agent/in");
+		expect(destinationFolder("unsorted", folders)).toBe("Agent/loose");
+		// Attachments always sit under the unsorted tray, wherever it is, so a
+		// dropped file is never loose beside the notes describing it.
+		expect(attachmentsFolder(folders)).toBe("Agent/loose/attachments");
+		expect(attachmentsFolder()).toBe(`${UNSORTED_FOLDER}/attachments`);
+	});
+});
+
+describe("normalizeFilingFolder", () => {
+	it("spells one folder one way, however it was typed", () => {
+		// Each of these is the same folder; keeping them distinct would write
+		// notes to one string and count them at another.
+		for (const typed of ["Claude/inbox", "/Claude/inbox", "Claude/inbox/", "Claude//inbox", " Claude / inbox "]) {
+			expect(normalizeFilingFolder(typed, UNSORTED_FOLDER)).toBe("Claude/inbox");
+		}
+	});
+
+	it("falls back rather than scattering filing notes across the vault root", () => {
+		// A cleared field is a cleared setting, not "write to the vault root".
+		expect(normalizeFilingFolder("", INBOX_FOLDER)).toBe(INBOX_FOLDER);
+		expect(normalizeFilingFolder("   ", INBOX_FOLDER)).toBe(INBOX_FOLDER);
+		expect(normalizeFilingFolder("///", INBOX_FOLDER)).toBe(INBOX_FOLDER);
+		// A hand-edited or half-synced data.json can hold anything at all.
+		expect(normalizeFilingFolder(undefined, INBOX_FOLDER)).toBe(INBOX_FOLDER);
+		expect(normalizeFilingFolder(7, INBOX_FOLDER)).toBe(INBOX_FOLDER);
+	});
 });
 
 describe("filing notes", () => {
@@ -370,6 +402,18 @@ describe("filing notes", () => {
 		expect(note.body).not.toContain(INBOX_FOLDER);
 		expect(note.body).toContain("[[Claude/unsorted/attachments/slides.pdf]]");
 		expect(note.frontmatter["sbd-attachment"]).toBe("Claude/unsorted/attachments/slides.pdf");
+	});
+
+	it("tells the reader which tray this vault actually uses", () => {
+		// The body is the instruction sheet for whoever drains the tray, so it has
+		// to name the folder the note was written to — not the default one.
+		const note = buildFilingNote(
+			{ kind: "note-detail", destination: "unsorted", source: "s", summary: "x" },
+			now,
+			{ inbox: "Agent/in", unsorted: "Agent/loose" },
+		);
+		expect(note.body).toContain("Agent/loose");
+		expect(note.body).not.toContain(UNSORTED_FOLDER);
 	});
 
 	it("ends every kind with a step that empties the tray", () => {

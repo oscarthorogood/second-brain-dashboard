@@ -15,6 +15,20 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Claude's two trays are set up once, in settings, not on every widget.**
+  Where the inbox and unsorted folders are, how far ahead and back the calendar
+  sync reaches, and the button that forgets what has already been written all
+  describe one filing system rather than one widget: every sync widget fills
+  the same inbox and shares one record of what it has written, and whoever
+  drains a tray reads one folder. They now live under Settings → Behaviour →
+  Claude trays, where both folders can also be pointed anywhere in the vault
+  (typed, or picked) instead of being fixed at `Claude/inbox` and
+  `Claude/unsorted`. A board that already carried a per-widget sync window
+  keeps it — the first sync widget's value is lifted into settings on upgrade.
+  What stays in a widget's own settings is what only that widget does: which
+  three calendars a sync widget watches and how often it refreshes, and which
+  note an unsorted widget attaches to.
+
 - **Every widget gets the row rhythm the stylesheet was written for.** A
   widget's body was a block, which quietly disabled two rules aimed at it: the
   per-size gap between its rows (8 / 10 / 13 / 16px, the reference's own steps)
