@@ -263,7 +263,7 @@ function renderLarge(
 		statusDot(left, slot);
 		const text = left.createDiv("sbd-sync-rowtext");
 		text.createDiv({ cls: "sbd-sync-name", text: slot.label });
-		text.createDiv({ cls: "sbd-sync-provider", text: slot.host || t().cards.calsync.notConnected });
+		providerLine(text, slot);
 		row.createDiv({ cls: "sbd-sync-status", text: slot.detail });
 	}
 }
@@ -284,7 +284,7 @@ function renderXLarge(
 		head.createDiv({ cls: "sbd-card-eyebrow is-on-sheet", text: slot.label });
 		statusDot(head, slot);
 		col.createDiv({ cls: "sbd-sync-colstatus", text: slot.detail });
-		col.createDiv({ cls: "sbd-sync-provider", text: slot.host || t().cards.calsync.notConnected });
+		providerLine(col, slot);
 		col.createDiv({ cls: "sbd-sync-count", text: t().cards.calsync.eventsTracked(slot.events) });
 	}
 }
@@ -370,6 +370,26 @@ function slotState(view: HomeView, card: DashboardCard, id: CalendarSyncSlotId):
 	if (status.error) return { id, label, url, enabled, host, state: "error", detail: syncError(status.error), events: status.events };
 	if (!status.loaded) return { id, label, url, enabled, host, state: "syncing", detail: strings.syncing, events: 0 };
 	return { id, label, url, enabled, host, state: "synced", detail: strings.synced, events: status.events };
+}
+
+/**
+ * The second line of a feed's row: which server it comes from.
+ *
+ * It used to fall back to "Not connected" when there was no server yet — the
+ * very words the status column beside it was already showing, so an
+ * unconfigured row read "Classes / Not connected … Not connected". The row has
+ * one thing left to say at that point and it is not the status again: it is
+ * what to do about it.
+ */
+function providerLine(parent: HTMLElement, slot: SlotState): void {
+	const strings = t().cards.calsync;
+	// A feed switched off says so in its status column and needs no second
+	// line at all; "add a URL" would be the wrong advice for it.
+	if (!slot.host && !slot.enabled) return;
+	parent.createDiv({
+		cls: "sbd-sync-provider",
+		text: slot.host || strings.addFeedHint,
+	});
 }
 
 /** A fetch failure in the user's own words, falling back to what the network

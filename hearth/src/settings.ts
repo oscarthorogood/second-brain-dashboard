@@ -1654,6 +1654,72 @@ export class HomeSettingTab extends PluginSettingTab {
 					}),
 				);
 			});
+
+		this.autoBackupRow(containerEl);
+	}
+
+	/** The automatic pre-update snapshot: what it holds, and the two things
+	 * worth doing with it. Taken by `SbdPlugin.loadSettings` whenever a new
+	 * version reads the settings for the first time — see `SettingsBackup`. */
+	private autoBackupRow(containerEl: HTMLElement): void {
+		const s = this.plugin.settings;
+		const backup = s.preUpdateBackup;
+		const strings = t().settings.layout;
+
+		if (!backup) {
+			new Setting(containerEl)
+				.setName(strings.autoBackupNone)
+				.setDesc(strings.autoBackupNoneDesc);
+			return;
+		}
+
+		const when = new Date(backup.savedAt);
+		const row = new Setting(containerEl)
+			.setName(strings.autoBackup)
+			.setDesc(
+				strings.autoBackupDesc(
+					backup.version,
+					// The vault's own locale formatting, not an ISO string: this
+					// line is read, not parsed.
+					isNaN(when.getTime()) ? backup.savedAt : when.toLocaleString(),
+				),
+			);
+
+		// Keeping a copy before overwriting the live settings is the safer of
+		// the two actions, so it comes first.
+		row.addButton((b) =>
+			this.exportButton(b, SETTINGS_FILE, () => backup.data, t().notices.settingsExported),
+		);
+
+		row.addButton((b) => {
+			b.buttonEl.addClass("sbd-danger-btn");
+			b.setButtonText(strings.autoBackupRestore).onClick(() => {
+				confirmAction(this.app, {
+					title: strings.autoBackupTitle,
+					message: strings.autoBackupMessage,
+					confirmText: strings.autoBackupRestore,
+					onConfirm: () => {
+						const err = importSettings(s, backup.data);
+						if (err) {
+							new Notice(err);
+							return;
+						}
+						// The restored payload carries no snapshot of its own
+						// (exportSettings omits it), so put this one back: a
+						// restore must not also throw away the undo.
+						s.preUpdateBackup = backup;
+						void this.save().then(() => {
+							new Notice(t().notices.autoBackupRestored);
+							// The pane's own in-place redraw, not the deprecated
+							// `display()`: on Obsidian 1.13+ the whole pane is
+							// hosted in one declarative row and `display()` is
+							// not the path that rebuilds it.
+							this.rerender();
+						});
+					},
+				});
+			});
+		});
 	}
 
 	/** Wire an export button. `build` is called at click time so it always

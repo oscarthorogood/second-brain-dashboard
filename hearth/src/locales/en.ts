@@ -55,6 +55,8 @@ export const en = {
 			`Second Brain Dashboard: couldn't save ${name} — check Claude/unsorted/attachments is writable, then drop it again.`,
 		detailQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Claude/unsorted.`,
+		detailNoteFailed:
+			"Second Brain Dashboard: couldn't create the note — check Claude/unsorted is writable.",
 		calsyncQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} written to Claude/inbox.`,
 		calsyncFailed: (n: number) =>
@@ -79,6 +81,7 @@ export const en = {
 		layoutImported: "Second Brain Dashboard: layout imported.",
 		layoutImportError: (error: string) => `Second Brain Dashboard: ${error}`,
 		settingsExported: "Second Brain Dashboard: settings exported.",
+		autoBackupRestored: "Second Brain Dashboard: restored the settings saved before the last update.",
 		settingsImported: "Second Brain Dashboard: settings imported.",
 		exportedToVault: (file: string) =>
 			`Second Brain Dashboard: saved ${file} to your vault's root folder.`,
@@ -437,6 +440,8 @@ export const en = {
 		hideCardHeaders: "Hide card headers",
 		doneArranging: "Done arranging",
 		finishArranging: "Finish arranging cards",
+		/** The toolbar pill that enters arrange mode. */
+		edit: "Edit",
 		moveResize: "Rearrange widgets",
 		cardSettings: "Card settings",
 		removeCard: "Remove card",
@@ -1084,6 +1089,23 @@ export const en = {
 			importSettingsMessage:
 				"This replaces all your Second Brain Dashboard settings — dashboard, layout, header, " +
 				"background, behaviour and appearance. This can't be undone.",
+
+			/** The automatic pre-update snapshot (see SettingsBackup in types.ts). */
+			autoBackup: "Before the last update",
+			autoBackupDesc: (version: string, when: string) =>
+				`Your board and settings as version ${version || "the previous version"} left them, saved ` +
+				`automatically on ${when}. Restore this if an update moved your widgets or lost a setting.`,
+			autoBackupNone: "Before the last update",
+			autoBackupNoneDesc:
+				"A copy of your board and settings is saved automatically whenever a new version reads " +
+				"them for the first time, so an update can always be undone. There is nothing to restore " +
+				"yet — this version is the one that wrote your current settings.",
+			autoBackupRestore: "Restore",
+			autoBackupDownload: "Download",
+			autoBackupTitle: "Restore the pre-update backup?",
+			autoBackupMessage:
+				"This replaces all your Second Brain Dashboard settings with the copy saved before the " +
+				"last update. Your current settings are not kept.",
 		},
 	},
 
@@ -2290,7 +2312,8 @@ export const en = {
 			recent: "Recent",
 			recentWithCode: (code: string) => `Recent · ${code}`,
 			recentLectures: "Recent lectures",
-			upcoming: "Upcoming",
+			/** The extra large card's second column: the lectures still ahead. */
+			upcomingLectures: "Upcoming lectures",
 			assignments: "Assignments",
 			assignmentsReadings: "Assignments & readings",
 			readings: "Readings",
@@ -2298,7 +2321,8 @@ export const en = {
 			nothingHere: "Nothing due",
 			moreCount: (n: number) => `+${n} more`,
 			openNote: "Open note",
-			switchShort: "Switch",
+			/** The switcher pill's accessible name and tooltip. The pill itself
+			 * is labelled with the current course, so the verb lives here. */
 			switchLong: "Switch course",
 			lectureCount: (n: number) => `${n} ${n === 1 ? "lecture" : "lectures"}`,
 			upcomingCount: (n: number) => `${n} upcoming`,
@@ -2321,6 +2345,9 @@ export const en = {
 			syncing: "Syncing…",
 			blocked: "External calls are off",
 			notConnected: "Not connected",
+			/** The second line of an unconfigured feed's row — what to do about
+			 * it, since the status column already says it isn't connected. */
+			addFeedHint: "Add a URL in settings",
 			notCalendar: "Not a calendar feed",
 			off: "Not watched",
 			neverSynced: "Never synced",
@@ -2339,9 +2366,20 @@ export const en = {
 		},
 		detail: {
 			eyebrow: "Claude",
+			/** The card's own name, at every size: the tray it fills. */
+			title: "Unsorted",
 			addDetail: "Add detail",
 			toUnsorted: "To unsorted",
-			headlineLong: "Add detail to unsorted",
+			headlineLong: "Unsorted",
+			/** The card's first action: a blank note in the tray, opened to write in. */
+			createNote: "Create note",
+			createNoteSub: "A new note in the tray, opened",
+			/** Its second: the card itself takes dropped files. */
+			dragDrop: "Drag and drop",
+			dragDropSub: "Drop files here, or click to add detail",
+			/** Shown across the card while files are over it. */
+			dropOver: "Drop to file in Claude/unsorted",
+			newNoteName: "Unsorted note",
 			linkPage: "Link a page",
 			linkPageSub: "Search your vault",
 			dropFiles: "Drop files",
@@ -2967,20 +3005,27 @@ export const en = {
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
 		noMatches: "No card matches that.",
-		/** The second step: which of the four fixed sizes the widget is added at. */
+		/** The row of size chips on every card tile: which of the four fixed
+		 * sizes the widget is added at. */
 		size: {
-			heading: "Choose a size",
-			/** Sizes can't be changed later, so the step says so once, here. */
+			/** Sizes can't be changed later, so the picker says so once, above
+			 * the chips. */
 			note: "A widget's size is fixed. To change it, remove the widget and add it again.",
-			back: "Back to all cards",
-			add: "Add widget",
+			/** A chip's accessible name and tooltip, e.g. "Small · 2 × 2". */
 			names: {
 				small: "Small",
 				medium: "Medium",
 				large: "Large",
 				xlarge: "Extra large",
 			},
-			/** Caption under each option, e.g. "2 × 2". */
+			/** What a chip itself is labelled — a chip is too small for a word. */
+			short: {
+				small: "S",
+				medium: "M",
+				large: "L",
+				xlarge: "XL",
+			},
+			/** The footprint in the chip's tooltip, e.g. "2 × 2". */
 			cells: (cols: number, rows: number) => `${cols} × ${rows}`,
 		},
 		/** Badge on a card whose plugin (or other dependency) is missing. */

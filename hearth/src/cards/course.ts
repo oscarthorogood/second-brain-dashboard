@@ -61,12 +61,14 @@ export function courseColumns(
 	now?: number,
 ): {
 	lectures: CourseworkItem[];
+	nextLectures: CourseworkItem[];
 	due: CourseworkItem[];
 	deadlines: CourseworkItem[];
 	readings: CourseworkItem[];
 } {
 	return {
 		lectures: recentLectures(items, now),
+		nextLectures: upcoming(items, ["lecture"], now),
 		due: upcoming(items, ASSIGNMENT_TYPES, now),
 		deadlines: upcoming(items, DEADLINE_TYPES, now),
 		readings: upcoming(items, ["reading"], now),
@@ -88,10 +90,11 @@ export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElem
 
 	const selected = courses.find((c) => c.name === card.course?.selected) ?? courses[0];
 	const items = readCourseItems(view.app, selected.name);
-	// Both deadline pane titles promise readings too ("Assignments & readings"
-	// at large, "Upcoming" at extra large), so both are fed DEADLINE_TYPES;
-	// `due` is the narrower assignments column at extra large.
-	const { lectures, due, deadlines, readings } = courseColumns(items);
+	// The large card draws one deadline pane titled "Assignments & readings",
+	// so it is fed DEADLINE_TYPES; the extra large card splits that into its
+	// own `due` (assignments) and `readings` columns, and spends its second
+	// column on the lectures still ahead.
+	const { lectures, nextLectures, due, deadlines, readings } = courseColumns(items);
 
 	switch (card.size) {
 		case "small":
@@ -104,7 +107,7 @@ export function renderCourse(view: HomeView, card: DashboardCard, body: HTMLElem
 			renderLarge(view, card, body, courses, selected, items, lectures, deadlines, redraw);
 			break;
 		case "xlarge":
-			renderXLarge(view, card, body, courses, selected, items, lectures, deadlines, due, readings, redraw);
+			renderXLarge(view, card, body, courses, selected, items, lectures, nextLectures, due, readings, redraw);
 			break;
 	}
 }
@@ -190,7 +193,7 @@ function renderXLarge(
 	course: Course,
 	items: CourseworkItem[],
 	lectures: CourseworkItem[],
-	deadlines: CourseworkItem[],
+	nextLectures: CourseworkItem[],
 	due: CourseworkItem[],
 	readings: CourseworkItem[],
 	redraw: () => void,
@@ -199,13 +202,15 @@ function renderXLarge(
 	const cols = body.createDiv("sbd-course-cols");
 	// Reference (Widget Set v2 → COURSE XL): four columns alternating sheet and
 	// glass, so neighbouring panes stay distinguishable at a glance.
+	//
+	// The four are the course's own four things, and no two overlap: the
+	// lectures behind you, the lectures ahead, what is due, and what to read.
+	// The second column used to be "Upcoming" fed by DEADLINE_TYPES, which is
+	// the union of the two columns to its right — so on a course with no
+	// readings it drew precisely the assignments column again, twice on one
+	// card, and the lectures still to come were nowhere on it at all.
 	pane(view, cols, t().cards.course.recentLectures, lectures, ROWS.xlarge, "sheet");
-	// "Upcoming" is every deadline the course has, soonest first — readings
-	// included, which is also what keeps it from redrawing the assignments
-	// column beside it. The assignments column is every assignment type,
-	// revision among them: filtering revision out of it while "Upcoming" ran
-	// two rows deep was enough to make an exam appear in neither.
-	pane(view, cols, t().cards.course.upcoming, deadlines, ROWS.xlarge, "glass");
+	pane(view, cols, t().cards.course.upcomingLectures, nextLectures, ROWS.xlarge, "glass");
 	pane(view, cols, t().cards.course.assignments, due, ROWS.xlarge, "sheet");
 	pane(view, cols, t().cards.course.readings, readings, ROWS.xlarge, "glass");
 }
@@ -260,10 +265,16 @@ function switcher(
 	const pill = parent.createDiv("sbd-course-switch");
 	pill.toggleClass("is-compact", size === "small" || size === "medium");
 	dot(pill, course);
-	// Reference (Widget Set v2 → COURSE): the pill is a bare chevron at small
-	// and medium, gains "Switch" at large and the full "Switch course" at XL,
-	// as the tile gets the width to carry it.
-	const label = bySize(size, ["", "", t().cards.course.switchShort, t().cards.course.switchLong]);
+	// The pill names the COURSE, not the verb. "Switch course" said what the
+	// control does, which the dot and the chevron already say; the course name
+	// says what it is set to, which is the thing a picker is supposed to show
+	// — and on the sizes that draw the name in the header too, the pill is
+	// what stays put when the header is scrolled or hidden. The verb survives
+	// as the accessible name and the tooltip, below.
+	//
+	// It is still a bare dot and chevron at small and medium: a course name
+	// does not fit a 158px tile that is already drawing the name once.
+	const label = bySize(size, ["", "", course.name, course.name]);
 	if (label) pill.createSpan({ cls: "sbd-course-switch-label", text: label });
 	setIcon(pill.createDiv("sbd-course-switch-icon"), "chevron-down");
 
@@ -316,8 +327,20 @@ function pane(
 		const row = list.createDiv("sbd-list-item");
 		const main = row.createDiv("sbd-course-rowmain");
 		main.createDiv({ cls: "sbd-list-label", text: entry.topic });
-		if (entry.code) main.createDiv({ cls: "sbd-course-code", text: entry.code });
-		if (entry.when) row.createDiv({ cls: "sbd-list-age", text: formatRelativeDate(entry.when) });
+		// The code and the date share one meta line UNDER the topic, rather
+		// than the date sitting beside it. A course pane is a quarter of the
+		// card at extra large, and "Next Tuesday" beside a topic left the
+		// topic about twenty pixels — enough for "S." and an ellipsis. Giving
+		// the topic the pane's full width and putting its two short facts on
+		// the line below fits any column at any cell size, and reads the same
+		// on every row whether its date is "Today" or "Next Tuesday".
+		if (entry.code || entry.when) {
+			const meta = main.createDiv("sbd-course-rowmeta");
+			if (entry.code) meta.createDiv({ cls: "sbd-course-code", text: entry.code });
+			if (entry.when) {
+				meta.createDiv({ cls: "sbd-list-age", text: formatRelativeDate(entry.when) });
+			}
+		}
 		openOnClick(view, row, entry);
 	}
 	const hidden = items.length - rows;

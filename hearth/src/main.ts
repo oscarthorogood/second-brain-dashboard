@@ -14,6 +14,7 @@ import { EXCALIDRAW_PLUGIN_ID } from "./filetypes";
 import { setLanguage, t } from "./i18n";
 import { maybeShowWhatsNew } from "./whatsnew";
 import { maybeRunSetup, openSetupWizard } from "./onboarding";
+import { exportSettings } from "./layout";
 import { clearContentSearchCache } from "./query";
 
 /** Core "Audio recorder" plugin id, used by the "Record voice" mobile action. */
@@ -265,12 +266,47 @@ export default class SbdPlugin extends Plugin {
 			this.settings as unknown as Record<string, unknown>,
 			DEFAULT_SETTINGS as unknown as Record<string, unknown>,
 		);
+		// Snapshot BEFORE the migration below, so the copy is what the previous
+		// version actually left behind rather than what this one made of it.
+		const snapshotted = this.snapshotBeforeUpdate(raw);
 		// A one-way migration (e.g. the commandId → target fold) mutates settings
 		// in memory only; without flushing it here the legacy data would survive
 		// in storage and the migration would re-run every start, never actually
 		// retiring the deprecated field. Persist immediately when that happens.
 		const migrated = migrateSettings(this.settings, raw);
-		if (migrated) await this.saveSettings();
+		if (migrated || snapshotted) await this.saveSettings();
+	}
+
+	/**
+	 * Keep one copy of the board and settings from before this version first
+	 * read them, so an update can be undone.
+	 *
+	 * Obsidian does not delete `data.json` when it updates a plugin, so settings
+	 * already survive an update on their own. What does not survive is a
+	 * migration that reads an old board differently — the fixed 16×8 grid in
+	 * 2.1.0 repacks a board saved by a free-form one, and that repack cannot be
+	 * reversed by re-running it — or a reinstall that replaces the plugin folder
+	 * rather than its files. The snapshot is the undo for both, restored from
+	 * Settings → Backup.
+	 *
+	 * Taken only when the version that wrote the settings differs from the one
+	 * now reading them, so ordinary reloads never overwrite it, and never on a
+	 * fresh install, which has nothing to lose. Returns whether it wrote one.
+	 */
+	private snapshotBeforeUpdate(raw: Record<string, unknown>): boolean {
+		if (this.isFirstRun) return false;
+		const previous = typeof raw.lastSeenVersion === "string" ? raw.lastSeenVersion : "";
+		// An empty lastSeenVersion is a vault from before that field existed, so
+		// it IS an upgrade and is worth snapshotting; the same version is not.
+		if (previous === this.manifest.version) return false;
+		this.settings.preUpdateBackup = {
+			version: previous,
+			savedAt: new Date().toISOString(),
+			// exportSettings enumerates the settings it carries, so the snapshot
+			// never contains a previous snapshot — this slot cannot compound.
+			data: exportSettings(this.settings),
+		};
+		return true;
 	}
 
 	async saveSettings() {
