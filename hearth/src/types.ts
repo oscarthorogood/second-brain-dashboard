@@ -1869,6 +1869,17 @@ export type SetupStatus = "pending" | "done" | "skipped";
 export const DEFAULT_FILING_PAST_DAYS = 7;
 export const DEFAULT_FILING_AHEAD_DAYS = 21;
 
+/**
+ * The widest the sync window may be, either side of today: ten years.
+ *
+ * One bound, used by the settings row, the importer and the resolver, so no
+ * path can accept what another rejects. It is a guard against a typo, not a
+ * preference: the sync writes one note per *occurrence*, so "2100" meant for
+ * "21" expands a single weekly lecture into roughly three hundred notes, and
+ * "21000" into three thousand.
+ */
+export const FILING_DAYS_MAX = 3650;
+
 export const DEFAULT_SETTINGS: HomeSettings = {
 	title: "Obsidian",
 	showTitle: true,
@@ -2201,8 +2212,10 @@ export function effectiveFilingWindow(s: HomeSettings): { pastDays: number; ahea
 }
 
 function filingDays(value: unknown, fallback: number): number {
+	// Clamped as well as validated: a hand-edited settings file can hold any
+	// number, and the resolver is the last line before the sync expands it.
 	return typeof value === "number" && Number.isFinite(value) && value >= 0
-		? Math.trunc(value)
+		? Math.min(Math.trunc(value), FILING_DAYS_MAX)
 		: fallback;
 }
 

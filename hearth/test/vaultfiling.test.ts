@@ -6,6 +6,8 @@ import {
 	courseFromLink,
 	courseLink,
 	attachmentsFolder,
+	eventTouchesFolder,
+	pathInFolder,
 	destinationFolder,
 	findCourseInText,
 	isIgnoredPath,
@@ -440,5 +442,42 @@ describe("filing notes", () => {
 			now,
 		);
 		expect(note.body).not.toContain("## What it says");
+	});
+});
+
+
+describe("pathInFolder", () => {
+	it("matches the folder and anything under it", () => {
+		expect(pathInFolder("Claude/inbox", "Claude/inbox")).toBe(true);
+		expect(pathInFolder("Claude/inbox/a.md", "Claude/inbox")).toBe(true);
+		expect(pathInFolder("Claude/inbox/deep/b.md", "Claude/inbox")).toBe(true);
+	});
+
+	it("respects the folder boundary rather than a bare prefix", () => {
+		// The case a user-chosen tray exposes: "Inbox" must not claim its siblings.
+		expect(pathInFolder("Inboxes/a.md", "Inbox")).toBe(false);
+		expect(pathInFolder("Inbox archive/a.md", "Inbox")).toBe(false);
+		expect(pathInFolder("Inbox/a.md", "Inbox")).toBe(true);
+	});
+});
+
+describe("eventTouchesFolder", () => {
+	const tray = "Claude/inbox";
+
+	it("sees a note arriving in the tray", () => {
+		expect(eventTouchesFolder({ file: { path: "Claude/inbox/x.md" } }, tray)).toBe(true);
+	});
+
+	it("sees a note being filed out of the tray", () => {
+		// Draining the tray is a move whose new path is elsewhere: only the old
+		// path says the tray just got shallower. Missing this left the count stale.
+		const filed = { file: { path: "Lectures/x.md" }, oldPath: "Claude/inbox/x.md" };
+		expect(eventTouchesFolder(filed, tray)).toBe(true);
+	});
+
+	it("ignores events elsewhere in the vault", () => {
+		expect(eventTouchesFolder({ file: { path: "Lectures/x.md" } }, tray)).toBe(false);
+		const moved = { file: { path: "Lectures/y.md" }, oldPath: "Essays/y.md" };
+		expect(eventTouchesFolder(moved, tray)).toBe(false);
 	});
 });

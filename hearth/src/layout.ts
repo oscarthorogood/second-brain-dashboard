@@ -41,6 +41,7 @@ import {
 	clampBannerHeight,
 	CONTENT_WIDTH_MAX,
 	CONTENT_WIDTH_MIN,
+	FILING_DAYS_MAX,
 	clampWidgetScale,
 } from "./types";
 import { CARD_KINDS } from "./cards";
@@ -1226,10 +1227,10 @@ function applySettings(s: HomeSettings, data: Record<string, unknown>): void {
 	// working export, but it would file a note per lecture for every term the
 	// feed publishes.
 	if (data.filingPastDays !== undefined) {
-		s.filingPastDays = clampNum(data.filingPastDays, 0, 3650, s.filingPastDays);
+		s.filingPastDays = clampNum(data.filingPastDays, 0, FILING_DAYS_MAX, s.filingPastDays);
 	}
 	if (data.filingAheadDays !== undefined) {
-		s.filingAheadDays = clampNum(data.filingAheadDays, 0, 3650, s.filingAheadDays);
+		s.filingAheadDays = clampNum(data.filingAheadDays, 0, FILING_DAYS_MAX, s.filingAheadDays);
 	}
 
 	// Tasks / TaskNotes field mappings

@@ -12743,15 +12743,20 @@ body.sbd-dv-resizing {
 	}
 
 	/* A 29px tile in a pill makes the strip two rows tall; at this width the
-	   glyph carries the meaning on its own. */
-	.sbd-glyph-tile {
+	   glyph carries the meaning on its own.
+
+	   Scoped to the rail. This sits in the picker's media query, but an
+	   unscoped `.sbd-glyph-tile` here also shrank every tile in the settings
+	   pane on a phone — the category rows and the page-title tile — which have
+	   no pill strip to fit and were meant to stay the full 29px. */
+	.sbd-picker-rail .sbd-glyph-tile {
 		width: 20px;
 		height: 20px;
 		border-radius: 6px;
 		box-shadow: none;
 	}
 
-	.sbd-glyph-tile .svg-icon {
+	.sbd-picker-rail .sbd-glyph-tile .svg-icon {
 		width: 13px;
 		height: 13px;
 	}

@@ -426,6 +426,38 @@ export function destinationFolder(
 	return destination === "inbox" ? folders.inbox : folders.unsorted;
 }
 
+/**
+ * Whether a vault path is inside `folder` (or is the folder itself).
+ *
+ * A folder boundary, not a bare prefix: `startsWith("Inbox")` also matches
+ * `Inboxes/…` and `Inbox archive/…`, which is harmless while the tray is the
+ * fixed `Claude/inbox` and wrong the moment a user names their own. The tray
+ * cards redraw off this, so a sibling folder's edits were restarting their
+ * debounce for nothing.
+ */
+export function pathInFolder(path: string, folder: string): boolean {
+	return path === folder || path.startsWith(`${folder}/`);
+}
+
+/**
+ * Whether a vault event touched a tray, on either side of a move.
+ *
+ * Both sides, because draining a tray *is* a move: whoever files an inbox note
+ * renames it from `Claude/inbox/…` to `Lectures/…`, so the event's new path is
+ * outside the tray and only its old path says the tray just got shallower.
+ * Checking the new path alone left the card's "N waiting" stuck at its old
+ * count after every filing.
+ */
+export function eventTouchesFolder(
+	ev: { file: { path: string }; oldPath?: string },
+	folder: string,
+): boolean {
+	return (
+		pathInFolder(ev.file.path, folder) ||
+		(ev.oldPath !== undefined && pathInFolder(ev.oldPath, folder))
+	);
+}
+
 /** Where dropped files wait: a subfolder of the unsorted tray, so an
  * attachment never sits loose beside the notes that describe it. */
 export function attachmentsFolder(folders: FilingFolders = DEFAULT_FILING_FOLDERS): string {

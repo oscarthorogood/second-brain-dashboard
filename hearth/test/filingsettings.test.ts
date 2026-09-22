@@ -5,6 +5,7 @@ import {
 	DEFAULT_SETTINGS,
 	effectiveFilingFolders,
 	effectiveFilingWindow,
+	FILING_DAYS_MAX,
 	migrateSettings,
 	type DashboardCard,
 	type HomeSettings,
@@ -80,6 +81,13 @@ describe("effectiveFilingWindow", () => {
 			pastDays: 0,
 			aheadDays: 90,
 		});
+	});
+
+	it("clamps a window too wide to be anything but a typo", () => {
+		// The sync writes one note per occurrence, so an unclamped 21000 would
+		// expand a weekly lecture into thousands of notes.
+		expect(effectiveFilingWindow(settings({ filingAheadDays: 21000 })).aheadDays).toBe(FILING_DAYS_MAX);
+		expect(effectiveFilingWindow(settings({ filingPastDays: 99999 })).pastDays).toBe(FILING_DAYS_MAX);
 	});
 
 	it("falls back rather than syncing a negative or unparseable window", () => {

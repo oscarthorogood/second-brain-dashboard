@@ -6,7 +6,7 @@ import { openFile } from "../opener";
 import { FilePickerModal } from "../pickers";
 import { effectiveFilingFolders, type DashboardCard, type HomeSettings } from "../types";
 import { makeClickable } from "../ui";
-import { attachmentsFolder, destinationFolder, findCourseInText } from "../vaultfiling";
+import { attachmentsFolder, destinationFolder, eventTouchesFolder, findCourseInText } from "../vaultfiling";
 import { type HomeView } from "../view";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
@@ -570,6 +570,6 @@ export const detailCard: CardDefinition<"detail"> = {
 	// for its own folder, rather than rebuilding on every note in the vault.
 	liveness: {
 		mode: "vault",
-		shouldRedraw: (_card, ev, view) => ev.file.path.startsWith(trayOf(view.plugin.settings).folder),
+		shouldRedraw: (_card, ev, view) => eventTouchesFolder(ev, trayOf(view.plugin.settings).folder),
 	},
 };

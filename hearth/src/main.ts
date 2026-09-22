@@ -38,6 +38,27 @@ export default class SbdPlugin extends Plugin {
 	 * the notice says.
 	 */
 	private settingsUnwritable = false;
+
+	/** Whether this session refuses to write settings (see `settingsUnwritable`).
+	 * Read by the settings pane so an import can say what it is about to do. */
+	get settingsLocked(): boolean {
+		return this.settingsUnwritable;
+	}
+
+	/**
+	 * Lift the write lock, for a deliberate restore only.
+	 *
+	 * The lock exists to stop the *in-memory* state — defaults plus a starter
+	 * board — being autosaved over a file we couldn't read. An explicit import
+	 * is different in kind: the user has picked a file, confirmed that it
+	 * replaces their settings, and the state it leaves in memory is the one they
+	 * chose. That is exactly the recovery the load notice points at, and
+	 * without this the import showed "imported" and then saved nothing, so the
+	 * restore silently vanished on the next reload.
+	 */
+	releaseSettingsLock(): void {
+		this.settingsUnwritable = false;
+	}
 	/** The ribbon crystal, kept so the icon can be swapped when the
 	 * themeColorTarget setting changes. */
 	private ribbonEl?: HTMLElement;
@@ -158,7 +179,14 @@ export default class SbdPlugin extends Plugin {
 			// The setup wizard is the fresh install's counterpart and is offered
 			// after it, so the two can never stack: on a first run the changelog
 			// is silently seeded and only the wizard appears.
-			void maybeShowWhatsNew(this).then(() => maybeRunSetup(this));
+			//
+			// Neither runs while the settings file couldn't be read. Both would read
+			// the empty stand-in as a real state — the changelog as an upgrade from
+			// nothing, the wizard as a fresh install — and whatever either wrote
+			// would be refused by the lock anyway.
+			if (!this.settingsUnwritable) {
+				void maybeShowWhatsNew(this).then(() => maybeRunSetup(this));
+			}
 		});
 	}
 
@@ -277,7 +305,12 @@ export default class SbdPlugin extends Plugin {
 		// No persisted keys at all => a genuinely fresh install. An existing vault
 		// that merely lacks a newly-added field (like lastSeenVersion) still has
 		// its other settings here, so it is correctly treated as an upgrade.
-		this.isFirstRun = Object.keys(raw).length === 0;
+		//
+		// An unreadable file also arrives as `{}`, and is emphatically not a fresh
+		// install: treating it as one opened the setup wizard over a vault whose
+		// real settings were only unreadable, and nothing built in it could be
+		// saved.
+		this.isFirstRun = readable && Object.keys(raw).length === 0;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw);
 		// Backfill nested config defaults too, not just top-level keys, so an
 		// object persisted by an older version isn't missing a nested field.

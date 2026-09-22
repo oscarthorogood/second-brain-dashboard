@@ -1006,9 +1006,10 @@ export const en = {
 			unsortedFolderDesc:
 				"Where the Unsorted widget puts prose and dropped files. Attachments go " +
 				"in an “attachments” subfolder of it.",
-			folderPlaceholder: "Claude/inbox",
 			pickFolder: "Choose a folder",
-			resetFolder: "Back to the default",
+			rootRefused:
+				"Second Brain Dashboard: a tray can't be the vault root — its notes would land " +
+				"among your own top-level folders. Pick or type a folder inside the vault.",
 			aheadDays: "Days ahead",
 			aheadDaysDesc:
 				"How far ahead an event is worth a note. A term's timetable is published " +
@@ -1126,6 +1127,12 @@ export const en = {
 			importDesc:
 				"Choose a previously exported layout file. This replaces your current dashboard.",
 			importButton: "Import file",
+			/** Appended to an import's confirmation while the settings file
+			 * couldn't be read on load. */
+			importOverUnreadable:
+				"Your settings file couldn't be read when Obsidian started, so importing " +
+				"this will replace it. Anything in that file that isn't in this import " +
+				"is lost.",
 			importTitle: "Import layout?",
 			importMessage:
 				"This replaces your current dashboard and layout settings. This can't be undone.",

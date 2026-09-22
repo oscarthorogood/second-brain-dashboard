@@ -14,7 +14,7 @@ import {
 	type HomeSettings,
 } from "../types";
 import { makeClickable } from "../ui";
-import { destinationFolder, findCourseInText, type FilingFolders } from "../vaultfiling";
+import { destinationFolder, eventTouchesFolder, findCourseInText, type FilingFolders } from "../vaultfiling";
 import { type HomeView } from "../view";
 
 import { type CardDefinition, type CardEditorContext } from "./definition";
@@ -676,6 +676,6 @@ export const calSyncCard: CardDefinition<"calsync"> = {
 	// auto-refresh clock, which meant a board in use auto-synced roughly never.
 	liveness: {
 		mode: "vault",
-		shouldRedraw: (_card, ev, view) => ev.file.path.startsWith(inboxFolder(view.plugin.settings)),
+		shouldRedraw: (_card, ev, view) => eventTouchesFolder(ev, inboxFolder(view.plugin.settings)),
 	},
 };

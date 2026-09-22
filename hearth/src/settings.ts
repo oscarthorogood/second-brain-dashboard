@@ -7,8 +7,7 @@ import { glyphTile, type TileTint } from "./glyphtile";
 import { addIconPicker } from "./lucide";
 import { CommandPickerModal, FolderPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, CONTENT_WIDTH_MAX, CONTENT_WIDTH_MIN, contentWidthIsFull, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
-import { INBOX_FOLDER, UNSORTED_FOLDER } from "./vaultfiling";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, CONTENT_WIDTH_MAX, CONTENT_WIDTH_MIN, contentWidthIsFull, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, FILING_DAYS_MAX, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
 import { isOmnisearchAvailable, OMNISEARCH_PLUGIN_ID } from "./omnisearch";
@@ -51,7 +50,9 @@ type StringSettingKey =
 	| "taskNotesDueField"
 	| "taskNotesPriorityField"
 	| "taskNotesDoneValue"
-	| "iconizeIconProperty";
+	| "iconizeIconProperty"
+	| "filingInboxFolder"
+	| "filingUnsortedFolder";
 
 /** The GitHub repository and support links surfaced in the About tab. */
 const GITHUB_URL = "https://github.com/oscarthorogood/second-brain-dashboard";
@@ -545,6 +546,9 @@ export class HomeSettingTab extends PluginSettingTab {
 		setting: Setting,
 		sl: SliderComponent,
 		key: NumericSettingKey,
+		/** Anything else that reflects the value. `sl.setValue` does not fire the
+		 * slider's own onChange, so a row that redraws from there would go stale. */
+		onReset?: () => void,
 	): void {
 		setting.addExtraButton((b) =>
 			b
@@ -554,6 +558,7 @@ export class HomeSettingTab extends PluginSettingTab {
 					const def = DEFAULT_SETTINGS[key];
 					(this.plugin.settings as unknown as Record<string, number>)[key] = def;
 					sl.setValue(def);
+					onReset?.();
 					await this.save();
 				}),
 		);
@@ -687,7 +692,9 @@ export class HomeSettingTab extends PluginSettingTab {
 					width.setDesc(widthDesc());
 					await this.save();
 				});
-			this.addSliderReset(width, sl, "maxWidth");
+			this.addSliderReset(width, sl, "maxWidth", () => {
+				width.setDesc(widthDesc());
+			});
 		});
 	}
 
@@ -1458,19 +1465,12 @@ export class HomeSettingTab extends PluginSettingTab {
 		const s = this.plugin.settings;
 		const strings = t().settings.filing;
 
-		this.filingFolderRow(
-			containerEl,
-			strings.inboxFolder,
-			strings.inboxFolderDesc,
-			"filingInboxFolder",
-			INBOX_FOLDER,
-		);
+		this.filingFolderRow(containerEl, strings.inboxFolder, strings.inboxFolderDesc, "filingInboxFolder");
 		this.filingFolderRow(
 			containerEl,
 			strings.unsortedFolder,
 			strings.unsortedFolderDesc,
 			"filingUnsortedFolder",
-			UNSORTED_FOLDER,
 		);
 
 		this.filingDaysRow(containerEl, strings.aheadDays, strings.aheadDaysDesc, "filingAheadDays");
@@ -1499,52 +1499,67 @@ export class HomeSettingTab extends PluginSettingTab {
 			);
 	}
 
-	/** One tray's folder: type a path, pick one from the vault, or go back to
-	 * the default. The value is stored as typed and normalised on read (see
-	 * `effectiveFilingFolders`), so a half-typed path never means the tray
-	 * silently moves mid-keystroke. */
+	/**
+	 * One tray's folder: type a path, pick one from the vault, or go back to the
+	 * default.
+	 *
+	 * A typed path is committed when the field is left (blur) or on Enter — not
+	 * per keystroke. Saving per keystroke moved the tray live while it was being
+	 * typed: every open board redrew against "I", "In", "Inb", and a calendar
+	 * sync that happened to fire mid-edit wrote its events into whichever
+	 * half-typed folder was current, stranding them outside the tray. The value
+	 * is still normalised on read (see `effectiveFilingFolders`), which is what
+	 * stops a stray slash splitting the tray; committing late is what stops a
+	 * half-typed name becoming one.
+	 */
 	private filingFolderRow(
 		containerEl: HTMLElement,
 		name: string,
 		desc: string,
 		key: "filingInboxFolder" | "filingUnsortedFolder",
-		fallback: string,
 	): void {
 		const s = this.plugin.settings;
 		const strings = t().settings.filing;
 		const row = new Setting(containerEl).setName(name).setDesc(desc);
-		let input: TextComponent | null = null;
+		const commit = async (value: string): Promise<void> => {
+			if (value === s[key]) return;
+			s[key] = value;
+			await this.save();
+		};
 		row.addText((txt) => {
-			input = txt;
-			txt.setPlaceholder(strings.folderPlaceholder)
-				.setValue(s[key])
-				.onChange(async (v) => {
-					s[key] = v;
-					await this.save();
-				});
+			// Each row's own default as its placeholder: a shared one showed
+			// "Claude/inbox" in the Unsorted field too, and following that hint
+			// merged the two trays the design keeps apart.
+			txt.setPlaceholder(DEFAULT_SETTINGS[key]).setValue(s[key]);
+			txt.inputEl.addEventListener("blur", () => void commit(txt.getValue()));
+			txt.inputEl.addEventListener("keydown", (evt: KeyboardEvent) => {
+				if (evt.key !== "Enter") return;
+				evt.preventDefault();
+				void commit(txt.getValue());
+			});
+			row.addExtraButton((b) =>
+				b
+					.setIcon("folder-open")
+					.setTooltip(strings.pickFolder)
+					.onClick(() => {
+						new FolderPickerModal(this.app, (folder) => {
+							// The vault root is in the picker's list, and its path "/"
+							// normalises to nothing — so it used to be stored, shown
+							// in the field, and then silently ignored in favour of the
+							// default. A tray at the root would scatter filing notes
+							// among the user's own top-level folders anyway, so it is
+							// refused out loud instead.
+							if (folder.isRoot()) {
+								new Notice(strings.rootRefused);
+								return;
+							}
+							txt.setValue(folder.path);
+							void commit(folder.path);
+						}).open();
+					}),
+			);
+			this.addTextReset(row, txt, key);
 		});
-		row.addExtraButton((b) =>
-			b
-				.setIcon("folder-open")
-				.setTooltip(strings.pickFolder)
-				.onClick(() => {
-					new FolderPickerModal(this.app, (folder) => {
-						s[key] = folder.path;
-						input?.setValue(folder.path);
-						void this.save();
-					}).open();
-				}),
-		);
-		row.addExtraButton((b) =>
-			b
-				.setIcon("rotate-ccw")
-				.setTooltip(strings.resetFolder)
-				.onClick(() => {
-					s[key] = fallback;
-					input?.setValue(fallback);
-					void this.save();
-				}),
-		);
 	}
 
 	/** One end of the sync window, in days. */
@@ -1562,13 +1577,18 @@ export class HomeSettingTab extends PluginSettingTab {
 				txt.setValue(String(s[key])).onChange(async (v) => {
 					const n = parseInt(v, 10);
 					// An unparseable or negative entry keeps the stored value rather
-					// than writing a window that would empty the inbox or never end;
-					// the field shows what the user typed until they leave the row.
+					// than writing a window that would empty the inbox; the field shows
+					// what the user typed until they leave the row. Too large is
+					// clamped to the same bound the importer and the resolver use, so
+					// "2100" typed for "21" can't expand one weekly lecture into
+					// hundreds of notes.
 					if (!Number.isFinite(n) || n < 0) return;
-					s[key] = n;
+					s[key] = Math.min(n, FILING_DAYS_MAX);
 					await this.save();
 				});
 				txt.inputEl.type = "number";
+				txt.inputEl.min = "0";
+				txt.inputEl.max = String(FILING_DAYS_MAX);
 				txt.inputEl.addClass("sbd-count-input");
 			});
 	}
@@ -1928,9 +1948,15 @@ export class HomeSettingTab extends PluginSettingTab {
 	}): Promise<void> {
 		const json = await pickTextFile();
 		if (json === null) return; // cancelled or unreadable
+		// While the settings file couldn't be read, an import is the way back —
+		// and it writes over that file, so the confirmation says so rather than
+		// leaving it to be discovered.
+		const locked = this.plugin.settingsLocked;
 		confirmAction(this.app, {
 			title: opts.title,
-			message: opts.message,
+			message: locked
+				? `${opts.message} ${t().settings.layout.importOverUnreadable}`
+				: opts.message,
 			confirmText: t().settings.layout.importButton,
 			onConfirm: () => {
 				const error = opts.apply(json);
@@ -1938,6 +1964,10 @@ export class HomeSettingTab extends PluginSettingTab {
 					new Notice(t().notices.layoutImportError(error));
 					return;
 				}
+				// A confirmed import is the user choosing what gets written, which is
+				// the one thing the lock can't know on its own. Released only after
+				// the apply succeeded, so a malformed file leaves the lock in place.
+				if (locked) this.plugin.releaseSettingsLock();
 				void this.save();
 				// An import can carry a different tab icon (or theme-color
 				// target), and neither the ribbon button nor an open tab header
