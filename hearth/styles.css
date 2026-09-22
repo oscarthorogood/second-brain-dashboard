@@ -3893,15 +3893,21 @@ body.theme-dark {
    chips gathered at the right edge, and only the title yielding when there
    isn't room for everything — it ellipsizes rather than wrapping the row (see
    the `is-done` rule below for what a completed one looks like). */
+/* The title outranks the chips beside it.
+ *
+ * This carried `flex: 1 1 0` — a zero basis, chosen so the row would never
+ * wrap and the title would shrink instead. What that produced on a narrow
+ * card was a status chip and a priority chip at full size next to a title cut
+ * to "Finish b…": the row kept every word of its metadata and threw away the
+ * task. An `auto` basis lets the title's own width count towards the line, so
+ * the chips (which already wrap among themselves) drop below it instead, and
+ * the floor stops the title being squeezed to an ellipsis before they do. */
 .sbd-task-main {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	/* Zero basis: a flex item is broken onto the next line by its *content*
-	   width, so a long title would wrap the row however freely it can shrink
-	   afterwards. With no basis to overflow it stays put and shrinks instead. */
-	flex: 1 1 0;
-	min-width: 0;
+	flex: 1 1 auto;
+	min-width: min(22ch, 100%);
 }
 
 /* The chips, held against the right edge. They keep their size until they alone
@@ -4086,6 +4092,52 @@ body.theme-dark {
 	color: var(--text-muted);
 	font-size: 0.72rem;
 	white-space: nowrap;
+}
+
+/* ---- Task chips on the board ----------------------------------------
+ *
+ * A priority label is tinted toward --text-normal so the level's colour
+ * still reads as that level. Everywhere else in Obsidian --text-normal is
+ * the ink the chip sits against, so the mix moves it AWAY from the
+ * background; on this board --text-normal is white and the chip sits on pale
+ * glass, so the same mix moved it towards the background instead — a
+ * mid-orange "Normal" at 70% strength over a light card is the unreadable
+ * label in the TaskNotes widget.
+ *
+ * On the board the ratio is inverted: mostly white, with enough of the level
+ * in it to still say which level. The dot beside it is unchanged and carries
+ * the colour at full strength, which is where the cue actually lives. */
+.sbd-view .sbd-task-priority.is-text,
+.sbd-view .sbd-task-priority.is-colored .sbd-task-priority-label {
+	color: color-mix(in srgb, var(--level-color) 28%, #ffffff);
+}
+
+/* The pill form keeps its tint as a fill, so its label may stay white. */
+.sbd-view .sbd-task-priority.is-pill {
+	background: color-mix(in srgb, var(--level-color) 30%, rgba(255, 255, 255, 0.16));
+	color: #ffffff;
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--level-color) 45%, transparent);
+}
+
+/* The status chip ("Open", "In progress") had --background-modifier-hover at
+ * white-20% under --text-muted at white-65%: a pale chip carrying paler text,
+ * which on a light wallpaper is two shades of nothing. */
+.sbd-view .sbd-task-status {
+	background: rgba(255, 255, 255, 0.26);
+	color: #ffffff;
+	font-weight: 600;
+}
+
+/* A sheet-tier row (the query, search and Kanban surfaces) flips back to dark
+ * ink, so neither override applies there. */
+.sbd-view .sbd-list.is-sheet .sbd-task-priority.is-text,
+.sbd-view .sbd-list.is-sheet .sbd-task-priority.is-colored .sbd-task-priority-label {
+	color: color-mix(in srgb, var(--level-color) 70%, var(--sbd-sheet-ink));
+}
+
+.sbd-view .sbd-list.is-sheet .sbd-task-status {
+	background: rgba(0, 0, 0, 0.07);
+	color: var(--sbd-sheet-ink-muted);
 }
 
 /* Favorites cards */
@@ -13830,11 +13882,24 @@ body.sbd-dv-resizing {
    card's output, not an error state, and a line that only appears when
    something is wrong leaves the reader unsure whether nothing is waiting or
    nothing was written. The empty state says so in the same place instead. */
+/* The status line — how much is waiting in Claude/inbox or Claude/unsorted —
+ * is pinned to the card's bottom edge rather than following the content.
+ * `margin-top: auto` needs a flex column to push against, which is what the
+ * rule below gives these two cards; before it the line sat wherever the
+ * actions above it ended, which on a full card was past the bottom edge (and,
+ * now that a widget clips rather than scrolls, out of sight entirely). */
+.sbd-card.is-detail-card > .sbd-card-body,
+.sbd-card.is-calsync-card > .sbd-card-body {
+	display: flex;
+	flex-direction: column;
+}
+
 .sbd-tray-line {
 	display: flex;
 	align-items: center;
 	gap: 7px;
-	margin-top: 10px;
+	flex: none;
+	margin-top: auto;
 	padding: 7px 9px;
 	border-radius: var(--sbd-radius-s);
 	background: rgba(255, 255, 255, 0.12);
@@ -13845,6 +13910,15 @@ body.sbd-dv-resizing {
 
 .sbd-tray-line:hover {
 	background: rgba(255, 255, 255, 0.2);
+}
+
+/* Files are over the card. The whole body lights up, because the whole body
+ * is the target — see `acceptDrops` in cards/detail.ts. */
+.sbd-card.is-detail-card > .sbd-card-body.is-drop-over {
+	outline: 2px dashed rgba(255, 255, 255, 0.7);
+	outline-offset: -8px;
+	border-radius: var(--sbd-radius-l);
+	background: rgba(255, 255, 255, 0.12);
 }
 
 /* An empty tray is good news, not a dead control: it stays legible and stays

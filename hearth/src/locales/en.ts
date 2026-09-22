@@ -55,6 +55,8 @@ export const en = {
 			`Second Brain Dashboard: couldn't save ${name} — check Claude/unsorted/attachments is writable, then drop it again.`,
 		detailQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Claude/unsorted.`,
+		detailNoteFailed:
+			"Second Brain Dashboard: couldn't create the note — check Claude/unsorted is writable.",
 		calsyncQueued: (n: number) =>
 			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} written to Claude/inbox.`,
 		calsyncFailed: (n: number) =>
@@ -79,6 +81,7 @@ export const en = {
 		layoutImported: "Second Brain Dashboard: layout imported.",
 		layoutImportError: (error: string) => `Second Brain Dashboard: ${error}`,
 		settingsExported: "Second Brain Dashboard: settings exported.",
+		autoBackupRestored: "Second Brain Dashboard: restored the settings saved before the last update.",
 		settingsImported: "Second Brain Dashboard: settings imported.",
 		exportedToVault: (file: string) =>
 			`Second Brain Dashboard: saved ${file} to your vault's root folder.`,
@@ -1086,6 +1089,23 @@ export const en = {
 			importSettingsMessage:
 				"This replaces all your Second Brain Dashboard settings — dashboard, layout, header, " +
 				"background, behaviour and appearance. This can't be undone.",
+
+			/** The automatic pre-update snapshot (see SettingsBackup in types.ts). */
+			autoBackup: "Before the last update",
+			autoBackupDesc: (version: string, when: string) =>
+				`Your board and settings as version ${version || "the previous version"} left them, saved ` +
+				`automatically on ${when}. Restore this if an update moved your widgets or lost a setting.`,
+			autoBackupNone: "Before the last update",
+			autoBackupNoneDesc:
+				"A copy of your board and settings is saved automatically whenever a new version reads " +
+				"them for the first time, so an update can always be undone. There is nothing to restore " +
+				"yet — this version is the one that wrote your current settings.",
+			autoBackupRestore: "Restore",
+			autoBackupDownload: "Download",
+			autoBackupTitle: "Restore the pre-update backup?",
+			autoBackupMessage:
+				"This replaces all your Second Brain Dashboard settings with the copy saved before the " +
+				"last update. Your current settings are not kept.",
 		},
 	},
 
@@ -2343,9 +2363,20 @@ export const en = {
 		},
 		detail: {
 			eyebrow: "Claude",
+			/** The card's own name, at every size: the tray it fills. */
+			title: "Unsorted",
 			addDetail: "Add detail",
 			toUnsorted: "To unsorted",
-			headlineLong: "Add detail to unsorted",
+			headlineLong: "Unsorted",
+			/** The card's first action: a blank note in the tray, opened to write in. */
+			createNote: "Create note",
+			createNoteSub: "A new note in the tray, opened",
+			/** Its second: the card itself takes dropped files. */
+			dragDrop: "Drag and drop",
+			dragDropSub: "Drop files here, or click to add detail",
+			/** Shown across the card while files are over it. */
+			dropOver: "Drop to file in Claude/unsorted",
+			newNoteName: "Unsorted note",
 			linkPage: "Link a page",
 			linkPageSub: "Search your vault",
 			dropFiles: "Drop files",

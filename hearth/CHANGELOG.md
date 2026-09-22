@@ -15,6 +15,46 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Your board and settings are backed up before every update.** Obsidian
+  leaves `data.json` alone when it updates a plugin, so settings already
+  survive an update by themselves — what does not survive is a migration that
+  reads an old board differently (2.1.0's fixed 16×8 grid repacks a board
+  saved by a free-form one, and re-running it cannot undo that), or a
+  reinstall that replaces the plugin folder rather than its files. Whenever a
+  new version reads your settings for the first time, and before any migration
+  touches them, a copy of the state the previous version left behind is saved.
+  **Settings → Backup** names its version and date, and offers to download it
+  or restore it. One slot, always the last update, and restoring keeps it.
+
+- **The TaskNotes widget is readable.** Two things made a task row hard to
+  read. Its title was set to shrink before the chips beside it, so a row on a
+  narrow card kept "Open" and "Normal" at full size next to a title cut to
+  "Finish b…" — the row kept all of its metadata and threw away the task; the
+  chips now wrap below the title instead. And a priority label is tinted
+  toward `--text-normal`, which everywhere else in Obsidian moves it away from
+  the surface behind it — but on this board `--text-normal` is white and the
+  chip sits on pale glass, so the same tint moved it *towards* the background.
+  On the board the label is now near-white with the level mixed in, with the
+  coloured dot beside it carrying the cue at full strength, and the status
+  chip is no longer a pale chip under paler text.
+
+### Added
+
+- **The "Add detail" widget is now "Unsorted", and it takes drops.** It is
+  named for the tray it fills, like the sync widget beside it. Its three
+  actions — "Link a page", "Write notes" and "Drop files" — were three doors
+  onto one dialog; it now offers **Create note**, which writes a note straight
+  into `Claude/unsorted` and opens it, and **Drag and drop**, which is a real
+  drop target: files dropped anywhere on the widget are filed into the tray
+  with the same filing note the dialog writes, without opening it. Everything
+  the dialog did, it still does.
+
+- **Both Claude widgets show their tray's depth, and keep showing it.** The
+  status line — "3 items waiting in Claude/inbox" — was already drawn at every
+  size but small, but it sat wherever the content above it ended, which on a
+  full widget was past the bottom edge. It is pinned to the bottom of the
+  widget now, with the rows above it sharing what is left.
+
 - **The course widget's four columns are four different things, and they can
   be read.** The extra large card's second column was "Upcoming", fed by every
   deadline type — which is the union of the two columns beside it, so a course

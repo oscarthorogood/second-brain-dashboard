@@ -1772,6 +1772,34 @@ export interface HomeSettings {
 	lastSeenVersion: string;
 	/** How far the first-run setup wizard has got. See {@link SetupStatus}. */
 	setupStatus: SetupStatus;
+	/** The board and settings as they stood the last time the running version
+	 * differed from the one that wrote them — taken on load, before any
+	 * migration touches them, so an update can always be undone. See
+	 * {@link SettingsBackup} and `SbdPlugin.loadSettings`. */
+	preUpdateBackup: SettingsBackup | null;
+}
+
+/**
+ * A copy of every configurable setting, taken automatically just before a new
+ * version reads them for the first time.
+ *
+ * Obsidian leaves `data.json` alone when it updates a plugin, so settings do
+ * survive an update by themselves. What does not survive is a migration that
+ * reads an old board differently (the fixed 16×8 grid in 2.1.0 repacks a
+ * free-form one), a reinstall that replaces the plugin folder rather than its
+ * files, or a hand-edited file that syncs badly. This is the undo for all
+ * three: one slot, always the state the previous version left behind, restored
+ * from the Backup tab.
+ */
+export interface SettingsBackup {
+	/** The version that wrote these settings. */
+	version: string;
+	/** When the snapshot was taken, as an ISO timestamp. */
+	savedAt: string;
+	/** The settings themselves, in the JSON shape `exportSettings` writes and
+	 * `importSettings` reads — so restoring is the same code path as importing
+	 * a backup file, rather than a second way to apply settings. */
+	data: string;
 }
 
 /**
@@ -1879,6 +1907,7 @@ export const DEFAULT_SETTINGS: HomeSettings = {
 	// every *existing* vault as done, so nobody is offered a rebuild of a
 	// dashboard they already have.
 	setupStatus: "pending",
+	preUpdateBackup: null,
 };
 
 /** The cards a brand-new vault starts with. Coordinates and sizes are taken

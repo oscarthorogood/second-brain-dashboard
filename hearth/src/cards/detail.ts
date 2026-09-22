@@ -1,7 +1,8 @@
 import { Modal, Notice, setIcon, Setting, TFile, type App } from "obsidian";
-import { fileForClaude, revealTray, trayCount, writeAttachment } from "../claudebridge";
+import { fileForClaude, revealTray, trayCount, writeAttachment, writeNote } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { t } from "../i18n";
+import { openFile } from "../opener";
 import { FilePickerModal } from "../pickers";
 import { type DashboardCard } from "../types";
 import { makeClickable } from "../ui";
@@ -26,11 +27,18 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * `claudebridge.ts` for why the decision doesn't live in this plugin.
  *
  * The tray is named at every size but small, for the same reason the sync card
- * names its inbox: a card that writes into the vault should say where.
+ * names its inbox: a card that writes into the vault should say where. Its
+ * depth — how much is sitting in `Claude/unsorted` right now — is the card's
+ * status line, pinned to the bottom edge so it is on screen whatever the
+ * actions above it do.
+ *
+ * The card is called "Unsorted" rather than "Add detail": it is named for the
+ * tray it fills, the way the sync card is named for its inbox, and the two
+ * read as a pair on a board that carries both.
  *
  * Reference (Widget Set v2 → DETAIL): small is a single add button, medium
- * gains the page field and two chips, large stacks the three actions as rows,
- * extra large runs them as three columns.
+ * gains the page field and two chips, large stacks the actions as rows, extra
+ * large runs them as columns.
  */
 
 /** Where dropped files wait. A subfolder of the tray so an attachment never
@@ -55,7 +63,7 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 		case "medium": {
 			const head = body.createDiv("sbd-card-headline");
 			setIcon(head.createDiv("sbd-card-headline-icon"), "folder-input");
-			head.createDiv({ cls: "sbd-card-headline-text", text: strings.addDetail });
+			head.createDiv({ cls: "sbd-card-headline-text", text: strings.title });
 			destinationChip(head);
 			const row = body.createDiv("sbd-detail-row");
 			searchField(row, open);
@@ -68,15 +76,17 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 			const head = body.createDiv("sbd-course-head is-stacked");
 			const text = head.createDiv("sbd-course-headtext");
 			text.createDiv({ cls: "sbd-card-eyebrow", text: strings.eyebrow });
-			text.createDiv({
-				cls: "sbd-course-name is-large",
-				text: card.size === "xlarge" ? strings.headlineLong : strings.addDetail,
-			});
+			text.createDiv({ cls: "sbd-course-name is-large", text: strings.title });
 			destinationChip(text);
 			const wrap = body.createDiv(card.size === "xlarge" ? "sbd-detail-cols" : "sbd-detail-stack");
-			action(wrap, "link", strings.linkPage, strings.linkPageSub, open, "glass");
-			action(wrap, "download", strings.dropFiles, strings.dropFilesSub, open, "sheet");
-			action(wrap, "pencil", strings.writeNotes, strings.writeNotesSub, open, "sheet");
+			// Two actions, not three. "Link a page" and "Write notes" were two
+			// doors onto the same dialog, which the drop action already opens —
+			// and neither is the thing you reach for most, which is somewhere
+			// to start typing. Both still live in that dialog.
+			action(wrap, "file-plus", strings.createNote, strings.createNoteSub, () => {
+				void createUnsortedNote(view);
+			}, "glass");
+			action(wrap, "download", strings.dragDrop, strings.dragDropSub, open, "sheet");
 			break;
 		}
 	}
@@ -86,6 +96,100 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 	// is draining is the one failure mode worth surfacing here, since the plugin
 	// has done its half and the items are still waiting.
 	if (card.size !== "small") trayLine(view, body);
+
+	// "Drag and drop" that only opens a dialog with a drop zone in it is a
+	// dialog, not a drop. The card itself takes the files.
+	acceptDrops(view, card, body);
+}
+
+/** Make the card a drop target: files dropped anywhere on it are filed into
+ * `Claude/unsorted` exactly as the dialog files them, without opening it. */
+function acceptDrops(view: HomeView, card: DashboardCard, body: HTMLElement): void {
+	body.addEventListener("dragover", (evt: DragEvent) => {
+		// Only claim the drop when the drag actually carries files: a widget
+		// being dragged across the board in arrange mode must not land here.
+		if (!evt.dataTransfer?.types.includes("Files")) return;
+		evt.preventDefault();
+		evt.dataTransfer.dropEffect = "copy";
+		body.addClass("is-drop-over");
+	});
+	body.addEventListener("dragleave", (evt: DragEvent) => {
+		// `dragleave` fires for every child the pointer crosses, so ignore the
+		// ones that are still inside the card.
+		if (evt.relatedTarget instanceof Node && body.contains(evt.relatedTarget)) return;
+		body.removeClass("is-drop-over");
+	});
+	body.addEventListener("drop", (evt: DragEvent) => {
+		const files = Array.from(evt.dataTransfer?.files ?? []);
+		if (!files.length) return;
+		evt.preventDefault();
+		body.removeClass("is-drop-over");
+		void fileDroppedAttachments(view, card, files);
+	});
+}
+
+/** File dropped attachments into the tray, one filing note each — the same
+ * write the dialog's Save performs, so both routes leave the same trail. */
+async function fileDroppedAttachments(
+	view: HomeView,
+	card: DashboardCard,
+	files: File[],
+): Promise<void> {
+	const app = view.app;
+	const target = targetOf(app, card);
+	const targetPath = target?.path ?? "";
+	const courseHint = findCourseInText(targetPath, courseNames(app));
+	const source = targetPath || UNSORTED_FOLDER;
+	let queued = 0;
+
+	for (const file of files) {
+		let written: TFile | null = null;
+		try {
+			written = await writeAttachment(app, UNSORTED_ATTACHMENTS, file.name, await file.arrayBuffer());
+		} catch {
+			written = null;
+		}
+		if (!written) {
+			new Notice(t().notices.detailAttachmentFailed(file.name));
+			continue;
+		}
+		await fileForClaude(
+			app,
+			{
+				kind: "attachment",
+				destination: "unsorted",
+				source,
+				summary: file.name,
+				courseHint,
+				attachmentPath: written.path,
+				content: `![[${written.path}]]`,
+				details: {
+					[t().cards.detail.detailTargetNote]: targetPath,
+					[t().cards.detail.detailSize]: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+				},
+			},
+			targetPath ? { "sbd-target": targetPath } : {},
+		);
+		queued++;
+	}
+
+	new Notice(queued ? t().notices.detailQueued(queued) : t().notices.detailNothingToSave);
+	view.render();
+}
+
+/** Create a blank note in the tray and open it — the card's "Create note".
+ * The note is written where everything else this card collects goes, so it
+ * is picked up by the same reader rather than becoming a loose file. */
+async function createUnsortedNote(view: HomeView): Promise<void> {
+	const file = await writeNote(view.app, UNSORTED_FOLDER, t().cards.detail.newNoteName, {}, "");
+	if (!file) {
+		new Notice(t().notices.detailNoteFailed);
+		return;
+	}
+	await openFile(view, file, "card");
+	// The tray line's count is now one out of date, and the card is still on
+	// screen behind whatever the note opened into.
+	view.render();
 }
 
 /** The folder everything this card collects lands in. */
