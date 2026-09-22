@@ -2345,6 +2345,9 @@ export const en = {
 			syncing: "Syncing…",
 			blocked: "External calls are off",
 			notConnected: "Not connected",
+			/** The second line of an unconfigured feed's row — what to do about
+			 * it, since the status column already says it isn't connected. */
+			addFeedHint: "Add a URL in settings",
 			notCalendar: "Not a calendar feed",
 			off: "Not watched",
 			neverSynced: "Never synced",

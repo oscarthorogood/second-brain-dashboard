@@ -15,6 +15,30 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Changed
 
+- **Every widget gets the row rhythm the stylesheet was written for.** A
+  widget's body was a block, which quietly disabled two rules aimed at it: the
+  per-size gap between its rows (8 / 10 / 13 / 16px, the reference's own steps)
+  and the centring that pulls the one or two rows a small or medium tile holds
+  away from the top edge. Every widget that wanted either had to reinvent it —
+  a margin under its header, or its own `display: flex` — and the rest simply
+  went without, which is most of why some widgets read as cramped and others
+  as top-heavy. The body is a column now and those stand-in margins are
+  cancelled where the gap covers them; three rules that were already written
+  to pin something to a widget's bottom edge (the course tile's latest
+  lecture, the sync widget's footer, both trays' status lines) start working
+  for the first time.
+
+- **An unconfigured calendar feed says what to do, not "Not connected" twice.**
+  A feed with no URL drew "Not connected" as its subtitle and again as its
+  status, so the row spent both its lines saying the same thing. The subtitle
+  is the server the feed comes from when there is one, and otherwise points at
+  the setting that would give it one.
+
+- **The search widget's file-type filters name themselves on hover.** They are
+  icon-only by design, and carried their names in the accessibility tree only
+  — which a pointer never reaches. They have tooltips now; the row is
+  unchanged.
+
 - **Your board and settings are backed up before every update.** Obsidian
   leaves `data.json` alone when it updates a plugin, so settings already
   survive an update by themselves — what does not survive is a migration that

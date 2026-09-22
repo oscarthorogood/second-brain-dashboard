@@ -1942,6 +1942,18 @@ body.theme-dark {
  * scroll INSIDE their own pane (.sbd-embed, .sbd-sched-scroll and friends
  * set their own overflow); it is only the card-level scrollbar that goes. */
 .sbd-card-body {
+	/* A column, so the rhythm below is the one that actually runs.
+	 *
+	 * This was a block, which quietly disabled two things written for it: the
+	 * per-size `gap` a few rules down (8/10/13/16px, the reference's own steps)
+	 * and the `justify-content: center` that centres what little a small or
+	 * medium tile holds. Every card that wanted either had to reinvent it —
+	 * with a margin-bottom on its header, or by declaring `display: flex` on
+	 * its own body — and every card that did not simply went without. Those
+	 * stand-in margins are cancelled where the gap now covers them (see the
+	 * rule after the size table). */
+	display: flex;
+	flex-direction: column;
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
@@ -2027,6 +2039,25 @@ body.theme-dark {
 
 .sbd-card.is-size-xlarge > .sbd-card-body {
 	gap: 16px;
+}
+
+/* The stand-ins for the gap above.
+ *
+ * Each of these is a header row that a card draws straight into its body, and
+ * each carried a margin-bottom of its own (12-16px) because the body's gap was
+ * not running. Only cancelled where they are a DIRECT child of the body — the
+ * same elements nested inside a pane or a column (a course pane's eyebrow, a
+ * sync column's head) still have no gap around them and still need theirs. */
+.sbd-card-body > .sbd-card-eyebrow,
+.sbd-card-body > .sbd-card-headline,
+.sbd-card-body > .sbd-course-head,
+.sbd-card-body > .sbd-sync-head,
+.sbd-card-body > .sbd-query-head,
+.sbd-card-body > .sbd-query-source,
+.sbd-card-body > .sbd-embed-path,
+.sbd-card-body > .sbd-leaf-viewtype,
+.sbd-card-body > .sbd-web-bar {
+	margin-bottom: 0;
 }
 
 /* An extra-large tile is twice the width of a large one and the same height,
@@ -13884,16 +13915,10 @@ body.sbd-dv-resizing {
    nothing was written. The empty state says so in the same place instead. */
 /* The status line — how much is waiting in Claude/inbox or Claude/unsorted —
  * is pinned to the card's bottom edge rather than following the content.
- * `margin-top: auto` needs a flex column to push against, which is what the
- * rule below gives these two cards; before it the line sat wherever the
- * actions above it ended, which on a full card was past the bottom edge (and,
- * now that a widget clips rather than scrolls, out of sight entirely). */
-.sbd-card.is-detail-card > .sbd-card-body,
-.sbd-card.is-calsync-card > .sbd-card-body {
-	display: flex;
-	flex-direction: column;
-}
-
+ * `margin-top: auto` pushes against the card body's flex column; before it the
+ * line sat wherever the actions above it ended, which on a full card was past
+ * the bottom edge (and, now that a widget clips rather than scrolls, out of
+ * sight entirely). */
 .sbd-tray-line {
 	display: flex;
 	align-items: center;

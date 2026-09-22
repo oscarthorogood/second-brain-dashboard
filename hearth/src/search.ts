@@ -1,4 +1,4 @@
-import { Command, Component, debounce, Platform, setIcon, TAbstractFile, TFile, TFolder } from "obsidian";
+import { Command, Component, debounce, Platform, setIcon, setTooltip, TAbstractFile, TFile, TFolder } from "obsidian";
 import type { HomeView } from "./view";
 import { applyFileIcon, fileIconOptions, resolveFileIcon, type ResolvedIcon } from "./fileicons";
 import { FILE_TYPE_GROUPS, FileTypeGroup, fileTypeLabel, groupForFile, OTHER_GROUP_ID } from "./filetypes";
@@ -224,7 +224,12 @@ export class SearchSection {
 			const chip = row.createDiv("sbd-filter");
 			chip.toggleClass("is-active", this.activeFilter === group.id);
 			setIcon(chip.createDiv("sbd-filter-icon"), group.icon);
+			// The chip is icon-only, per the reference, so its name lives in the
+			// accessibility tree — which a pointer never reaches. A tooltip says
+			// the same thing to the other half of the users, and costs the row
+			// no width.
 			chip.setAttribute("aria-label", fileTypeLabel(group));
+			setTooltip(chip, fileTypeLabel(group));
 			chip.setAttribute("role", "button");
 			chip.setAttribute("tabindex", "0");
 			chip.setAttribute("aria-pressed", String(this.activeFilter === group.id));
