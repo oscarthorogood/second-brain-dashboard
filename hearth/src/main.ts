@@ -1,6 +1,6 @@
 import { addIcon, apiVersion, debounce, normalizePath, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
 import { HomeView, VIEW_TYPE_HOME } from "./view";
-import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings, settingsAreReadable } from "./types";
+import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings, type SettingsBackup, settingsAreReadable } from "./types";
 import { HomeSettingTab } from "./settings";
 import {
 	SBD_ICON_ID,
@@ -15,6 +15,7 @@ import { setLanguage, t } from "./i18n";
 import { maybeShowWhatsNew } from "./whatsnew";
 import { maybeRunSetup, openSetupWizard } from "./onboarding";
 import { exportSettings } from "./layout";
+import { isNewer } from "./changelog";
 import { clearContentSearchCache } from "./query";
 
 /** Core "Audio recorder" plugin id, used by the "Record voice" mobile action. */
@@ -311,7 +312,13 @@ export default class SbdPlugin extends Plugin {
 		// real settings were only unreadable, and nothing built in it could be
 		// saved.
 		this.isFirstRun = readable && Object.keys(raw).length === 0;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw);
+		// Cloned, not assigned: `Object.assign` is shallow, so every array and
+		// object default the file didn't carry (`favorites`, `cards`, …) was the
+		// *same object* as the one in DEFAULT_SETTINGS. Pinning a favourite then
+		// pushed into the default itself, and anything later reading the defaults
+		// in that session — a reset button, the pre-update snapshot — saw the
+		// user's data as the factory value.
+		this.settings = Object.assign(structuredClone(DEFAULT_SETTINGS), raw);
 		// Backfill nested config defaults too, not just top-level keys, so an
 		// object persisted by an older version isn't missing a nested field.
 		fillMissingDefaults(
@@ -320,12 +327,25 @@ export default class SbdPlugin extends Plugin {
 		);
 		// Snapshot BEFORE the migration below, so the copy is what the previous
 		// version actually left behind rather than what this one made of it.
-		const snapshotted = this.snapshotBeforeUpdate(raw);
+		// Never of an unreadable file: all there is to copy is the stand-in, and
+		// once an import lifts the lock that stand-in would be saved as the
+		// "undo" for this update.
+		const snapshotted = readable && this.snapshotBeforeUpdate(raw);
 		// A one-way migration (e.g. the commandId → target fold) mutates settings
 		// in memory only; without flushing it here the legacy data would survive
 		// in storage and the migration would re-run every start, never actually
 		// retiring the deprecated field. Persist immediately when that happens.
 		const migrated = migrateSettings(this.settings, raw);
+		if (!readable) {
+			// The migration read `{}` as a fresh install and set the bookkeeping to
+			// match: the wizard pending, no version seen. Neither is true of a vault
+			// that had a settings file, and an import that lifts the lock doesn't
+			// carry either field (they are left out of exports on purpose) — so
+			// without this the wizard opened over the restored board on the next
+			// launch and What's New replayed the whole changelog.
+			this.settings.setupStatus = "done";
+			this.settings.lastSeenVersion = this.manifest.version;
+		}
 		if (migrated || snapshotted) await this.saveSettings();
 	}
 
@@ -420,16 +440,27 @@ export default class SbdPlugin extends Plugin {
 	 */
 	private snapshotBeforeUpdate(raw: Record<string, unknown>): boolean {
 		if (this.isFirstRun) return false;
+		const current = this.manifest.version;
 		const previous = typeof raw.lastSeenVersion === "string" ? raw.lastSeenVersion : "";
 		// An empty lastSeenVersion is a vault from before that field existed, so
-		// it IS an upgrade and is worth snapshotting; the same version is not.
-		if (previous === this.manifest.version) return false;
+		// it IS an upgrade and is worth snapshotting. Otherwise only a move to a
+		// NEWER version is: a downgrade has nothing of this version's to undo.
+		if (previous !== "" && !isNewer(current, previous)) return false;
+		// And only once per version. Two devices syncing one data.json on
+		// different builds flip lastSeenVersion back and forth, so "it differs"
+		// alone re-took the snapshot on every alternation — overwriting the copy
+		// from before this version's migration with the already-migrated board
+		// on the very first flip. The snapshot this version took is the one to
+		// keep.
+		const existing = raw.preUpdateBackup as SettingsBackup | undefined;
+		if (existing?.takenBy === current) return false;
 		this.settings.preUpdateBackup = {
 			version: previous,
 			savedAt: new Date().toISOString(),
 			// exportSettings enumerates the settings it carries, so the snapshot
 			// never contains a previous snapshot — this slot cannot compound.
 			data: exportSettings(this.settings),
+			takenBy: current,
 		};
 		return true;
 	}

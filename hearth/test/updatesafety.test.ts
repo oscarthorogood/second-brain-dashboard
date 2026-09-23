@@ -119,3 +119,22 @@ describe("settingsAreReadable", () => {
 		expect(settingsAreReadable(42, false, true)).toBe(false);
 	});
 });
+
+describe("migrateSettings: the legacy multi-dashboard fold runs once", () => {
+	it("retires the legacy keys so the fold can't replace a later board", () => {
+		// The bug: the keys rode along into every save, the fold re-ran on every
+		// load, and each reload replaced the user's new board with the legacy one.
+		const s = { ...structuredClone(DEFAULT_SETTINGS) } as HomeSettings & Record<string, unknown>;
+		const raw = {
+			dashboards: [{ id: "a", cards: [{ id: "x", kind: "text", size: "medium" }] }],
+			activeDashboardId: "a",
+			pinnedCards: [],
+		};
+		Object.assign(s, raw);
+		const migrated = migrateSettings(s, raw);
+		expect(migrated).toBe(true);
+		expect("dashboards" in s).toBe(false);
+		expect("activeDashboardId" in s).toBe(false);
+		expect("pinnedCards" in s).toBe(false);
+	});
+});

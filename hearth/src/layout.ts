@@ -139,6 +139,7 @@ export function exportSettings(s: HomeSettings): string {
 		logo: s.logo,
 		logoIcon: s.logoIcon,
 		tabIcon: s.tabIcon,
+		themeColorTarget: s.themeColorTarget,
 		showSearch: s.showSearch,
 		searchPlaceholder: s.searchPlaceholder,
 		showNewNoteButton: s.showNewNoteButton,
@@ -160,10 +161,13 @@ export function exportSettings(s: HomeSettings): string {
 		// would describe a look the importing vault doesn't show.
 		lowPower: s.lowPower,
 		lowPowerBackgroundColor: s.lowPowerBackgroundColor,
+		backgroundSkyAnimate: s.backgroundSkyAnimate,
 
 		// Behaviour
 		openOnStartup: s.openOnStartup,
 		replaceNewTabs: s.replaceNewTabs,
+		focusSearchOnOpen: s.focusSearchOnOpen,
+		liveRefresh: s.liveRefresh,
 		mobileSearchOnly: s.mobileSearchOnly,
 		showMobileActionBar: s.showMobileActionBar,
 		mobileActionButtons: s.mobileActionButtons,
@@ -173,6 +177,7 @@ export function exportSettings(s: HomeSettings): string {
 		openFromOutside: s.openFromOutside,
 
 		// Appearance
+		arrangeButtonVisibility: s.arrangeButtonVisibility,
 		cardOpacity: s.cardOpacity,
 		cardBlur: s.cardBlur,
 		cardRadius: s.cardRadius,
@@ -197,6 +202,10 @@ export function exportSettings(s: HomeSettings): string {
 		taskNotesDoneValue: s.taskNotesDoneValue,
 		taskFieldsEnabled: s.taskFieldsEnabled,
 		taskFields: s.taskFields,
+
+		// File icons
+		customFileIcons: s.customFileIcons,
+		iconizeIconProperty: s.iconizeIconProperty,
 	};
 	return JSON.stringify(data, null, 2);
 }
@@ -277,6 +286,61 @@ function sanitizeLink(raw: unknown): LinkItem | null {
 	if (typeof r.row === "number" && r.row >= 0) link.row = r.row;
 	return link;
 }
+
+/** Keys that must never be copied from imported data: assigning any of these
+ * on a plain object reaches the prototype chain rather than the object. */
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+/**
+ * A JSON-safe deep copy of plain data: objects, arrays, strings, finite
+ * numbers and booleans. Anything else — and any prototype-reaching key — is
+ * dropped, and nesting past a bound is cut off.
+ *
+ * The fallback for a card kind whose config has no dedicated sanitizer. The
+ * alternative this replaces was dropping that config outright: nine widget
+ * kinds (schedule, weather, pet, templater, stats, the search bar, course,
+ * calendar sync, unsorted) came back from every settings import — and from the
+ * automatic pre-update backup, which is the undo for an update — as bare,
+ * unconfigured widgets, with the result saved over the live settings.
+ *
+ * This does not validate field *values*; the renderers already read every
+ * field defensively (`?? default`), because data.json itself can be
+ * hand-edited. What it guarantees is that nothing but inert data gets in.
+ */
+function plainData(value: unknown, depth = 0): unknown {
+	if (depth > 8) return undefined;
+	if (typeof value === "string" || typeof value === "boolean") return value;
+	if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+	if (Array.isArray(value)) {
+		return value.map((v) => plainData(v, depth + 1)).filter((v) => v !== undefined);
+	}
+	if (value && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+		const out: Record<string, unknown> = {};
+		for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+			if (UNSAFE_KEYS.has(key)) continue;
+			const copied = plainData(v, depth + 1);
+			if (copied !== undefined) out[key] = copied;
+		}
+		return out;
+	}
+	return undefined;
+}
+
+/** Per-kind config on a card that has no dedicated sanitizer, copied through
+ * {@link plainData}. A new card kind's config belongs here until it earns a
+ * sanitizer of its own — the failure mode of forgetting is a silent wipe. */
+const PLAIN_CARD_CONFIG = [
+	"schedule",
+	"weather",
+	"pet",
+	"templater",
+	"stats",
+	"searchBar",
+	"course",
+	"calsync",
+	"detail",
+	"recentTypes",
+] as const;
 
 function sanitizeCard(raw: unknown, index: number): DashboardCard | null {
 	if (!raw || typeof raw !== "object") return null;
@@ -391,6 +455,11 @@ function sanitizeCard(raw: unknown, index: number): DashboardCard | null {
 	}
 	if (r.secondView && typeof r.secondView === "object") {
 		card.secondView = sanitizeEmbedView(r.secondView);
+	}
+	for (const key of PLAIN_CARD_CONFIG) {
+		if (r[key] === undefined) continue;
+		const copied = plainData(r[key]);
+		if (copied !== undefined) (card as unknown as Record<string, unknown>)[key] = copied;
 	}
 
 	return card;
@@ -681,6 +750,11 @@ function sanitizeTasks(r: Record<string, unknown>): TasksConfig {
 
 function sanitizeCalendar(r: Record<string, unknown>): CalendarConfig {
 	const cfg: CalendarConfig = {};
+	// How many days the agenda view lists. Was missing here, so every import
+	// reset a configured agenda back to its default length.
+	if (typeof r.agendaDays === "number" && Number.isFinite(r.agendaDays)) {
+		cfg.agendaDays = Math.max(1, Math.min(365, Math.round(r.agendaDays)));
+	}
 	if (typeof r.showWeekNumbers === "boolean")
 		cfg.showWeekNumbers = r.showWeekNumbers;
 	if (typeof r.heatmap === "boolean") cfg.heatmap = r.heatmap;
@@ -987,7 +1061,12 @@ function applyLayout(
 		const cards = data.cards
 			.map((c, i) => sanitizeCard(c, i))
 			.filter((c): c is DashboardCard => c !== null);
-		if (cards.length === 0) return t().layout.noValidCards;
+		// An export that *had* cards and lost every one to sanitising is an
+		// error worth stopping on. One that never had any is a board used only
+		// as a search launcher — rejecting it aborted the whole settings import
+		// (header, background, behaviour and all), so such a vault's backup
+		// could never be restored.
+		if (cards.length === 0 && data.cards.length > 0) return t().layout.noValidCards;
 		s.cards = cards;
 		applyGlobals(s, data);
 		return null;
@@ -1135,6 +1214,11 @@ function applySettings(s: HomeSettings, data: Record<string, unknown>): void {
 		"color",
 		"image",
 		"url",
+		// Missing before, while backgroundValue (a packed weather place for this
+		// kind) was still applied — so importing a weather-sky background into a
+		// vault set to an image left that kind in place and fed it a place
+		// string as its URL, and the background broke.
+		"weather",
 	];
 	if (bgKinds.includes(data.backgroundKind as BackgroundKind)) {
 		s.backgroundKind = data.backgroundKind as BackgroundKind;
@@ -1232,6 +1316,27 @@ function applySettings(s: HomeSettings, data: Record<string, unknown>): void {
 	if (data.filingAheadDays !== undefined) {
 		s.filingAheadDays = clampNum(data.filingAheadDays, 0, FILING_DAYS_MAX, s.filingAheadDays);
 	}
+
+	// Settings that were carried by neither export nor import, so a restore
+	// quietly left them at whatever the vault already had. Validated per field,
+	// like everything else here.
+	if (
+		data.themeColorTarget === "none" ||
+		data.themeColorTarget === "icon" ||
+		data.themeColorTarget === "title" ||
+		data.themeColorTarget === "both"
+	) {
+		s.themeColorTarget = data.themeColorTarget;
+	}
+	if (typeof data.backgroundSkyAnimate === "boolean") s.backgroundSkyAnimate = data.backgroundSkyAnimate;
+	if (typeof data.focusSearchOnOpen === "boolean") s.focusSearchOnOpen = data.focusSearchOnOpen;
+	if (typeof data.liveRefresh === "boolean") s.liveRefresh = data.liveRefresh;
+	if (data.arrangeButtonVisibility === "always" || data.arrangeButtonVisibility === "hover") {
+		s.arrangeButtonVisibility = data.arrangeButtonVisibility;
+	}
+	if (typeof data.customFileIcons === "boolean") s.customFileIcons = data.customFileIcons;
+	const iconProperty = str(data.iconizeIconProperty);
+	if (iconProperty !== undefined && iconProperty.trim()) s.iconizeIconProperty = iconProperty;
 
 	// Tasks / TaskNotes field mappings
 	const statusField = str(data.taskNotesStatusField);

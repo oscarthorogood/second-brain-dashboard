@@ -1844,6 +1844,9 @@ export interface SettingsBackup {
 	 * `importSettings` reads — so restoring is the same code path as importing
 	 * a backup file, rather than a second way to apply settings. */
 	data: string;
+	/** The version that took the snapshot, so that version never retakes it.
+	 * Absent on snapshots written before this field existed. */
+	takenBy?: string;
 }
 
 /**
@@ -2377,6 +2380,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * remain in-memory until the next ordinary save, exactly as before.
  */
 export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): boolean {
+	let migratedLegacyBoards = false;
 	if (Array.isArray(raw.dashboards) && raw.dashboards.length > 0) {
 		// Fold the old multi-dashboard model down to a single board: keep the
 		// active dashboard's own cards plus every pinned card (which rendered on
@@ -2392,6 +2396,7 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 			? (raw.pinnedCards as DashboardCard[])
 			: [];
 		s.cards = [...ownCards, ...pinned];
+		migratedLegacyBoards = true;
 	} else if (!Array.isArray(raw.cards)) {
 		// A genuinely fresh install (a pre-multi-dashboard vault's legacy `cards`
 		// array is already carried over by Object.assign in loadSettings).
@@ -2503,7 +2508,21 @@ export function migrateSettings(s: HomeSettings, raw: Record<string, unknown>): 
 	// whose action is chosen here; fall back to the original New-note behaviour.
 	if ((s.newNoteButtonMode as string) === "split") s.newNoteButtonMode = "newNote";
 	const migratedFilingWindow = migrateFilingWindow(s, raw);
-	return migratedCommandId || migratedFilingWindow;
+	// Retire the multi-dashboard keys once folded. `loadSettings` copies every
+	// persisted key onto the settings object, so these rode along into every
+	// later save — and on every load `raw.dashboards` was still an array, the
+	// fold ran again, and it replaced whatever board the user had built since
+	// with the legacy one. Those cards carry no size, so the next step emptied
+	// the board: every reload lost every widget. Deleted here and flushed at
+	// once, the fold runs exactly one time.
+	const legacy = s as unknown as Record<string, unknown>;
+	for (const key of ["dashboards", "activeDashboardId", "pinnedCards"]) {
+		if (key in legacy) {
+			delete legacy[key];
+			migratedLegacyBoards = true;
+		}
+	}
+	return migratedCommandId || migratedFilingWindow || migratedLegacyBoards;
 }
 
 /**
