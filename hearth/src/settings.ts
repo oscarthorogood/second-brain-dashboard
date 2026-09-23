@@ -1533,7 +1533,7 @@ export class HomeSettingTab extends PluginSettingTab {
 			txt.setPlaceholder(DEFAULT_SETTINGS[key]).setValue(s[key]);
 			txt.inputEl.addEventListener("blur", () => void commit(txt.getValue()));
 			txt.inputEl.addEventListener("keydown", (evt: KeyboardEvent) => {
-				if (evt.key !== "Enter") return;
+				if (evt.key !== "Enter" || evt.isComposing) return;
 				evt.preventDefault();
 				void commit(txt.getValue());
 			});

@@ -1,6 +1,6 @@
 import { Setting, type App } from "obsidian";
 import { CARD_KINDS, cardDefinition } from "./cards";
-import { type CardEditorContext } from "./cards/definition";
+import { type CardEditorContext, templateDefaultSize, templateSizes } from "./cards/definition";
 import { t } from "./i18n";
 import { sizeSpec } from "./widgetsize";
 import { SbdTabbedModal, type SbdModalTab } from "./tabbedmodal";
@@ -105,7 +105,16 @@ export class CardSettingsModal extends SbdTabbedModal {
 				});
 				d.setValue(card.kind).onChange((v) => {
 					card.kind = v as CardKind;
+					// Keep the widget at a size its new kind offers. The size was left
+					// as it was, so a small or large card switched to the search bar
+					// (medium and extra large only) became a widget the picker could
+					// never have made, drawn in a footprint its layout doesn't have.
+					const template = cardDefinition(card).templates[0];
+					if (template && !templateSizes(template).includes(card.size)) {
+						card.size = templateDefaultSize(template);
+					}
 					this.opts.save();
+					this.opts.rerender();
 					this.render();
 				});
 			});

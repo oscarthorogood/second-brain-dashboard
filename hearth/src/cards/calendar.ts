@@ -36,6 +36,11 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * today when it doesn't exist yet safely falls back to the core "Open
  * today's daily note" command (template-aware). Other empty days are left
  * alone rather than guessing at template handling for arbitrary dates. */
+/** The month each mini calendar is showing, by card id — transient, so it
+ * resets to this month when Obsidian reloads, but survives the redraws in
+ * between. */
+const CALENDAR_CURSOR = new Map<string, Moment>();
+
 export function renderCalendar(
 	view: HomeView,
 	card: DashboardCard,
@@ -85,22 +90,23 @@ export function renderCalendar(
 		return;
 	}
 
-	let cursor: Moment = moment().startOf("month");
+	// The month on screen outlives a redraw. This card has vault liveness, so any
+	// note saving in the background — autosave, a sync — rebuilt it and a local
+	// cursor went back to the current month under the user's hand, about 400ms
+	// after they had paged away. Keyed by card id, as the schedule card's
+	// SCHEDULE_STATE already is for the same reason.
+	let cursor: Moment = CALENDAR_CURSOR.get(card.id)?.clone() ?? moment().startOf("month");
+	const moveTo = (next: Moment) => {
+		cursor = next;
+		CALENDAR_CURSOR.set(card.id, next.clone());
+		draw();
+	};
 	const draw = () => {
 		wrap.empty();
 		renderCalendarHead(wrap, cursor, {
-			onPrev: () => {
-				cursor = cursor.clone().subtract(1, "month");
-				draw();
-			},
-			onNext: () => {
-				cursor = cursor.clone().add(1, "month");
-				draw();
-			},
-			onToday: () => {
-				cursor = moment().startOf("month");
-				draw();
-			},
+			onPrev: () => moveTo(cursor.clone().subtract(1, "month")),
+			onNext: () => moveTo(cursor.clone().add(1, "month")),
+			onToday: () => moveTo(moment().startOf("month")),
 		});
 		// Expand events across a window comfortably covering the visible grid.
 		ics.expand(

@@ -207,16 +207,26 @@ function decorateDataviewTable(
 				widths![index] = w;
 				if (cols[index]) cols[index].style.width = `${w}px`;
 			};
+			// The window the drag is in, not the main one. The body class above
+			// already used the active document for popouts, but the listeners went
+			// on the main `window`: in a popout they never fired, so the drag
+			// didn't track, pointerup never came, and the popout's body stayed in
+			// "resizing" (text selection blocked) with the width never saved.
+			const dragWin = dragDoc.defaultView ?? window;
 			const onUp = () => {
-				window.removeEventListener("pointermove", onMove);
-				window.removeEventListener("pointerup", onUp);
+				dragWin.removeEventListener("pointermove", onMove);
+				dragWin.removeEventListener("pointerup", onUp);
+				dragWin.removeEventListener("pointercancel", onUp);
 				handle.removeClass("is-dragging");
 				dragDoc.body.removeClass("sbd-dv-resizing");
 				cfg.columnWidths = widths ? [...widths] : undefined;
 				persist();
 			};
-			window.addEventListener("pointermove", onMove);
-			window.addEventListener("pointerup", onUp);
+			dragWin.addEventListener("pointermove", onMove);
+			dragWin.addEventListener("pointerup", onUp);
+			// A touch drag the system takes over (a scroll, a gesture) ends in
+			// pointercancel with no pointerup, which left the same stuck state.
+			dragWin.addEventListener("pointercancel", onUp);
 		});
 	});
 }

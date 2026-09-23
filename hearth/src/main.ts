@@ -494,6 +494,22 @@ export default class SbdPlugin extends Plugin {
 		});
 	}
 
+	/**
+	 * Re-render every open home view except the one that made the change.
+	 *
+	 * For edits made from a board — a drag-reorder, a card's settings — where the
+	 * editing view already shows the result, and redrawing it would interrupt the
+	 * drag or rebuild the board under an open settings modal. Those edits used to
+	 * save without refreshing anything, so a second dashboard tab (a split pane,
+	 * another window) kept showing the old order or config until refocused.
+	 */
+	refreshOtherViews(except: HomeView) {
+		this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME).forEach((leaf) => {
+			const view = leaf.view;
+			if (view instanceof HomeView && view !== except) view.render();
+		});
+	}
+
 	/** Re-render a home view when it becomes the active leaf again, so content
 	 * that changed while it was backgrounded (recents, bookmarks, saved-query
 	 * results) is current (#110). The first activation of a leaf was its fresh

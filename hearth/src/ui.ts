@@ -141,7 +141,9 @@ export class PromptModal extends Modal {
 			// Enter is how anyone types a name into a one-field dialog; without
 			// this it would submit nothing and close.
 			txt.inputEl.addEventListener("keydown", (e: KeyboardEvent) => {
-				if (e.key !== "Enter") return;
+				// Not while an IME is composing: that Enter confirms the conversion,
+				// and submitting on it sent a half-typed value.
+				if (e.key !== "Enter" || e.isComposing) return;
 				e.preventDefault();
 				submit();
 			});

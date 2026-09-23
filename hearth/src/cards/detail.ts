@@ -1,4 +1,4 @@
-import { Modal, Notice, setIcon, Setting, TFile, type App } from "obsidian";
+import { Modal, Notice, setIcon, Setting, TFile, type App, type Component } from "obsidian";
 import { fileForClaude, revealTray, trayCount, writeAttachment, writeNote } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { t } from "../i18n";
@@ -58,7 +58,12 @@ function trayOf(settings: HomeSettings): { folder: string; attachments: string }
 	return { folder: destinationFolder("unsorted", folders), attachments: attachmentsFolder(folders) };
 }
 
-export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElement): void {
+export function renderDetail(
+	view: HomeView,
+	card: DashboardCard,
+	body: HTMLElement,
+	component: Component,
+): void {
 	const strings = t().cards.detail;
 	const open = () => openDetailModal(view, targetOf(view.app, card));
 
@@ -112,13 +117,27 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 
 	// "Drag and drop" that only opens a dialog with a drop zone in it is a
 	// dialog, not a drop. The card itself takes the files.
-	acceptDrops(view, card, body);
+	acceptDrops(view, card, body, component);
 }
 
-/** Make the card a drop target: files dropped anywhere on it are filed into
- * `Claude/unsorted` exactly as the dialog files them, without opening it. */
-function acceptDrops(view: HomeView, card: DashboardCard, body: HTMLElement): void {
-	body.addEventListener("dragover", (evt: DragEvent) => {
+/**
+ * Make the card a drop target: files dropped anywhere on it are filed into the
+ * unsorted tray exactly as the dialog files them, without opening it.
+ *
+ * Registered through the render's component, not `addEventListener`. A redraw
+ * reuses this same `body` — it empties the children, not the listeners on the
+ * element itself — and this card redraws whenever its tray changes, which a
+ * drop always does. So every drop used to add another set of listeners, and
+ * the next drop filed each file once per set: two copies, then three. The
+ * component is unloaded on each redraw, which takes these with it.
+ */
+function acceptDrops(
+	view: HomeView,
+	card: DashboardCard,
+	body: HTMLElement,
+	component: Component,
+): void {
+	component.registerDomEvent(body, "dragover", (evt: DragEvent) => {
 		// Only claim the drop when the drag actually carries files: a widget
 		// being dragged across the board in arrange mode must not land here.
 		if (!evt.dataTransfer?.types.includes("Files")) return;
@@ -126,13 +145,13 @@ function acceptDrops(view: HomeView, card: DashboardCard, body: HTMLElement): vo
 		evt.dataTransfer.dropEffect = "copy";
 		body.addClass("is-drop-over");
 	});
-	body.addEventListener("dragleave", (evt: DragEvent) => {
+	component.registerDomEvent(body, "dragleave", (evt: DragEvent) => {
 		// `dragleave` fires for every child the pointer crosses, so ignore the
 		// ones that are still inside the card.
 		if (evt.relatedTarget instanceof Node && body.contains(evt.relatedTarget)) return;
 		body.removeClass("is-drop-over");
 	});
-	body.addEventListener("drop", (evt: DragEvent) => {
+	component.registerDomEvent(body, "drop", (evt: DragEvent) => {
 		const files = Array.from(evt.dataTransfer?.files ?? []);
 		if (!files.length) return;
 		evt.preventDefault();
@@ -560,7 +579,7 @@ export const detailCard: CardDefinition<"detail"> = {
 			build: () => ({ kind: "detail", title: "Add detail to unsorted", detail: {} }),
 		},
 	],
-	render: (view, card, body) => renderDetail(view, card, body),
+	render: (view, card, body, component) => renderDetail(view, card, body, component),
 	renderEditor: (container, ctx) => detailEditor(ctx, container),
 	cloneConfig: (source, copy) => {
 		if (source.detail) copy.detail = { ...source.detail };

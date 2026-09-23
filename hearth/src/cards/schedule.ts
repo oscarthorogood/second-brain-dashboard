@@ -90,7 +90,16 @@ export function renderSchedule(
 	const ics = buildIcsContext(view, cfg, sources, component);
 	const wrap = body.createDiv("sbd-sched");
 
+	// Each internal draw gets its own child component, unloaded by the next one.
+	// Navigating, switching view and every feed load redraw *inside* the card
+	// without remounting it, so anything registered on the card's own component
+	// outlived the draw that made it: each redraw added another minute-timer for
+	// the now line, each holding a detached column, until a vault event finally
+	// remounted the card.
+	let drawScope: Component | null = null;
 	const draw = (): void => {
+		if (drawScope) component.removeChild(drawScope);
+		drawScope = component.addChild(new Component());
 		wrap.empty();
 		// The live view, exposed for user CSS snippets ([data-view="week"]).
 		wrap.dataset.view = state.view;
@@ -104,7 +113,7 @@ export function renderSchedule(
 		);
 		if (cfg.hideToolbar !== true) renderToolbar(wrap, state, cfg, range.label, draw);
 		const main = wrap.createDiv("sbd-sched-body");
-		const ctx: ViewContext = { view, cfg, options, ics, component, redraw: draw };
+		const ctx: ViewContext = { view, cfg, options, ics, component: drawScope, redraw: draw };
 		if (state.view === "month") renderMonth(main, state, ctx);
 		else if (state.view === "list") renderList(main, state, ctx);
 		else renderTimeGrid(main, state, ctx);

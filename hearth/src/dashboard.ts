@@ -69,7 +69,11 @@ export function renderDashboard(
 	// toolbar (with "Add card") is still available above.
 	if (cards.length === 0) return;
 
-	const commit = () => void view.plugin.saveData(s);
+	// Other open dashboards redraw too; this one already shows the new order.
+	const commit = () => {
+		void view.plugin.saveData(s);
+		view.plugin.refreshOtherViews(view);
+	};
 
 	// Shared vault-event fan-out for every card on this board (see
 	// createVaultEventHub). Lives on the render component, torn down with it.
@@ -197,7 +201,14 @@ function availableHeight(grid: HTMLElement): number {
 	const scroll = scrollHost(grid);
 	if (!scroll) return 0;
 	const pad = parseFloat(getComputedStyle(scroll).paddingBottom) || 0;
-	const room = scroll.getBoundingClientRect().bottom - grid.getBoundingClientRect().top - pad;
+	// The grid's top as it sits in the page, not on screen. Both rects are
+	// viewport coordinates, so once the user had scrolled a tall board down the
+	// grid's top was that much higher and the "room" that much larger: a resize
+	// while scrolled relaxed the height fit and grew every widget, and scrolling
+	// back and resizing again shrank them. Adding the scroll offset back makes
+	// the measure the same wherever the board is scrolled to.
+	const gridTop = grid.getBoundingClientRect().top + scroll.scrollTop;
+	const room = scroll.getBoundingClientRect().bottom - gridTop - pad;
 	return room > 0 ? room : 0;
 }
 
@@ -225,6 +236,23 @@ function mountCardBody(
 		child = new Component();
 		parent.addChild(child);
 		body.empty();
+		// Back to the bare body, too. `empty()` removes children but leaves the
+		// classes a render added to `body` itself, and every such class is a
+		// card's own per-render state: an embed that switched from a picture to
+		// a note kept the picture's `overflow: hidden; padding: 0` and clipped
+		// the note; a weather card that changed style kept the old one's
+		// flush-to-the-edge layout. Only renders add classes here, so resetting
+		// to the one class the board gave it undoes exactly those.
+		body.className = "sbd-card-body";
+		// The "open" overlay (daily, embed, slideshow) is drawn onto the card, just
+		// outside `body`, so `empty()` never reached it. Each redraw stacked another
+		// — dozens over a session on a daily card whose note is being edited — and
+		// a render that drew none left the last one standing: an embed switched to
+		// a view whose file is missing kept view 1's button, which opened the wrong
+		// file (or a deleted one). It is per-render state, so it goes here too.
+		body.parentElement
+			?.querySelectorAll(":scope > .sbd-card-actions-overlay")
+			.forEach((overlay) => overlay.remove());
 		try {
 			def.render(view, card, body, child);
 		} catch (err) {
@@ -377,11 +405,17 @@ function renderCardControls(
  * board so nothing has to be configured in the plugin settings tab. */
 function openCardSettings(view: HomeView, card: DashboardCard): void {
 	const s = view.plugin.settings;
+	// Settings save on every keystroke, so the other dashboards catch up once the
+	// typing pauses rather than rebuilding on each character.
+	const refreshOthers = debounce(() => view.plugin.refreshOtherViews(view), 400, true);
 	new CardSettingsModal(view.app, card, {
 		settings: s,
 		favorites: s.favorites,
 		externalCallsDisabled: s.disableExternalCalls,
-		save: () => void view.plugin.saveData(s),
+		save: () => {
+			void view.plugin.saveData(s);
+			refreshOthers();
+		},
 		rerender: () => view.render(),
 		remove: () => {
 			removeCard(s, card);

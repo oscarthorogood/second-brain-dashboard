@@ -2561,7 +2561,7 @@ function renderKanbanAddCard(
 			});
 		};
 		input.addEventListener("keydown", (ke) => {
-			if (ke.key === "Enter" && !ke.shiftKey) {
+			if (ke.key === "Enter" && !ke.shiftKey && !ke.isComposing) {
 				ke.preventDefault();
 				commit();
 			} else if (ke.key === "Escape") {
@@ -4034,7 +4034,7 @@ function startCardTitleEdit(
 	input.addEventListener("keydown", (ke) => {
 		// Enter commits (a card title is a single line); Shift+Enter is ignored so
 		// it can't split the title. Escape cancels.
-		if (ke.key === "Enter" && !ke.shiftKey) {
+		if (ke.key === "Enter" && !ke.shiftKey && !ke.isComposing) {
 			ke.preventDefault();
 			commit();
 		} else if (ke.key === "Escape") {
@@ -4090,7 +4090,7 @@ function startColumnRename(
 		cleanup();
 	};
 	input.addEventListener("keydown", (ke) => {
-		if (ke.key === "Enter") {
+		if (ke.key === "Enter" && !ke.isComposing) {
 			ke.preventDefault();
 			commit();
 		} else if (ke.key === "Escape") {

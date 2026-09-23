@@ -175,7 +175,9 @@ class CardPickerModal extends Modal {
 			if (!this.tiles.length) return;
 			// Enter takes the top match without a detour through the grid — the
 			// point of typing "pet" is to get the pet card.
-			if (evt.key === "Enter") {
+			// Not while an IME is composing: that Enter confirms the conversion,
+			// and taking it here added the top card for a half-typed word.
+			if (evt.key === "Enter" && !evt.isComposing) {
 				evt.preventDefault();
 				// The top match at the size it prefers — the chip a mouse would
 				// most likely have gone for, not whichever chip is leftmost.

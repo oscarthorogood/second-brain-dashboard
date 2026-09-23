@@ -515,7 +515,7 @@ export class SearchSection {
 		} else if (e.key === "ArrowUp") {
 			e.preventDefault();
 			this.move(-1);
-		} else if (e.key === "Enter") {
+		} else if (e.key === "Enter" && !e.isComposing) {
 			e.preventDefault();
 			const target = this.selected >= 0 ? this.selected : 0;
 			this.rows[target]?.open();
