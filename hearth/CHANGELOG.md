@@ -15,6 +15,41 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ### Fixed
 
+- **A sweep of the whole plugin for bugs.** Every module was read end to end,
+  and every finding was checked against the code before it was fixed.
+  Highlights:
+  - **Your data is safer.** Importing a settings file no longer drops seven
+    settings or rejects an empty board. Restoring a backup no longer loses
+    card settings. The backup taken before an update now happens once per
+    upgrade instead of on every load.
+  - **The tasks widget no longer rewrites what you didn't touch.** Tags,
+    `^block-ids`, repeat rules it doesn't recognise, and the body of a linked
+    note all survive an edit. Checkboxes inside code blocks are no longer
+    picked up as tasks.
+  - **Notes saved with Windows line endings work.** Tasks in those notes used
+    to be invisible and impossible to edit.
+  - **Repeating tasks.** Ticking off a repeating TaskNotes task early records
+    the occurrence it was scheduled for, so it no longer comes back already
+    done. Property names follow TaskNotes' own field mapping. Completing a
+    TaskNotes task stamps its completion date, as TaskNotes does.
+  - **Calendar feeds.** Repeating events are calculated from their start
+    date, so "every other week", long series, the 31st of the month and
+    29 February land on the right days. A moved or cancelled single
+    occurrence is respected. A failing feed, like a failing RSS feed or
+    forecast, is retried after a pause instead of on every redraw.
+  - **Privacy and safety.** Calendar text copied into your notes is fenced
+    off as plain data. DataviewJS blocks run only if you've enabled
+    JavaScript queries in Dataview. With external calls disabled, the default
+    background is no longer downloaded.
+  - **Smaller fixes.**
+    - Enter in search opens the result for what you actually typed.
+    - The calculator accepts `1,000` and no longer freezes on huge factorials.
+    - Feed URL fields no longer fetch every half-typed address.
+    - "Open in same tab" really uses the same tab.
+    - Text on light panels is readable again, and focus rings are back in
+      low-power mode.
+    - Widgets no longer leak event listeners when they redraw.
+
 - **The tasks widget scrolls, and its rows are shorter.** A tasks widget draws
   up to six tasks at large and ten at extra large — more than either tile holds
   — and the surplus was simply clipped, with no way to reach it. The Kanban
