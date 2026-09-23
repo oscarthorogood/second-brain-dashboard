@@ -59,7 +59,7 @@ import {
 	type ResolvedChips,
 	type TaskNotesSourceConfig,
 } from "./types";
-import { makeClickable } from "./ui";
+import { commitOnLeave, makeClickable } from "./ui";
 import { type HomeView } from "./view";
 import { type CardEditorContext } from "./cards/definition";
 
@@ -1130,8 +1130,9 @@ export function calendarSourcesEditor(ctx: CardEditorContext, containerEl: HTMLE
 				.onChange((v) => {
 					source.url = v.trim();
 					ctx.opts.save();
-					ctx.opts.rerender();
 				});
+			// Redraw (and so fetch) once the URL is finished, not per keystroke.
+			commitOnLeave(txt.inputEl, () => ctx.opts.rerender());
 			txt.inputEl.addClass("sbd-rss-url");
 		});
 		row.addColorPicker((c) =>

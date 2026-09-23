@@ -38,9 +38,16 @@ export interface RssFeed {
 interface CacheEntry {
 	feed: RssFeed | null;
 	inflight: Promise<RssFeed | null> | null;
+	/** When the last fetch failed (epoch ms), or 0 after a success. */
+	failedAt: number;
 }
 
 const cache = new Map<string, CacheEntry>();
+
+/** How long a failed fetch holds off the next unforced attempt. Without it a
+ * dead or offline source was requested again on every board redraw, since a
+ * failure leaves nothing fresh in the cache to stop it. */
+const FAILURE_BACKOFF_MS = 2 * 60_000;
 
 /** The last-fetched feed for a URL (possibly stale), or null if never loaded. */
 export function cachedFeed(url: string): RssFeed | null {
@@ -62,7 +69,7 @@ export async function loadFeed(
 ): Promise<RssFeed | null> {
 	let entry = cache.get(url);
 	if (!entry) {
-		entry = { feed: null, inflight: null };
+		entry = { feed: null, inflight: null, failedAt: 0 };
 		cache.set(url, entry);
 	}
 	if (opts.disabled) return entry.feed;
@@ -70,6 +77,8 @@ export async function loadFeed(
 		entry.feed && Date.now() - entry.feed.fetched < opts.ttlMs;
 	if (fresh && !opts.force) return entry.feed;
 	if (entry.inflight) return entry.inflight;
+	const backoff = Math.min(FAILURE_BACKOFF_MS, opts.ttlMs > 0 ? opts.ttlMs : FAILURE_BACKOFF_MS);
+	if (!opts.force && entry.failedAt && Date.now() - entry.failedAt < backoff) return entry.feed;
 
 	const current = entry;
 	current.inflight = (async () => {
@@ -78,8 +87,10 @@ export async function loadFeed(
 			const parsed = parseFeed(res.text);
 			// Keep prior items when a fetch returns something unparseable.
 			if (parsed) current.feed = parsed;
+			current.failedAt = parsed ? 0 : Date.now();
 			return current.feed;
 		} catch {
+			current.failedAt = Date.now();
 			// Offline or blocked — keep any prior items.
 			return current.feed;
 		} finally {

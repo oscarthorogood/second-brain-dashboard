@@ -16,8 +16,16 @@
  * these links are localized as usual.
  */
 
-/** Where an emailed card request goes. */
-export const CARD_REQUEST_EMAIL = "ondrej.uhnavy@proton.me";
+/**
+ * Where an emailed card request goes — or "" for no email channel, in which
+ * case the picker offers only the GitHub route.
+ *
+ * Empty on purpose. It was upstream Hearth's maintainer's address, while the
+ * GitHub link beside it pointed here: a request emailed from this plugin went
+ * to someone who doesn't maintain it and never reached this project. Set this
+ * to a real maintainer address to bring the email option back.
+ */
+export const CARD_REQUEST_EMAIL: string = "";
 
 /** GitHub's issue-form endpoint, and the form the request opens. */
 const GITHUB_NEW_ISSUE_URL = "https://github.com/oscarthorogood/second-brain-dashboard/issues/new";
@@ -98,7 +106,7 @@ export function cardRequestGithubUrl(ctx: CardRequestContext): string {
  */
 export function cardRequestMailtoUrl(ctx: CardRequestContext): string {
 	const body = [
-		"Hi Ondrej,",
+		"Hi,",
 		"",
 		"I'd like to suggest a new card for Second Brain Dashboard.",
 		"",

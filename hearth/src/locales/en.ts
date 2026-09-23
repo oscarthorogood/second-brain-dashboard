@@ -51,17 +51,22 @@ export const en = {
 		// Names the next action, not just the failure: the other files in the
 		// drop still went through, so "it didn't work" alone leaves the reader
 		// unsure whether to redo all of them or one.
-		detailAttachmentFailed: (name: string) =>
-			`Second Brain Dashboard: couldn't save ${name} — check Claude/unsorted/attachments is writable, then drop it again.`,
-		detailQueued: (n: number) =>
-			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to Claude/unsorted.`,
-		detailNoteFailed:
-			"Second Brain Dashboard: couldn't create the note — check Claude/unsorted is writable.",
-		calsyncQueued: (n: number) =>
-			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} written to Claude/inbox.`,
-		calsyncFailed: (n: number) =>
-			`Second Brain Dashboard: couldn't write ${n} ${n === 1 ? "event" : "events"} to Claude/inbox — check the vault has room to write, then refresh.`,
-		calsyncForgotten: "Second Brain Dashboard: synced events forgotten — the next refresh will write them to Claude/inbox again.",
+		detailAttachmentFailed: (name: string, folder: string) =>
+			`Second Brain Dashboard: couldn't save ${name} — check ${folder} is writable, then drop it again.`,
+		detailQueued: (n: number, folder: string) =>
+			`Second Brain Dashboard: ${n} ${n === 1 ? "item" : "items"} saved to ${folder}.`,
+		detailNoteFailed: (folder: string) =>
+			`Second Brain Dashboard: couldn't create the note — check ${folder} is writable.`,
+		calsyncQueued: (n: number, folder: string) =>
+			`Second Brain Dashboard: ${n} new ${n === 1 ? "event" : "events"} written to ${folder}.`,
+		calsyncFailed: (n: number, folder: string) =>
+			`Second Brain Dashboard: couldn't write ${n} ${n === 1 ? "event" : "events"} to ${folder} — check the vault has room to write, then refresh.`,
+		calsyncForgotten: (folder: string) =>
+			`Second Brain Dashboard: synced events forgotten — the next refresh will write them to ${folder} again.`,
+		settingsUnreadable:
+			"Second Brain Dashboard: your settings file couldn't be read, so your dashboard and settings " +
+			"are not loaded. Nothing has been changed and nothing will be saved over it — reload Obsidian " +
+			"to try again. If this keeps happening, check data.json in the plugin's folder.",
 		taskNotesCreateFailed: "Second Brain Dashboard: couldn't run TaskNotes: Create new task.",
 		taskChangedOnDisk: "Second Brain Dashboard: that task changed on disk — refreshed.",
 		couldNotOpenTaskNote: "Second Brain Dashboard: couldn't open that task's note.",
@@ -476,7 +481,7 @@ export const en = {
 			appearance: "Title, logo, background, and low power mode.",
 			search: "The search bar and which results it offers.",
 			dashboard: "Grid, card surface, and the controls around the board.",
-			behaviour: "Startup, how notes open, mobile, and privacy.",
+			behaviour: "Startup, how notes open, mobile, Claude's trays, and privacy.",
 			integrations: "TaskNotes, file icons, and every plugin Second Brain Dashboard reads.",
 			backup: "Export and import your layout and settings.",
 			about: "Version, what's new, and where to report things.",
@@ -606,7 +611,15 @@ export const en = {
 			newNoteButtonModeNewNote: "New note",
 			newNoteButtonModeSearchOnline: "Search online",
 			contentWidth: "Content width",
-			contentWidthDesc: "Maximum width of the home content, in pixels.",
+			contentWidthDesc: (px: number) =>
+				`How wide the board is allowed to get: ${px}px. The board is a fixed 16-column ` +
+				"page, so this also sets how large the widgets are drawn — a wider column fits " +
+				"the same sixteen columns at a larger cell. Drag it all the way up to fill the " +
+				"window.",
+			contentWidthFull:
+				"Full width — the board fills the window, leaving only a small gutter at each " +
+				"edge. Widgets are drawn as large as that allows; use Widget size below to dial " +
+				"them back down without bringing the margins back.",
 		},
 		lowPower: {
 			enable: "Low power mode",
@@ -976,6 +989,45 @@ export const en = {
 				},
 			},
 		},
+		filing: {
+			heading: "Claude trays",
+			headingDesc:
+				"The two folders the Sync to inbox and Unsorted widgets write into, and " +
+				"how much calendar the inbox takes. These are vault-wide: every sync " +
+				"widget fills the same inbox and shares one record of what it has " +
+				"already written, so the folder and the window are set once, here. A " +
+				"widget's own settings are the things only it does — which calendars it " +
+				"watches, which note it attaches to.",
+			inboxFolder: "Inbox folder",
+			inboxFolderDesc:
+				"Where calendar events land as notes to be filed. One note per event, " +
+				"waiting to be sorted — nothing is filed automatically.",
+			unsortedFolder: "Unsorted folder",
+			unsortedFolderDesc:
+				"Where the Unsorted widget puts prose and dropped files. Attachments go " +
+				"in an “attachments” subfolder of it.",
+			pickFolder: "Choose a folder",
+			rootRefused:
+				"Second Brain Dashboard: a tray can't be the vault root — its notes would land " +
+				"among your own top-level folders. Pick or type a folder inside the vault.",
+			aheadDays: "Days ahead",
+			aheadDaysDesc:
+				"How far ahead an event is worth a note. A term's timetable is published " +
+				"months out, so a short window keeps the inbox readable.",
+			pastDays: "Days back",
+			pastDaysDesc:
+				"How far back an event is still worth a note, so something added to a " +
+				"calendar after the fact isn't missed.",
+			forget: "Re-sync everything",
+			forgetDesc:
+				"Forget which events have already been written, so the next refresh " +
+				"writes them all again. Use this if you deleted a note and want it back.",
+			forgetButton: "Forget synced events",
+			forgetConfirm:
+				"Every event in the window will be written again on the next refresh. " +
+				"Notes you already filed are not touched, so an event you have filed " +
+				"will come back as a second, unfiled note.",
+		},
 		tasks: {
 			heading: "Tasks / TaskNotes",
 			headingDesc:
@@ -1075,6 +1127,12 @@ export const en = {
 			importDesc:
 				"Choose a previously exported layout file. This replaces your current dashboard.",
 			importButton: "Import file",
+			/** Appended to an import's confirmation while the settings file
+			 * couldn't be read on load. */
+			importOverUnreadable:
+				"Your settings file couldn't be read when Obsidian started, so importing " +
+				"this will replace it. Anything in that file that isn't in this import " +
+				"is lost.",
 			importTitle: "Import layout?",
 			importMessage:
 				"This replaces your current dashboard and layout settings. This can't be undone.",
@@ -1351,27 +1409,30 @@ export const en = {
 		calsync: {
 			heading: "Calendars",
 			headingDesc:
-				"Subscribe to your class timetable, your assignment deadlines and your own calendar. Every new event becomes a note in Claude/inbox, waiting to be filed — nothing is filed automatically.",
+				"Subscribe to your class timetable, your assignment deadlines and your own calendar. Every new event becomes a note in the inbox tray, waiting to be filed — nothing is filed automatically.",
 			urlPlaceholder: "https://…/basic.ics",
 			enable: "Watch this calendar",
 			disable: "Stop watching this calendar",
 			refresh: "Auto-refresh",
 			refreshDesc: "Minutes between automatic checks. 0 = only refresh by hand.",
-			window: "Days ahead",
-			windowDesc:
-				"How far ahead an event is worth a note. A term's timetable is published months out, so a short window keeps the inbox readable.",
-			forget: "Re-sync everything",
-			forgetDesc:
-				"Forget which events have already been written, so the next refresh writes them all to Claude/inbox again. Use this if you deleted a note and want it back.",
-			forgetButton: "Forget synced events",
+			systemSettings: "Inbox settings",
+			systemSettingsDesc: (folder: string) =>
+				`Events land in ${folder}. That folder, how far ahead and back the sync looks, ` +
+				"and re-syncing everything are shared by every sync widget — set them in " +
+				"Second Brain Dashboard's settings, under Behaviour → Claude trays.",
 		},
 		detail: {
 			target: "Default note",
 			targetDesc:
-				"The note this card attaches to unless you pick another in the dialog. Everything you add lands in Claude/unsorted, naming this note.",
+				"The note this card attaches to unless you pick another in the dialog. Everything you add lands in the unsorted tray, naming this note.",
 			targetPlaceholder: "Lectures/Business Economics L03 - Market Structure.md",
 			pickTarget: "Pick a note",
 			clearTarget: "Clear",
+			systemSettings: "Unsorted settings",
+			systemSettingsDesc: (folder: string) =>
+				`Everything this widget collects lands in ${folder}. That folder is shared ` +
+				"by every unsorted widget — set it in Second Brain Dashboard's settings, " +
+				"under Behaviour → Claude trays.",
 		},
 		calendar: {
 			view: "Layout",
@@ -2378,7 +2439,7 @@ export const en = {
 			dragDrop: "Drag and drop",
 			dragDropSub: "Drop files here, or click to add detail",
 			/** Shown across the card while files are over it. */
-			dropOver: "Drop to file in Claude/unsorted",
+			dropOver: "Drop to file in the unsorted tray",
 			newNoteName: "Unsorted note",
 			linkPage: "Link a page",
 			linkPageSub: "Search your vault",
@@ -2432,6 +2493,9 @@ export const en = {
 				"No Kanban board found — pick a board note in card settings, or create one with the Kanban plugin",
 			dataviewEnable: "Enable the Dataview plugin to run queries",
 			dataviewNoQuery: "Set a Dataview query in card settings",
+			dataviewJsDisabled:
+				"This is a DataviewJS query, and JavaScript queries are off in Dataview's settings. " +
+				"Turn on \"Enable JavaScript queries\" there to run it.",
 			datacoreEnable: "Enable the Datacore plugin to run queries",
 			datacoreNoQuery: "Set a Datacore query in card settings",
 			datacoreBadQuery: "Datacore couldn't read this query",
@@ -2753,6 +2817,9 @@ export const en = {
 			doneDate: "Done date",
 			recurrenceLabel: "Repeat",
 			recurrenceNever: "Never",
+			/** A repeat rule the picker can't build ("every weekday", "every
+			 * Monday"), offered so a Save leaves it exactly as written. */
+			recurrenceKeep: (rule: string) => `${rule} (as written)`,
 			recurrenceEvery: "every",
 			recurrenceInterval: "Repeat interval",
 			recurrenceUnits: {
@@ -2995,8 +3062,8 @@ export const en = {
 		leaf: "Another plugin's side panel, hosted in a card",
 		pet: "A small companion that lives on your board",
 		course: "One course's recent lectures and what's due next",
-		calsync: "Every event on your calendars, written into Claude/inbox to be filed",
-		detail: "A page, files or notes, dropped into Claude/unsorted for Claude to file",
+		calsync: "Every event on your calendars, written into Claude's inbox tray to be filed",
+		detail: "A page, files or notes, dropped into Claude's unsorted tray for Claude to file",
 	},
 
 	// ---- Add-card picker -----------------------------------------------
@@ -3004,6 +3071,9 @@ export const en = {
 		title: "Add a card",
 		searchPlaceholder: "Search cards…",
 		allCards: "All cards",
+		/** The heading over the rail's category rows, the way the settings
+		 * window labels the groups in its own list. */
+		categoriesLabel: "Categories",
 		noMatches: "No card matches that.",
 		/** The row of size chips on every card tile: which of the four fixed
 		 * sizes the widget is added at. */

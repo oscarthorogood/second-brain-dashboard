@@ -3,10 +3,11 @@ import type SbdPlugin from "./main";
 import { TaskFieldsModal } from "./cards/tasks";
 import { hasFileIconPlugin } from "./fileicons";
 import { FILE_TYPE_GROUPS, fileTypeLabel } from "./filetypes";
+import { glyphTile, type TileTint } from "./glyphtile";
 import { addIconPicker } from "./lucide";
-import { CommandPickerModal } from "./pickers";
+import { CommandPickerModal, FolderPickerModal } from "./pickers";
 import { configuredPlaces, renderSkySource } from "./placepicker";
-import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, DEFAULT_SETTINGS, defaultMobileActionButtons, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
+import { BANNER_HEIGHT_MAX, BANNER_HEIGHT_MIN, type BackgroundKind, type BackgroundLayout, clampBannerHeight, clampWidgetScale, CONTENT_WIDTH_MAX, CONTENT_WIDTH_MIN, contentWidthIsFull, DEFAULT_SETTINGS, defaultMobileActionButtons, effectiveFilingFolders, FILING_DAYS_MAX, type HomeSettings, LOW_POWER_BACKGROUND, type MobileActionButton, OPEN_IN_MODES, OPEN_SOURCES, type OpenIn, type OpenInRule, type OpenOutsideRule, WIDGET_SCALE_MAX, WIDGET_SCALE_MIN } from "./types";
 import { exportLayout, exportSettings, importLayout, importSettings } from "./layout";
 import { confirmAction, downloadTextFile, makeClickable, pickTextFile } from "./ui";
 import { isOmnisearchAvailable, OMNISEARCH_PLUGIN_ID } from "./omnisearch";
@@ -49,7 +50,9 @@ type StringSettingKey =
 	| "taskNotesDueField"
 	| "taskNotesPriorityField"
 	| "taskNotesDoneValue"
-	| "iconizeIconProperty";
+	| "iconizeIconProperty"
+	| "filingInboxFolder"
+	| "filingUnsortedFolder";
 
 /** The GitHub repository and support links surfaced in the About tab. */
 const GITHUB_URL = "https://github.com/oscarthorogood/second-brain-dashboard";
@@ -61,16 +64,21 @@ const LAYOUT_FILE = "sbd-layout.json";
 const SETTINGS_FILE = "sbd-settings.json";
 
 /** A tab in the settings ribbon: an id (keys `t().settings.tabs`, declared in
- * `integrations.ts` so the catalogue can point at one) and a Lucide icon shown
- * beside the label. */
-const SETTINGS_TABS: { id: SettingsTabId; icon: string }[] = [
-	{ id: "appearance", icon: "palette" },
-	{ id: "search", icon: "search" },
-	{ id: "dashboard", icon: "layout-dashboard" },
-	{ id: "behaviour", icon: "settings-2" },
-	{ id: "integrations", icon: "plug" },
-	{ id: "backup", icon: "archive" },
-	{ id: "about", icon: "info" },
+ * `integrations.ts` so the catalogue can point at one), a Lucide icon shown
+ * beside the label, and the hue its tile wears.
+ *
+ * The hues are chosen the way Obsidian chooses its own — one per row, no two
+ * adjacent rows alike, and the neutral grey reserved for the row that is about
+ * the app rather than a feature (Obsidian gives General its grey; here that is
+ * Behaviour). See `glyphtile.ts` for why these are hue names and not colours. */
+const SETTINGS_TABS: { id: SettingsTabId; icon: string; tint: TileTint }[] = [
+	{ id: "appearance", icon: "palette", tint: "purple" },
+	{ id: "search", icon: "search", tint: "blue" },
+	{ id: "dashboard", icon: "layout-dashboard", tint: "orange" },
+	{ id: "behaviour", icon: "settings-2", tint: "grey" },
+	{ id: "integrations", icon: "plug", tint: "green" },
+	{ id: "backup", icon: "archive", tint: "cyan" },
+	{ id: "about", icon: "info", tint: "pink" },
 ];
 
 /** Where the settings pane currently is: the category index, or one category's
@@ -356,13 +364,16 @@ export class HomeSettingTab extends PluginSettingTab {
 	 * rest of the plugin uses. Obsidian's base `button` style fixes the element's
 	 * height, which a two-line row overflows — its name and description spilled
 	 * straight out of the row's own box. */
-	private indexRow(rowsEl: HTMLElement, entry: { id: SettingsTabId; icon: string }): void {
+	private indexRow(
+		rowsEl: HTMLElement,
+		entry: { id: SettingsTabId; icon: string; tint: TileTint },
+	): void {
 		const s = t().settings;
 		const label = s.tabs[entry.id];
 		const row = rowsEl.createDiv("sbd-settings-index-row");
 		const open = () => this.navigate(entry.id);
 		makeClickable(row, open, label);
-		setIcon(row.createSpan("sbd-settings-index-glyph"), entry.icon);
+		glyphTile(row, entry.icon, entry.tint);
 		const text = row.createDiv("sbd-settings-index-rowtext");
 		text.createDiv({ cls: "sbd-settings-index-rowname", text: label });
 		text.createDiv({ cls: "sbd-settings-index-rowdesc", text: s.tabDescs[entry.id] });
@@ -383,7 +394,12 @@ export class HomeSettingTab extends PluginSettingTab {
 		back.createSpan({ text: this.plugin.manifest.name });
 		back.addEventListener("click", leave);
 
-		containerEl.createDiv({ cls: "sbd-settings-page-title", text: s.tabs[tab] });
+		// The same tile the index row wore, so the page reads as the row you
+		// tapped rather than as somewhere else that happens to share its name.
+		const title = containerEl.createDiv("sbd-settings-page-title");
+		const entry = SETTINGS_TABS.find((e) => e.id === tab);
+		if (entry) glyphTile(title, entry.icon, entry.tint);
+		title.createSpan({ cls: "sbd-settings-page-titletext", text: s.tabs[tab] });
 		containerEl.createDiv({ cls: "sbd-settings-page-desc", text: s.tabDescs[tab] });
 	}
 
@@ -428,6 +444,7 @@ export class HomeSettingTab extends PluginSettingTab {
 				this.section(body, s.mobileActions.heading, s.mobileActions.headingDesc, (b) =>
 					this.mobileActionsSection(b),
 				);
+				this.section(body, s.filing.heading, s.filing.headingDesc, (b) => this.filingSection(b));
 				this.section(body, s.sections.privacy, s.sections.privacyDesc, (b) =>
 					this.privacySection(b),
 				);
@@ -529,6 +546,9 @@ export class HomeSettingTab extends PluginSettingTab {
 		setting: Setting,
 		sl: SliderComponent,
 		key: NumericSettingKey,
+		/** Anything else that reflects the value. `sl.setValue` does not fire the
+		 * slider's own onChange, so a row that redraws from there would go stale. */
+		onReset?: () => void,
 	): void {
 		setting.addExtraButton((b) =>
 			b
@@ -538,6 +558,7 @@ export class HomeSettingTab extends PluginSettingTab {
 					const def = DEFAULT_SETTINGS[key];
 					(this.plugin.settings as unknown as Record<string, number>)[key] = def;
 					sl.setValue(def);
+					onReset?.();
 					await this.save();
 				}),
 		);
@@ -652,18 +673,28 @@ export class HomeSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const width = new Setting(containerEl)
-			.setName(t().settings.appearance.contentWidth)
-			.setDesc(t().settings.appearance.contentWidthDesc);
+		const width = new Setting(containerEl).setName(t().settings.appearance.contentWidth);
+		// The description carries the current value, because the slider's own
+		// dynamic tooltip can only show the raw number — and at the top of the
+		// range the number is not what the setting means ("2600" reads as a
+		// literal width; it is "fill the pane").
+		const widthDesc = () =>
+			contentWidthIsFull(s)
+				? t().settings.appearance.contentWidthFull
+				: t().settings.appearance.contentWidthDesc(s.maxWidth);
+		width.setDesc(widthDesc());
 		width.addSlider((sl) => {
-			sl.setLimits(700, 1600, 20)
+			sl.setLimits(CONTENT_WIDTH_MIN, CONTENT_WIDTH_MAX, 20)
 				.setValue(s.maxWidth)
 				.setDynamicTooltip()
 				.onChange(async (v) => {
 					s.maxWidth = v;
+					width.setDesc(widthDesc());
 					await this.save();
 				});
-			this.addSliderReset(width, sl, "maxWidth");
+			this.addSliderReset(width, sl, "maxWidth", () => {
+				width.setDesc(widthDesc());
+			});
 		});
 	}
 
@@ -1418,6 +1449,150 @@ export class HomeSettingTab extends PluginSettingTab {
 		return section === "tasks" ? t().settings.tasks.heading : t().settings.fileIcons.heading;
 	}
 
+	// ---- Claude trays -----------------------------------------------------
+
+	/**
+	 * Claude's two trays: where they are, how much calendar the inbox takes, and
+	 * the one button that undoes a sync.
+	 *
+	 * These used to be spread across the two widgets that fill them — the window
+	 * and the re-sync button on every Sync to inbox card, the folders hardcoded —
+	 * which made a board with two sync widgets hold two answers to a question the
+	 * single shared inbox only has one of. They are the filing system's settings,
+	 * not a widget's, so they live here and the widget editors point at them.
+	 */
+	private filingSection(containerEl: HTMLElement): void {
+		const s = this.plugin.settings;
+		const strings = t().settings.filing;
+
+		this.filingFolderRow(containerEl, strings.inboxFolder, strings.inboxFolderDesc, "filingInboxFolder");
+		this.filingFolderRow(
+			containerEl,
+			strings.unsortedFolder,
+			strings.unsortedFolderDesc,
+			"filingUnsortedFolder",
+		);
+
+		this.filingDaysRow(containerEl, strings.aheadDays, strings.aheadDaysDesc, "filingAheadDays");
+		this.filingDaysRow(containerEl, strings.pastDays, strings.pastDaysDesc, "filingPastDays");
+
+		// A full re-sync is the way out of "I deleted the note and want it back":
+		// the index is what suppresses a second copy, so clearing it is the only
+		// thing that can bring one. Confirmed, because on a drained inbox it
+		// rewrites every event in the window as a fresh unfiled note.
+		new Setting(containerEl)
+			.setName(strings.forget)
+			.setDesc(strings.forgetDesc)
+			.addButton((b) =>
+				b.setButtonText(strings.forgetButton).onClick(() => {
+					confirmAction(this.app, {
+						title: strings.forget,
+						message: strings.forgetConfirm,
+						confirmText: strings.forgetButton,
+						onConfirm: () => {
+							s.calendarSyncSeen = {};
+							void this.save();
+							new Notice(t().notices.calsyncForgotten(effectiveFilingFolders(s).inbox));
+						},
+					});
+				}),
+			);
+	}
+
+	/**
+	 * One tray's folder: type a path, pick one from the vault, or go back to the
+	 * default.
+	 *
+	 * A typed path is committed when the field is left (blur) or on Enter — not
+	 * per keystroke. Saving per keystroke moved the tray live while it was being
+	 * typed: every open board redrew against "I", "In", "Inb", and a calendar
+	 * sync that happened to fire mid-edit wrote its events into whichever
+	 * half-typed folder was current, stranding them outside the tray. The value
+	 * is still normalised on read (see `effectiveFilingFolders`), which is what
+	 * stops a stray slash splitting the tray; committing late is what stops a
+	 * half-typed name becoming one.
+	 */
+	private filingFolderRow(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		key: "filingInboxFolder" | "filingUnsortedFolder",
+	): void {
+		const s = this.plugin.settings;
+		const strings = t().settings.filing;
+		const row = new Setting(containerEl).setName(name).setDesc(desc);
+		const commit = async (value: string): Promise<void> => {
+			if (value === s[key]) return;
+			s[key] = value;
+			await this.save();
+		};
+		row.addText((txt) => {
+			// Each row's own default as its placeholder: a shared one showed
+			// "Claude/inbox" in the Unsorted field too, and following that hint
+			// merged the two trays the design keeps apart.
+			txt.setPlaceholder(DEFAULT_SETTINGS[key]).setValue(s[key]);
+			txt.inputEl.addEventListener("blur", () => void commit(txt.getValue()));
+			txt.inputEl.addEventListener("keydown", (evt: KeyboardEvent) => {
+				if (evt.key !== "Enter" || evt.isComposing) return;
+				evt.preventDefault();
+				void commit(txt.getValue());
+			});
+			row.addExtraButton((b) =>
+				b
+					.setIcon("folder-open")
+					.setTooltip(strings.pickFolder)
+					.onClick(() => {
+						new FolderPickerModal(this.app, (folder) => {
+							// The vault root is in the picker's list, and its path "/"
+							// normalises to nothing — so it used to be stored, shown
+							// in the field, and then silently ignored in favour of the
+							// default. A tray at the root would scatter filing notes
+							// among the user's own top-level folders anyway, so it is
+							// refused out loud instead.
+							if (folder.isRoot()) {
+								new Notice(strings.rootRefused);
+								return;
+							}
+							txt.setValue(folder.path);
+							void commit(folder.path);
+						}).open();
+					}),
+			);
+			this.addTextReset(row, txt, key);
+		});
+	}
+
+	/** One end of the sync window, in days. */
+	private filingDaysRow(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		key: "filingAheadDays" | "filingPastDays",
+	): void {
+		const s = this.plugin.settings;
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(desc)
+			.addText((txt) => {
+				txt.setValue(String(s[key])).onChange(async (v) => {
+					const n = parseInt(v, 10);
+					// An unparseable or negative entry keeps the stored value rather
+					// than writing a window that would empty the inbox; the field shows
+					// what the user typed until they leave the row. Too large is
+					// clamped to the same bound the importer and the resolver use, so
+					// "2100" typed for "21" can't expand one weekly lecture into
+					// hundreds of notes.
+					if (!Number.isFinite(n) || n < 0) return;
+					s[key] = Math.min(n, FILING_DAYS_MAX);
+					await this.save();
+				});
+				txt.inputEl.type = "number";
+				txt.inputEl.min = "0";
+				txt.inputEl.max = String(FILING_DAYS_MAX);
+				txt.inputEl.addClass("sbd-count-input");
+			});
+	}
+
 	// ---- Tasks / TaskNotes ------------------------------------------------
 
 	private tasksSection(containerEl: HTMLElement): void {
@@ -1773,9 +1948,15 @@ export class HomeSettingTab extends PluginSettingTab {
 	}): Promise<void> {
 		const json = await pickTextFile();
 		if (json === null) return; // cancelled or unreadable
+		// While the settings file couldn't be read, an import is the way back —
+		// and it writes over that file, so the confirmation says so rather than
+		// leaving it to be discovered.
+		const locked = this.plugin.settingsLocked;
 		confirmAction(this.app, {
 			title: opts.title,
-			message: opts.message,
+			message: locked
+				? `${opts.message} ${t().settings.layout.importOverUnreadable}`
+				: opts.message,
 			confirmText: t().settings.layout.importButton,
 			onConfirm: () => {
 				const error = opts.apply(json);
@@ -1783,6 +1964,10 @@ export class HomeSettingTab extends PluginSettingTab {
 					new Notice(t().notices.layoutImportError(error));
 					return;
 				}
+				// A confirmed import is the user choosing what gets written, which is
+				// the one thing the lock can't know on its own. Released only after
+				// the apply succeeded, so a malformed file leaves the lock in place.
+				if (locked) this.plugin.releaseSettingsLock();
 				void this.save();
 				// An import can carry a different tab icon (or theme-color
 				// target), and neither the ribbon button nor an open tab header

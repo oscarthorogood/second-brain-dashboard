@@ -125,8 +125,13 @@ export type CardLiveness =
 	| {
 			mode: "vault";
 			/** Skip events that provably can't change this card's content (the
-			 * folder-scoped tasks card). Default: always redraw. */
-			shouldRedraw?: (card: DashboardCard, ev: VaultEvent) => boolean;
+			 * folder-scoped tasks card). Default: always redraw.
+			 *
+			 * Takes the view because "what this card reads" is not always on the
+			 * card: the two tray cards watch a folder named in plugin settings,
+			 * so a predicate that closed over a module constant would keep
+			 * redrawing for the old tray after the setting changed. */
+			shouldRedraw?: (card: DashboardCard, ev: VaultEvent, view: HomeView) => boolean;
 	  };
 
 /** Everything a kind's editor needs, replacing the private state and helpers it

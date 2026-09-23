@@ -1,6 +1,6 @@
 import { Component, Setting } from "obsidian";
 import { emptyState, summaryTile, wireMarkdownLinks } from "../cardbodies";
-import { DATAVIEW_PLUGIN_ID, getDataviewApi, isDataviewAvailable } from "../dataview";
+import { DATAVIEW_PLUGIN_ID, dataviewJsEnabled, getDataviewApi, isDataviewAvailable } from "../dataview";
 import { t } from "../i18n";
 import { type DashboardCard } from "../types";
 import { type HomeView } from "../view";
@@ -49,6 +49,13 @@ export function renderDataview(
 	// in a translucent mono panel. A table of rows with the query hidden in
 	// settings gives no way to tell what you are looking at from the board.
 	body.createDiv({ cls: "sbd-query-source", text: query });
+
+	// JavaScript queries only where Dataview itself allows them (see
+	// `dataviewJsEnabled` for why the API can't be trusted to check).
+	if (cfg.language === "js" && !dataviewJsEnabled(view.app)) {
+		emptyState(body, "shield-alert", t().cards.empty.dataviewJsDisabled);
+		return;
+	}
 
 	const host = body.createDiv("sbd-dataview");
 	// The dashboard has no "current note", so queries run with an empty origin
@@ -200,16 +207,26 @@ function decorateDataviewTable(
 				widths![index] = w;
 				if (cols[index]) cols[index].style.width = `${w}px`;
 			};
+			// The window the drag is in, not the main one. The body class above
+			// already used the active document for popouts, but the listeners went
+			// on the main `window`: in a popout they never fired, so the drag
+			// didn't track, pointerup never came, and the popout's body stayed in
+			// "resizing" (text selection blocked) with the width never saved.
+			const dragWin = dragDoc.defaultView ?? window;
 			const onUp = () => {
-				window.removeEventListener("pointermove", onMove);
-				window.removeEventListener("pointerup", onUp);
+				dragWin.removeEventListener("pointermove", onMove);
+				dragWin.removeEventListener("pointerup", onUp);
+				dragWin.removeEventListener("pointercancel", onUp);
 				handle.removeClass("is-dragging");
 				dragDoc.body.removeClass("sbd-dv-resizing");
 				cfg.columnWidths = widths ? [...widths] : undefined;
 				persist();
 			};
-			window.addEventListener("pointermove", onMove);
-			window.addEventListener("pointerup", onUp);
+			dragWin.addEventListener("pointermove", onMove);
+			dragWin.addEventListener("pointerup", onUp);
+			// A touch drag the system takes over (a scroll, a gesture) ends in
+			// pointercancel with no pointerup, which left the same stuck state.
+			dragWin.addEventListener("pointercancel", onUp);
 		});
 	});
 }

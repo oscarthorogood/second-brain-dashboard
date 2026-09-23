@@ -73,10 +73,28 @@ import {
 	type TaskSortField,
 	type TaskSortRule,
 } from "../types";
-import { openInTaskNotes, TASKNOTES_PLUGIN_ID } from "../tasknotes";
+import {
+	DEFAULT_TASKNOTES_FIELDS,
+	openInTaskNotes,
+	readTaskNotesSetup,
+	TASKNOTES_PLUGIN_ID,
+	type TaskNotesFieldMapping,
+} from "../tasknotes";
 import { confirmAction, makeClickable } from "../ui";
 import { type HomeView } from "../view";
 import { bySize, type WidgetSize } from "../widgetsize";
+import {
+	FIELD_VALUE,
+	MANAGED_EMOJI_CLASS,
+	splitBlockId,
+	splitLines,
+	stripTaskMetadata,
+	TASK_EMOJI_CLASS,
+	withBlockId,
+	withDoneDate,
+	withEmojiDate,
+} from "../tasklines";
+import { checkboxLines } from "../checkboxes";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
 
@@ -90,6 +108,10 @@ const KANBAN_FRONTMATTER_KEY = "kanban-plugin";
  * (`%% kanban:settings`). Everything from this line to end-of-file is board
  * metadata, not cards, so parsing and card insertion stop here. */
 const KANBAN_SETTINGS_RE = /^\s*%%\s*kanban:settings/i;
+
+/** The drag payload type for a Kanban task card. Private, so text dragged in
+ * from a note (which arrives as `text/plain`) can never be read as a task. */
+const TASK_DRAG_MIME = "application/sbd-task";
 
 
 /** A Kanban board column: its `##` heading text and the line range
@@ -2139,6 +2161,22 @@ function renderTaskKanban(
 	const today: string = moment().format("YYYY-MM-DD");
 
 	// Move a dragged task into a target column and persist the change.
+	// Task drags carry a private MIME type and a token unique to this render,
+	// the way column reorders already carry `application/sbd-col`. They used to
+	// put a bare index into `text/plain`, so dropping a task from a *different*
+	// tasks card moved whichever task sat at that index here, and dragging
+	// selected text reading "2" from a note onto a column moved task #2. The
+	// token also refuses an index from this board's previous render, whose
+	// `hits` it no longer indexes.
+	const dragToken = Math.random().toString(36).slice(2);
+	const draggedHit = (e: DragEvent): TaskHit | null => {
+		const raw = e.dataTransfer?.getData(TASK_DRAG_MIME) ?? "";
+		const [token, index] = raw.split(":");
+		if (token !== dragToken) return null;
+		const i = Number(index);
+		return Number.isInteger(i) ? (hits[i] ?? null) : null;
+	};
+
 	const moveTo = (hit: TaskHit, col: Column) => {
 		if (source === "kanban") {
 			// Relocate the card's checkbox line under the target heading in the
@@ -2171,7 +2209,8 @@ function renderTaskKanban(
 				return;
 			}
 			const value = col.label === t().cards.tasks.noStatus ? "" : col.label;
-			void setTaskNotesStatus(view, hit, value).then(refresh);
+			const done = doneStatusMatcher(cfg, view.plugin.settings.taskNotesDoneValue)(value);
+			void setTaskNotesStatus(view, hit, value, done).then(refresh);
 		}
 	};
 
@@ -2268,20 +2307,22 @@ function renderTaskKanban(
 
 		const colBody = colEl.createDiv("sbd-kanban-col-body");
 		colBody.addEventListener("dragover", (e) => {
-			// Only task-card drags target the column body (not header reorders).
-			if (e.dataTransfer?.types.includes("application/sbd-col")) return;
+			// Only task-card drags target the column body — not header reorders,
+			// and not text dragged in from a note. (`types` is readable during a
+			// drag; the payload itself isn't until the drop.)
+			if (!e.dataTransfer?.types.includes(TASK_DRAG_MIME)) return;
 			e.preventDefault();
 			colBody.addClass("is-drop-target");
 		});
 		colBody.addEventListener("dragleave", () => colBody.removeClass("is-drop-target"));
 		colBody.addEventListener("drop", (e) => {
 			colBody.removeClass("is-drop-target");
-			const raw = e.dataTransfer?.getData("text/plain") ?? "";
-			if (!raw) return; // header reorder, handled on the header
+			// Not one of this board's tasks (a header reorder, another card's
+			// task, dragged text): leave it to whoever it belongs to.
+			const hit = draggedHit(e);
+			if (!hit) return;
 			e.preventDefault();
-			const idx = parseInt(raw, 10);
-			const hit = Number.isNaN(idx) ? null : hits[idx];
-			if (hit) moveTo(hit, col);
+			moveTo(hit, col);
 		});
 
 		for (const hit of col.hits) {
@@ -2290,14 +2331,14 @@ function renderTaskKanban(
 			cardEl.toggleClass("is-done", hit.done);
 			cardEl.setAttribute("draggable", "true");
 			cardEl.addEventListener("dragstart", (e) => {
-				e.dataTransfer?.setData("text/plain", String(idx));
+				e.dataTransfer?.setData(TASK_DRAG_MIME, `${dragToken}:${idx}`);
 				cardEl.addClass("is-dragging");
 			});
 			cardEl.addEventListener("dragend", () => cardEl.removeClass("is-dragging"));
 			// Highlight the task card a dragged task would land on (the card
 			// being hovered), with the same dashed outline as column drop.
 			cardEl.addEventListener("dragover", (e) => {
-				if (e.dataTransfer?.types.includes("application/sbd-col")) return;
+				if (!e.dataTransfer?.types.includes(TASK_DRAG_MIME)) return;
 				e.preventDefault();
 				e.stopPropagation();
 				cardEl.addClass("is-drop-target");
@@ -2306,14 +2347,10 @@ function renderTaskKanban(
 			cardEl.addEventListener("drop", (e) => {
 				cardEl.removeClass("is-drop-target");
 				if (e.dataTransfer?.types.includes("application/sbd-col")) return;
-				const raw = e.dataTransfer?.getData("text/plain") ?? "";
-				if (!raw) return;
+				const from = draggedHit(e);
+				if (!from) return;
 				e.preventDefault();
 				e.stopPropagation();
-				const fromIdx = parseInt(raw, 10);
-				if (Number.isNaN(fromIdx)) return;
-				const from = hits[fromIdx];
-				if (!from) return;
 				if (from === hit) return;
 				if (from.status === hit.status) {
 					// Same column: reorder within it. No fine-grained order is
@@ -2532,7 +2569,7 @@ function renderKanbanAddCard(
 			});
 		};
 		input.addEventListener("keydown", (ke) => {
-			if (ke.key === "Enter" && !ke.shiftKey) {
+			if (ke.key === "Enter" && !ke.shiftKey && !ke.isComposing) {
 				ke.preventDefault();
 				commit();
 			} else if (ke.key === "Escape") {
@@ -2565,13 +2602,18 @@ function emptyMeta(): TaskMeta {
  * 2024-01-10 ⏳ 2024-01-12 📅 2024-01-15"). Emits markers in the Tasks-plugin's
  * conventional order; omits any blank field. */
 function buildMetadataSuffix(meta: TaskMeta): string {
-	const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+	// Any single-line value, not only ISO. The editor's date inputs only ever
+	// produce ISO or "", but a chip edit (priority, a date) passes the line's
+	// own raw values back through here — and requiring ISO dropped a
+	// natural-language due date such as "next friday" from the line whenever
+	// the priority was changed.
+	const isDate = (v: string) => v.trim() !== "" && !/[\r\n]/.test(v);
 	let s = "";
 	if (meta.priority && PRIORITY_EMOJI[meta.priority]) s += ` ${PRIORITY_EMOJI[meta.priority]}`;
 	if (meta.recurrence.trim()) s += ` 🔁 ${meta.recurrence.trim()}`;
-	if (isDate(meta.start)) s += ` 🛫 ${meta.start}`;
-	if (isDate(meta.scheduled)) s += ` ⏳ ${meta.scheduled}`;
-	if (isDate(meta.due)) s += ` 📅 ${meta.due}`;
+	if (isDate(meta.start)) s += ` 🛫 ${meta.start.trim()}`;
+	if (isDate(meta.scheduled)) s += ` ⏳ ${meta.scheduled.trim()}`;
+	if (isDate(meta.due)) s += ` 📅 ${meta.due.trim()}`;
 	return s;
 }
 
@@ -2581,14 +2623,26 @@ function buildMetadataSuffix(meta: TaskMeta): string {
 const RECURRENCE_UNITS = ["day", "week", "month", "year"] as const;
 
 
-/** Parse a Tasks-plugin recurrence string into the picker's {unit, interval}.
- * Handles "every day", "every week", "every 2 weeks", etc. Unknown/empty rules
- * yield unit "" (no recurrence). */
-function parseRecurrence(rule: string): { unit: string; interval: number } {
-	const m = /every\s+(\d+)?\s*(day|week|month|year)s?/i.exec(rule.trim());
-	if (!m) return { unit: "", interval: 1 };
-	return { unit: m[2].toLowerCase(), interval: Math.max(1, parseInt(m[1] ?? "1", 10) || 1) };
+/**
+ * Parse a Tasks-plugin recurrence string into the picker's {unit, interval},
+ * and say whether the picker can represent it exactly.
+ *
+ * The whole rule has to match. The old pattern had no end anchor or word
+ * boundary, so "every weekday" matched as "every week" and was rewritten to it
+ * on Save, and "every month on the 1st when done" lost everything after
+ * "month". A rule the picker can't express — "every Monday", "every weekday" —
+ * is reported with `exact: false` so the editor can keep it verbatim instead
+ * of reading it as "no repeat" and deleting it.
+ */
+function parseRecurrence(rule: string): { unit: string; interval: number; exact: boolean } {
+	const trimmed = rule.trim();
+	const m = /^every\s+(?:(\d+)\s+)?(day|week|month|year)s?$/i.exec(trimmed);
+	if (!m) return { unit: "", interval: 1, exact: trimmed === "" };
+	return { unit: m[2].toLowerCase(), interval: Math.max(1, parseInt(m[1] ?? "1", 10) || 1), exact: true };
 }
+
+/** The repeat dropdown's value for "leave this rule exactly as written". */
+const KEEP_RECURRENCE = "__keep";
 
 
 /** Build a Tasks-plugin recurrence string from the picker's {unit, interval}
@@ -2600,11 +2654,19 @@ function buildRecurrence(unit: string, interval: number): string {
 }
 
 
-/** Build the shared task-detail fields (priority, repeat, and start/scheduled/
+/**
+ * Build the shared task-detail fields (priority, repeat, and start/scheduled/
  * due dates) into `parent`, prefilled from `meta`, and return a getter for the
- * current values. Repeat and the dates are mutually exclusive: setting one
- * disables and clears the other. Used by both the Kanban add-card form and the
- * edit dialog. */
+ * current values. Used by both the Kanban add-card form and the edit dialog.
+ *
+ * Repeat and the dates are independent, as they are in the Tasks plugin. They
+ * used to be mutually exclusive, and the form enforced it on *load*: opening a
+ * `🔁 every weekday 📅 2024-06-03` task blanked its due date, so a Save that
+ * only fixed the title wrote the task back without the date its recurrence is
+ * anchored to. The Tasks plugin needs that date, and this plugin's own
+ * roll-forward reads due, then scheduled, then start — nothing here requires
+ * them to be exclusive.
+ */
 function buildTaskDetailFields(
 	parent: HTMLElement,
 	meta: TaskMeta,
@@ -2639,7 +2701,16 @@ function buildTaskDetailFields(
 	repeatUnit.createEl("option", { value: "", text: t().cards.tasks.recurrenceNever });
 	for (const u of RECURRENCE_UNITS)
 		repeatUnit.createEl("option", { value: u, text: t().cards.tasks.recurrenceUnits[u] });
-	repeatUnit.value = parsed.unit;
+	// A rule the picker can't express is offered as itself, and selected, so a
+	// Save that never touches the repeat writes it back unchanged.
+	const keepRule = !parsed.exact ? meta.recurrence.trim() : "";
+	if (keepRule) {
+		repeatUnit.createEl("option", {
+			value: KEEP_RECURRENCE,
+			text: t().cards.tasks.recurrenceKeep(keepRule),
+		});
+	}
+	repeatUnit.value = keepRule ? KEEP_RECURRENCE : parsed.unit;
 	const repeatEvery = repeatRow.createSpan({ cls: "sbd-taskdetail-every", text: t().cards.tasks.recurrenceEvery });
 	const repeatInterval = repeatRow.createEl("input", {
 		cls: "sbd-taskdetail-interval",
@@ -2657,39 +2728,13 @@ function buildTaskDetailFields(
 	const start = dateField("🛫", t().cards.tasks.startDate, meta.start);
 	const scheduled = dateField("⏳", t().cards.tasks.scheduledDate, meta.scheduled);
 	const due = dateField("📅", t().cards.tasks.dueDate, meta.due);
-	// A repeating card is anchored by its scheduled date only; a fixed start/due
-	// date is mutually exclusive with repeating. Don't show stale start/due
-	// values beside an existing repeat.
-	if (parsed.unit) {
-		start.value = "";
-		due.value = "";
-	}
-
+	// The interval only means something beside a unit the picker built.
 	const sync = () => {
-		const repeating = repeatUnit.value !== "";
-		const hasFixed = start.value !== "" || due.value !== "";
-		start.disabled = repeating;
-		due.disabled = repeating;
-		repeatUnit.disabled = hasFixed;
-		repeatInterval.disabled = hasFixed || !repeating;
-		repeatEvery.toggleClass("is-disabled", hasFixed || !repeating);
+		const pickerUnit = repeatUnit.value !== "" && repeatUnit.value !== KEEP_RECURRENCE;
+		repeatInterval.disabled = !pickerUnit;
+		repeatEvery.toggleClass("is-disabled", !pickerUnit);
 	};
-	repeatUnit.addEventListener("change", () => {
-		if (repeatUnit.value !== "") {
-			start.value = "";
-			due.value = "";
-		}
-		sync();
-	});
-	[start, due].forEach((d) =>
-		d.addEventListener("input", () => {
-			if (d.value !== "") {
-				repeatUnit.value = "";
-				repeatInterval.value = "1";
-			}
-			sync();
-		}),
-	);
+	repeatUnit.addEventListener("change", sync);
 	sync();
 
 	// Description: plain multiline text, stored as sub-bullets under the card.
@@ -2707,14 +2752,17 @@ function buildTaskDetailFields(
 	}
 
 	return () => {
-		const repeating = repeatUnit.value !== "";
+		const unit = repeatUnit.value;
 		return {
 			meta: {
 				priority: prio.value,
-				recurrence: repeating ? buildRecurrence(repeatUnit.value, parseInt(repeatInterval.value, 10)) : "",
-				start: repeating ? "" : start.value,
+				recurrence:
+					unit === KEEP_RECURRENCE
+						? keepRule
+						: buildRecurrence(unit, parseInt(repeatInterval.value, 10)),
+				start: start.value,
 				scheduled: scheduled.value,
-				due: repeating ? "" : due.value,
+				due: due.value,
 			},
 			description: descArea ? descArea.value : description,
 		};
@@ -2832,10 +2880,7 @@ class TaskDetailModal extends Modal {
 					attr: { rows: "3", placeholder: t().cards.tasks.descriptionPlaceholder },
 				});
 				this.linkedDescArea = area;
-				void readNoteDescription(view, hit.linkedFile).then((desc) => {
-					// Don't clobber edits the user already started typing.
-					if (!area.value) area.value = desc;
-				});
+				loadLinkedDescription(area, view, hit.linkedFile);
 			}
 		} else {
 			// Read-only summary of whatever metadata the task carries (from the card
@@ -2865,10 +2910,7 @@ class TaskDetailModal extends Modal {
 				});
 				this.descArea = area;
 				if (linked && hit.linkedFile) {
-					void readNoteDescription(view, hit.linkedFile).then((desc) => {
-						// Don't clobber edits the user already started typing.
-						if (!area.value) area.value = desc;
-					});
+					loadLinkedDescription(area, view, hit.linkedFile);
 				} else {
 					area.value = hit.description ?? "";
 				}
@@ -2908,8 +2950,12 @@ class TaskDetailModal extends Modal {
 							}
 							// A linked card's description is written back to the note body,
 							// whichever mode edited it.
+							// Only when that text was actually edited — this replaces the
+							// note's whole body, so a Save that only changed the title
+							// must not touch it.
 							const linkedDesc = linkedDescArea ?? ownDescArea;
-							if (hit.linkedFile && linkedDesc) await writeNoteDescription(view, hit.linkedFile, linkedDesc.value);
+							const edit = linkedDesc ? linkedDescriptionEdit(linkedDesc) : null;
+							if (hit.linkedFile && edit !== null) await writeNoteDescription(view, hit.linkedFile, edit);
 							this.refresh();
 						})();
 						this.close();
@@ -2978,8 +3024,13 @@ async function collectCheckboxTasks(view: HomeView, cfg: TasksConfig): Promise<T
 		const cache = view.app.metadataCache.getFileCache(file);
 		if (cache && !cache.listItems?.some((li) => li.task !== undefined)) continue;
 		const content = await view.app.vault.cachedRead(file);
-		const lines = content.split("\n");
+		const { lines } = splitLines(content);
+		// Only lines that are real checkboxes: not inside a fenced code block, not
+		// in the frontmatter. A `- [ ] example` in a ```md sample used to be listed
+		// as a task — and ticking it rewrote the code block.
+		const realCheckboxes = new Set(checkboxLines(content));
 		lines.forEach((line, i) => {
+			if (!realCheckboxes.has(i)) return;
 			const match = /^\s*[-*+]\s\[(.)\]\s*(.*)$/.exec(line);
 			if (!match) return;
 			const symbol = match[1];
@@ -3064,8 +3115,23 @@ function scalarField(v: unknown): string | undefined {
 }
 
 
+/** The frontmatter keys of a recurring task's `scheduled`, `recurrence` and
+ * `complete_instances`, and of a task's title. A TaskNotes task follows
+ * TaskNotes' own field mapping; a note made by "Convert to note" (any hit
+ * with a line, or a linked `targetFile`) always uses the default keys, since
+ * those are the keys it was written with. */
+function recurringTaskKeys(
+	view: HomeView,
+	hit?: TaskHit,
+	targetFile?: TFile,
+): TaskNotesFieldMapping {
+	const fromTaskNotes = !hit || (hit.line === -1 && !targetFile);
+	return fromTaskNotes ? readTaskNotesSetup(view.app).fields : DEFAULT_TASKNOTES_FIELDS;
+}
+
 function collectTaskNotesTasks(view: HomeView, cfg: TasksConfig): TaskHit[] {
 	const s = view.plugin.settings;
+	const keys = recurringTaskKeys(view);
 	const statusField = s.taskNotesStatusField.trim() || "status";
 	const dueField = s.taskNotesDueField.trim() || "due";
 	const priorityField = s.taskNotesPriorityField.trim() || "priority";
@@ -3092,25 +3158,25 @@ function collectTaskNotesTasks(view: HomeView, cfg: TasksConfig): TaskHit[] {
 			dueRaw = expr;
 			due = resolveDate(expr);
 		}
-		// TaskNotes' scheduled field is conventionally "scheduled"; read it as
-		// a fallback sort key when no due date is set.
-		const scheduledRaw: unknown = fm["scheduled"];
+		// TaskNotes' scheduled field (conventionally "scheduled"); read it as a
+		// fallback sort key when no due date is set.
+		const scheduledRaw: unknown = fm[keys.scheduled];
 		const scheduled: string | null = typeof scheduledRaw === "string" ? scheduledRaw : null;
 		const priority = scalarField(fm[priorityField]);
-		// TaskNotes stores the recurrence rule in a "recurrence" frontmatter
-		// field (an RRULE like "FREQ=WEEKLY;INTERVAL=1" or "RRULE:FREQ=DAILY").
-		const recurrence = scalarField(fm["recurrence"]);
+		// TaskNotes stores the recurrence rule in its recurrence field
+		// (an RRULE like "FREQ=WEEKLY;INTERVAL=1" or "RRULE:FREQ=DAILY").
+		const recurrence = scalarField(fm[keys.recurrence]);
 		// TaskNotes records each completed occurrence of a recurring task as a
-		// YYYY-MM-DD entry in "complete_instances". Read it so the completion
-		// checkbox can reflect today's state and avoid double-completing.
-		const ciRaw: unknown = fm["complete_instances"];
+		// YYYY-MM-DD entry in its complete-instances field. Read it so the
+		// completion checkbox can reflect today's state and avoid double-completing.
+		const ciRaw: unknown = fm[keys.completeInstances];
 		const completeInstances: string[] = Array.isArray(ciRaw)
 			? ciRaw.map((v) => String(v)).filter(Boolean)
 			: [];
 		hits.push({
 			file,
 			line: -1,
-			text: String(fm.title ?? file.basename),
+			text: String(scalarField(fm[keys.title]) ?? file.basename),
 			done: isDone(status),
 			due,
 			dueRaw,
@@ -3245,43 +3311,80 @@ function soleLinkedNote(view: HomeView, text: string, sourcePath: string): TFile
 }
 
 
-/** Read a linked note's body (frontmatter stripped) as plain description lines,
- * with any leading list marker removed. Joined with "\n"; empty when the note
- * has no body. Used to show a converted card's description "inside the note". */
-async function readNoteDescription(view: HomeView, file: TFile): Promise<string> {
+const FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+
+/**
+ * A linked note's body (frontmatter stripped), exactly as written — or null
+ * when the note couldn't be read.
+ *
+ * Verbatim, which it used to not be: list markers and blank lines were
+ * stripped for display, and the writer below then re-bulleted every line, so a
+ * note with a heading, a paragraph and a code block came back as `- # Plan`,
+ * `- paragraph`, `- ```js`. Only surrounding blank lines are trimmed. Null (not
+ * "") on failure, so the editor can tell "empty note" from "couldn't read" and
+ * refuse to write over the latter.
+ */
+async function readNoteDescription(view: HomeView, file: TFile): Promise<string | null> {
 	let content: string;
 	try {
 		content = await view.app.vault.cachedRead(file);
 	} catch {
-		return "";
+		return null;
 	}
-	const body = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
-	return body
-		.split(/\r?\n/)
-		.map((l) => l.replace(/^\s*(?:[-*+]|\d+\.)\s+/, "").trim())
-		.filter(Boolean)
-		.join("\n");
+	return content.replace(FRONTMATTER_RE, "").replace(/^\s*\n/, "").replace(/\s+$/, "");
 }
 
-
-/** Write a linked note's description (the body below its frontmatter) from the
- * quick-view editor: keeps the frontmatter intact and replaces the body with the
- * edited lines as bullet points. */
+/**
+ * Write a linked note's body from the quick-view editor, keeping its
+ * frontmatter byte-for-byte and the blank lines that separated the two.
+ *
+ * The body is written as given. Callers only reach here when the text was
+ * actually edited (see `linkedDescriptionEdit`), because this replaces the
+ * whole body: an unconditional write on every Save rewrote a note whose title
+ * was all that changed.
+ */
 async function writeNoteDescription(view: HomeView, file: TFile, description: string): Promise<void> {
 	try {
 		const content = await view.app.vault.read(file);
-		const fm = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(content)?.[0] ?? "";
-		const bullets = description
-			.split(/\r?\n/)
-			.map((l) => l.trim())
-			.filter(Boolean)
-			.map((l) => `- ${l}`)
-			.join("\n");
-		const next = fm ? (bullets ? `${fm.replace(/\r?\n?$/, "\n")}\n${bullets}\n` : fm) : bullets ? `${bullets}\n` : "";
-		await view.app.vault.modify(file, next);
+		const fm = FRONTMATTER_RE.exec(content)?.[0] ?? "";
+		const gap = /^\s*/.exec(content.slice(fm.length))?.[0] ?? "";
+		const body = description.replace(/\s+$/, "");
+		// A textarea hands back "\n"; a note written on Windows keeps its CRLF.
+		const eol = content.includes("\r\n") ? "\r\n" : "\n";
+		const text = body ? `${fm}${gap}${body}\n`.replace(/\r?\n/g, eol) : fm;
+		await view.app.vault.modify(file, text);
 	} catch {
 		new Notice(t().notices.taskChangedOnDisk);
 	}
+}
+
+/**
+ * Wire a textarea to a linked note's body: disabled until the body has loaded,
+ * then filled and enabled, remembering what it loaded so a Save can tell an
+ * edit from a pass-through.
+ *
+ * Disabled first because the read is async. Before, a Save clicked before it
+ * resolved found an empty textarea and wrote that — deleting the note's body —
+ * and anything typed before it resolved was written over the real body the
+ * user never saw. A read that fails leaves the area disabled for good, so
+ * there is nothing to write back over a note we couldn't read.
+ */
+function loadLinkedDescription(area: HTMLTextAreaElement, view: HomeView, file: TFile): void {
+	area.disabled = true;
+	void readNoteDescription(view, file).then((desc) => {
+		if (desc === null) return;
+		area.value = desc;
+		area.dataset.sbdLoaded = desc;
+		area.disabled = false;
+	});
+}
+
+/** The edited body to write back, or null when there is nothing to write: the
+ * body never loaded, or the text is exactly what was loaded. */
+function linkedDescriptionEdit(area: HTMLTextAreaElement): string | null {
+	const loaded = area.dataset.sbdLoaded;
+	if (loaded === undefined) return null;
+	return area.value.replace(/\s+$/, "") === loaded ? null : area.value;
 }
 
 
@@ -3297,7 +3400,7 @@ async function collectKanbanTasks(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return { hits: [], columns: [], file: null };
 	const content = await view.app.vault.cachedRead(file);
-	const lines = content.split("\n");
+	const { lines } = splitLines(content);
 	const { columns } = parseKanbanColumns(lines);
 	const extended = cfg.kanbanExtended ?? false;
 	const hits: TaskHit[] = [];
@@ -3392,17 +3495,6 @@ async function collectKanbanTasks(
 }
 
 
-/** Every Tasks-plugin metadata emoji marker, used to strip metadata from a
- * card's display text and to compare cards ignoring their metadata. */
-const TASK_EMOJI_CLASS = "📅⏳🛫🔁✅❌➕⏫🔼🔽🔺⏬";
-
-
-/** The subset of metadata emoji Second Brain Dashboard's editor manages (due/scheduled/start/
- * recurrence/priority). Completion (✅), created (➕) and cancelled (❌) markers
- * are left untouched when rewriting a card's metadata. */
-const MANAGED_EMOJI_CLASS = "📅⏳🛫🔁⏫🔼🔽🔺⏬";
-
-
 /** The single source of truth for turning a raw date expression — an ISO date
  * (YYYY-MM-DD) or natural-language wording ("today", "next friday", "in 3
  * days") — into a validated YYYY-MM-DD, or null when it isn't a real date. Both
@@ -3427,35 +3519,6 @@ function readEmojiDate(text: string, emoji: string): string {
 }
 
 
-/** Strip all Tasks-plugin emoji metadata (each marker and its trailing value up
- * to the next marker) from a task's text, collapsing leftover whitespace. Used
- * for clean Kanban card display and for stable text comparison on writeback
- * (idempotent, so a raw and an already-stripped text compare equal). */
-function stripTaskMetadata(text: string): string {
-	const re = new RegExp(`[${TASK_EMOJI_CLASS}][^\\n\\r${TASK_EMOJI_CLASS}]*`, "gu");
-	return text.replace(re, "").replace(/\s+/g, " ").trim();
-}
-
-
-/** Add or remove the Tasks-plugin done-date marker (✅ YYYY-MM-DD) on a card's
- * text: any existing ✅ field is dropped, then today's is appended when `done`.
- * Used to keep the completion date in sync as cards are checked/unchecked. */
-function withDoneDate(text: string, done: boolean, today: string): string {
-	const re = new RegExp(`✅[^\\n\\r${TASK_EMOJI_CLASS}]*`, "gu");
-	const base = text.replace(re, "").replace(/\s+/g, " ").trim();
-	return done ? `${base} ✅ ${today}`.trim() : base;
-}
-
-
-/** Set (or, when null, remove) a Tasks-plugin date field (e.g. 📅/⏳/🛫) on a
- * task's text to `date`, replacing any existing value for that marker. */
-function withEmojiDate(text: string, emoji: string, date: string | null): string {
-	const re = new RegExp(`${emoji}[^\\n\\r${TASK_EMOJI_CLASS}]*`, "gu");
-	const base = text.replace(re, "").replace(/\s+/g, " ").trim();
-	return date ? `${base} ${emoji} ${date}`.trim() : base;
-}
-
-
 /** Complete (or un-complete) the current occurrence of a recurring checkbox /
  * Kanban task in place, TaskNotes-style: the line stays unchecked (a recurring
  * task never retires) but on completion its ✅ done date is stamped to today and
@@ -3469,7 +3532,7 @@ async function setLineRecurringInstanceDone(
 	done: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3505,7 +3568,7 @@ async function setLineRecurringInstanceDone(
 		.slice(0, cur.length - m[2].length)
 		.replace(CHECKBOX_MARKER, (_x, pre: string, _s: string, post: string) => `${pre} ${post}`);
 	lines[hit.line] = `${prefix}${body}`.trimEnd();
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3520,7 +3583,7 @@ async function setKanbanCardDone(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3529,7 +3592,7 @@ async function setKanbanCardDone(
 		.replace(CHECKBOX_MARKER, (_x, pre: string, _s: string, post: string) => `${pre}${done ? "x" : " "}${post}`);
 	const body = extended ? withDoneDate(m[2], done, moment().format("YYYY-MM-DD")) : m[2];
 	lines[hit.line] = `${marker}${body}`;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3547,7 +3610,7 @@ async function moveKanbanCard(
 	doneDate?: string,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m) return false; // line changed under us
@@ -3578,7 +3641,7 @@ async function moveKanbanCard(
 	lines.splice(hit.line, removeEnd - hit.line);
 
 	if (!insertCardBlock(lines, targetHeading, block)) return false;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3598,12 +3661,12 @@ async function addKanbanCard(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return false;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	let body = text.replace(/\r?\n/g, " ").trim();
 	if (markDone && doneDate) body = withDoneDate(body, true, doneDate);
 	const block = [`- [${markDone ? "x" : " "}] ${body}`, ...descriptionBullets(description ?? "", "")];
 	if (!insertCardBlock(lines, heading, block)) return false;
-	await view.app.vault.modify(file, lines.join("\n"));
+	await view.app.vault.modify(file, lines.join(eol));
 	return true;
 }
 
@@ -3657,7 +3720,7 @@ async function addKanbanCardAsNote(
 	}
 
 	const content = await view.app.vault.read(board);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const link = view.app.fileManager.generateMarkdownLink(note, board.path);
 	let cardBody = link;
 	if (!scrape) {
@@ -3666,7 +3729,7 @@ async function addKanbanCardAsNote(
 	}
 	const block = [`- [${markDone ? "x" : " "}] ${cardBody}`.trimEnd()];
 	if (!insertCardBlock(lines, heading, block)) return false;
-	await view.app.vault.modify(board, lines.join("\n"));
+	await view.app.vault.modify(board, lines.join(eol));
 	return true;
 }
 
@@ -3679,7 +3742,7 @@ async function markCardsDone(view: HomeView, hits: TaskHit[], doneDate?: string)
 	if (!hits.length) return;
 	const file = hits[0].file;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	let changed = false;
 	for (const hit of hits) {
 		const line = lines[hit.line];
@@ -3693,7 +3756,7 @@ async function markCardsDone(view: HomeView, hits: TaskHit[], doneDate?: string)
 		lines[hit.line] = `${marker}${body}`;
 		changed = true;
 	}
-	if (changed) await view.app.vault.modify(file, lines.join("\n"));
+	if (changed) await view.app.vault.modify(file, lines.join(eol));
 }
 
 
@@ -3819,18 +3882,19 @@ async function setKanbanCardMetadata(
 	// edits are written there, not onto the board link.
 	if (hit.linkedFile) return writeMetadataFrontmatter(view, hit.linkedFile, meta);
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
 	// Strip the managed markers (priority/recurrence/start/scheduled/due and
 	// their values) from the card text, leaving ✅/➕/❌ untouched, then re-append
 	// the new markers.
-	const managedRe = new RegExp(`[${MANAGED_EMOJI_CLASS}][^\\n\\r${TASK_EMOJI_CLASS}]*`, "gu");
-	const base = m[2].replace(managedRe, "").replace(/\s+/g, " ").trim();
+	const managedRe = new RegExp(`[${MANAGED_EMOJI_CLASS}]${FIELD_VALUE}`, "gu");
+	const { body, blockId } = splitBlockId(m[2]);
+	const base = body.replace(managedRe, "").replace(/\s+/g, " ").trim();
 	const itemIndent = /^(\s*)/.exec(cur)?.[1] ?? "";
 	const prefix = cur.slice(0, cur.length - m[2].length);
-	const newItem = `${prefix}${base}${buildMetadataSuffix(meta)}`.trimEnd();
+	const newItem = `${prefix}${withBlockId(`${base}${buildMetadataSuffix(meta)}`, blockId)}`.trimEnd();
 	if (hit.boardColumn) {
 		// Kanban card: replace the item line and its old description sub-bullets
 		// with the new item line and freshly-built description bullets.
@@ -3841,7 +3905,7 @@ async function setKanbanCardMetadata(
 		// (which may be sub-tasks, not a description) untouched.
 		lines[hit.line] = newItem;
 	}
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3860,7 +3924,7 @@ async function setKanbanCardText(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3882,7 +3946,7 @@ async function setKanbanCardText(
 	const newItem = `${prefix}${rest}`.trimEnd();
 	if (newItem === cur) return true; // no-op edit
 	lines[hit.line] = newItem;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3903,7 +3967,7 @@ async function setKanbanCardDescription(
 		return true;
 	}
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3912,7 +3976,7 @@ async function setKanbanCardDescription(
 	// Swap just the description sub-bullets (item line + 1 … block end) for the
 	// freshly-built ones, keeping the card's title/metadata line as-is.
 	lines.splice(hit.line + 1, end - (hit.line + 1), ...descriptionBullets(description, itemIndent));
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3922,7 +3986,7 @@ async function setKanbanCardDescription(
  * longer matches the card. */
 async function deleteKanbanCard(view: HomeView, hit: TaskHit): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3937,7 +4001,7 @@ async function deleteKanbanCard(view: HomeView, hit: TaskHit): Promise<boolean> 
 	let removeEnd = end;
 	if (lines[removeEnd]?.trim() === "") removeEnd++;
 	lines.splice(hit.line, removeEnd - hit.line);
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3993,7 +4057,7 @@ function startCardTitleEdit(
 	input.addEventListener("keydown", (ke) => {
 		// Enter commits (a card title is a single line); Shift+Enter is ignored so
 		// it can't split the title. Escape cancels.
-		if (ke.key === "Enter" && !ke.shiftKey) {
+		if (ke.key === "Enter" && !ke.shiftKey && !ke.isComposing) {
 			ke.preventDefault();
 			commit();
 		} else if (ke.key === "Escape") {
@@ -4049,7 +4113,7 @@ function startColumnRename(
 		cleanup();
 	};
 	input.addEventListener("keydown", (ke) => {
-		if (ke.key === "Enter") {
+		if (ke.key === "Enter" && !ke.isComposing) {
 			ke.preventDefault();
 			commit();
 		} else if (ke.key === "Escape") {
@@ -4075,12 +4139,12 @@ async function renameKanbanColumn(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const { columns } = parseKanbanColumns(lines);
 	const col = columns.find((c) => c.heading === oldHeading);
 	if (!col) return;
 	lines[col.headingLine] = `## ${newHeading}`;
-	await view.app.vault.modify(file, lines.join("\n"));
+	await view.app.vault.modify(file, lines.join(eol));
 	// Remap the lowercased column keys the config stores.
 	const oldKey = oldHeading.toLowerCase();
 	const newKey = newHeading.toLowerCase();
@@ -4099,7 +4163,7 @@ async function renameKanbanColumn(
 async function convertKanbanCardToNote(view: HomeView, cfg: TasksConfig, hit: TaskHit): Promise<void> {
 	const board = hit.file;
 	const content = await view.app.vault.read(board);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) {
@@ -4155,7 +4219,7 @@ async function convertKanbanCardToNote(view: HomeView, cfg: TasksConfig, hit: Ta
 	// note), leaving just the link line.
 	const prefix = cur.slice(0, cur.length - m[2].length);
 	lines.splice(hit.line, end - hit.line, `${prefix}${link}${meta ? ` ${meta}` : ""}`);
-	await view.app.vault.modify(board, lines.join("\n"));
+	await view.app.vault.modify(board, lines.join(eol));
 }
 
 
@@ -4275,8 +4339,11 @@ function readEmojiField(text: string, emoji: string): string | null {
 	const idx = text.indexOf(emoji);
 	if (idx < 0) return null;
 	let rest = text.slice(idx + emoji.length);
-	// Stop at the next emoji marker (any of the Tasks-plugin conventions).
-	const next = rest.search(new RegExp(`[${TASK_EMOJI_CLASS}]`, "u"));
+	// Stop at the next emoji marker (any of the Tasks-plugin conventions), or at
+	// a #tag or ^block-id — the same boundary the write paths use (FIELD_VALUE).
+	// Reading past a tag made `📅 2024-01-15 #finance` a due date of
+	// "2024-01-15 #finance", which doesn't parse, so the task showed no due date.
+	const next = rest.search(new RegExp(`[#^${TASK_EMOJI_CLASS}]`, "u"));
 	if (next >= 0) rest = rest.slice(0, next);
 	const value = rest.trim();
 	return value || null;
@@ -4301,7 +4368,7 @@ async function setCheckboxSymbol(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const line = lines[hit.line];
 	const match = line != null ? CHECKBOX_MARKER.exec(line) : null;
 	if (!match) return false;
@@ -4312,13 +4379,11 @@ async function setCheckboxSymbol(
 		.replace(CHECKBOX_MARKER, (_m, pre: string, _state: string, post: string) => `${pre}${symbol}${post}`);
 	const body = extended ? withDoneDate(rest, done, moment().format("YYYY-MM-DD")) : rest;
 	lines[hit.line] = `${marker}${body}`.trimEnd();
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
 
-/** Write a TaskNotes task's status frontmatter field (used by the Kanban board
- * when a card is dragged to another status column). */
 /** The status value written when a TaskNotes task is marked done: the card's
  * first configured "done" status when set (so a card treating both "done" and
  * "canceled" as complete writes "done"), otherwise the global done value. */
@@ -4352,15 +4417,29 @@ function renderTaskNotesCheckbox(
 	check.addEventListener("pointerdown", stop);
 	check.addEventListener("change", () => {
 		const value = check.checked ? doneWriteValue(view, cfg) : openStatus;
-		void setTaskNotesStatus(view, hit, value).then(refresh);
+		void setTaskNotesStatus(view, hit, value, check.checked).then(refresh);
 	});
 }
 
-async function setTaskNotesStatus(view: HomeView, hit: TaskHit, value: string): Promise<void> {
+/** Write a TaskNotes task's status frontmatter field (the list checkbox, and
+ * the Kanban board when a card is dragged to another status column).
+ *
+ * TaskNotes stamps the completion date alongside a completed status, and its
+ * own views sort and filter on it, so do the same: set it when the task moves
+ * into a done status, and clear it when the task is reopened. */
+async function setTaskNotesStatus(
+	view: HomeView,
+	hit: TaskHit,
+	value: string,
+	done: boolean,
+): Promise<void> {
 	const field = view.plugin.settings.taskNotesStatusField.trim() || "status";
+	const completedField = readTaskNotesSetup(view.app).fields.completedDate;
 	try {
 		await view.app.fileManager.processFrontMatter(hit.file, (fm) => {
 			fm[field] = value;
+			if (done && !hit.done) fm[completedField] = moment().format("YYYY-MM-DD");
+			else if (!done && completedField in fm) delete fm[completedField];
 		});
 	} catch {
 		new Notice(t().notices.couldNotUpdateTaskStatus);
@@ -4382,24 +4461,28 @@ function nextOccurrence(rule: string, fromDate: string): string | null {
 	if (!freq) return null;
 	const interval = Math.max(1, parseInt(/INTERVAL=(\d+)/i.exec(r)?.[1] ?? "1", 10) || 1);
 	const bydayRaw = /BYDAY=([A-Z,]+)/i.exec(r)?.[1];
+	const from = moment(fromDate);
+	// The series' anchor: its DTSTART, or — when the rule carries none, which is
+	// what TaskNotes writes for "weekly" and friends — the occurrence being
+	// stepped from. Without an anchor every "days since" below was 0: DAILY
+	// ignored INTERVAL and WEEKLY landed on tomorrow, so ticking a weekly task
+	// moved it one day; MONTHLY and YEARLY needed one to match against and
+	// returned null, so the task never moved at all.
 	const dtstart = dtRaw
 		? moment(`${dtRaw.slice(0, 4)}-${dtRaw.slice(4, 6)}-${dtRaw.slice(6, 8)}`)
-		: null;
-	const from = moment(fromDate);
+		: from.clone();
 	const wdMap: Record<string, number> = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 };
 	const weekdays = bydayRaw
 		? bydayRaw
 				.split(",")
 				.map((d) => wdMap[d.trim().toUpperCase()] ?? -1)
 				.filter((w) => w >= 0)
-		: dtstart
-			? [dtstart.day()]
-			: [];
+		: [dtstart.day()];
 
 	const cursor = from.clone().add(1, "day");
 	const limit = 730;
 	for (let i = 0; i < limit; i++) {
-		const daysSince = dtstart ? cursor.diff(dtstart, "days") : 0;
+		const daysSince = cursor.diff(dtstart, "days");
 		if (daysSince < 0) {
 			cursor.add(1, "day");
 			continue;
@@ -4449,29 +4532,43 @@ function nextRecurrenceDate(rule: string, fromDate: string): string | null {
 }
 
 
-/** Mark today's occurrence of a recurring TaskNotes task complete the way
- * TaskNotes does: append today's YYYY-MM-DD to `complete_instances` (deduped,
+/** The YYYY-MM-DD day of a TaskNotes `scheduled` value (which may carry a
+ * time), or null when there isn't one. */
+function scheduledDay(value: string | null): string | null {
+	const m = value ? /^(\d{4}-\d{2}-\d{2})/.exec(value.trim()) : null;
+	return m ? m[1] : null;
+}
+
+/** Mark the scheduled occurrence of a recurring TaskNotes task complete the
+ * way TaskNotes does: append its YYYY-MM-DD to `complete_instances` (deduped,
  * kept sorted) and advance `scheduled` to the next occurrence derived from the
  * recurrence rule. The task's `status` is left untouched — a recurring task
  * stays open and just rolls forward to its next due date. */
 async function completeRecurringInstance(view: HomeView, hit: TaskHit, targetFile?: TFile): Promise<void> {
 	if (!hit.recurrence) return;
+	const rule = hit.recurrence;
 	const today: string = moment().format("YYYY-MM-DD");
-	const next = nextRecurrenceDate(hit.recurrence, today);
+	const keys = recurringTaskKeys(view, hit, targetFile);
 	try {
 		await view.app.fileManager.processFrontMatter(targetFile ?? hit.file, (fm) => {
-			const cur = typeof fm["scheduled"] === "string" ? String(fm["scheduled"]) : null;
+			const cur = typeof fm[keys.scheduled] === "string" ? String(fm[keys.scheduled]) : null;
 			const timeMatch = cur ? /T(\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)\s*$/.exec(cur) : null;
-			const instances = Array.isArray(fm["complete_instances"])
-				? fm["complete_instances"].map((v: unknown) => String(v))
-				: [];
-			if (!instances.includes(today)) {
-				instances.push(today);
+			// The occurrence being completed is the one the task is scheduled for,
+			// not today. Using today broke finishing early: Friday's occurrence
+			// ticked off on Wednesday was recorded as Wednesday, and the next date
+			// after Wednesday is that same Friday — so `scheduled` didn't move and
+			// the task came back open on Friday, already done.
+			const occurrence = scheduledDay(cur) ?? today;
+			const next = nextRecurrenceDate(rule, occurrence);
+			const ciRaw: unknown = fm[keys.completeInstances];
+			const instances = Array.isArray(ciRaw) ? ciRaw.map((v: unknown) => String(v)) : [];
+			if (!instances.includes(occurrence)) {
+				instances.push(occurrence);
 				instances.sort();
-				fm["complete_instances"] = instances;
+				fm[keys.completeInstances] = instances;
 			}
 			if (next) {
-				fm["scheduled"] = timeMatch ? `${next}T${timeMatch[1]}` : next;
+				fm[keys.scheduled] = timeMatch ? `${next}T${timeMatch[1]}` : next;
 			}
 		});
 	} catch {
@@ -4480,24 +4577,31 @@ async function completeRecurringInstance(view: HomeView, hit: TaskHit, targetFil
 }
 
 
-/** Undo today's completion of a recurring TaskNotes task: remove today from
- * `complete_instances` and roll `scheduled` back to today (the occurrence we
- * just un-completed). Used when the user unchecks the box to cancel a
- * mistaken completion. */
+/** Undo the latest completion of a recurring TaskNotes task: remove that
+ * occurrence from `complete_instances` and roll `scheduled` back to it. Used
+ * when the user unchecks the box to cancel a mistaken completion. */
 async function uncompleteRecurringInstance(view: HomeView, hit: TaskHit, targetFile?: TFile): Promise<void> {
 	if (!hit.recurrence) return;
 	const today: string = moment().format("YYYY-MM-DD");
+	const keys = recurringTaskKeys(view, hit, targetFile);
 	try {
 		await view.app.fileManager.processFrontMatter(targetFile ?? hit.file, (fm) => {
-			const cur = typeof fm["scheduled"] === "string" ? String(fm["scheduled"]) : null;
+			const cur = typeof fm[keys.scheduled] === "string" ? String(fm[keys.scheduled]) : null;
 			const timeMatch = cur ? /T(\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)\s*$/.exec(cur) : null;
-			const instances = Array.isArray(fm["complete_instances"])
-				? fm["complete_instances"].map((v: unknown) => String(v)).filter((d) => d !== today)
-				: [];
-			fm["complete_instances"] = instances;
-			// Restore the occurrence date the checkbox represents (today),
-			// keeping any time component the task already had.
-			fm["scheduled"] = timeMatch ? `${today}T${timeMatch[1]}` : today;
+			const ciRaw: unknown = fm[keys.completeInstances];
+			const all = Array.isArray(ciRaw) ? ciRaw.map((v: unknown) => String(v)) : [];
+			// The completion being undone is the latest one before the date the
+			// task has since moved on to — the mirror of completing, which records
+			// the scheduled occurrence rather than today. Falls back to today for
+			// a record written before that, when completions were stamped today.
+			const upcoming = scheduledDay(cur);
+			const undone =
+				[...all].sort().reverse().find((d) => !upcoming || d < upcoming) ?? today;
+			const instances = all.filter((d) => d !== undone);
+			fm[keys.completeInstances] = instances;
+			// Restore the undone occurrence's date, keeping any time component
+			// the task already had.
+			fm[keys.scheduled] = timeMatch ? `${undone}T${timeMatch[1]}` : undone;
 		});
 	} catch {
 		new Notice(t().notices.couldNotUndoRecurring);
@@ -4701,7 +4805,7 @@ async function discoverTaskFields(
 	if (source === "kanban" && cfg) {
 		const board = resolveKanbanFile(app, cfg);
 		if (board) {
-			const lines = (await app.vault.cachedRead(board)).split("\n");
+			const { lines } = splitLines(await app.vault.cachedRead(board));
 			record(builtinSource("column"), parseKanbanColumns(lines).columns.map((c) => c.heading));
 		}
 	}

@@ -669,8 +669,13 @@ export class SetupWizardModal extends Modal {
 
 	/** Apply the answers, persist once, and hand the user their board. */
 	private async commitSetup(): Promise<void> {
-		const outcome = applySetup(this.plugin.settings, this.answers, this.detection);
+		// Once only. The modal closes only after the save below resolves, so a
+		// double-click on Finish used to run the whole plan twice — new card ids
+		// the second time, two saves, two "done" notices and two activateView
+		// calls, which could open a second dashboard tab.
+		if (this.finished) return;
 		this.finished = true;
+		const outcome = applySetup(this.plugin.settings, this.answers, this.detection);
 		// Record the version too, so a first-run user isn't shown the changelog
 		// for a build they have just been set up on.
 		this.plugin.settings.lastSeenVersion = this.plugin.manifest.version;

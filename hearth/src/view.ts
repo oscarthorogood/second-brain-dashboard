@@ -7,6 +7,7 @@ import { applyBackground, renderBanner } from "./background";
 import { deferRedrawWhileTyping } from "./cardfocus";
 import {
 	bannerActive,
+	contentWidthIsFull,
 	effectiveMaxWidth,
 	effectiveShowSearch,
 	effectiveShowTitle,
@@ -201,7 +202,12 @@ export class HomeView extends ItemView {
 		if (banner) renderBanner(this, scroll, child);
 
 		const inner = scroll.createDiv("sbd-inner");
-		inner.style.maxWidth = `${effectiveMaxWidth(this.plugin.settings)}px`;
+		// At the top of the range the column carries no cap at all, so the board
+		// fills the pane and the only side margin left is the scroll area's own
+		// gutter. Below it the cap is a literal pixel width.
+		inner.style.maxWidth = contentWidthIsFull(this.plugin.settings)
+			? "none"
+			: `${effectiveMaxWidth(this.plugin.settings)}px`;
 
 		if (effectiveShowTitle(this.plugin.settings) || effectiveShowSearch(this.plugin.settings)) {
 			const header = inner.createDiv("sbd-header");

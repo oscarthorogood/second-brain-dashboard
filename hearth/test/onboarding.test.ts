@@ -243,6 +243,17 @@ describe("defaultAnswers", () => {
 		expect(answers.integrations).toEqual(["omnisearch"]);
 	});
 
+	it("preselects a daily board only when Daily notes is on", () => {
+		expect(defaultAnswers(freshSettings(), emptyDetection()).purposes).not.toContain("daily");
+		const answers = defaultAnswers(
+			freshSettings(),
+			emptyDetection({
+				integrations: [{ id: "dailyNotes", name: "Daily notes", recommended: true }],
+			}),
+		);
+		expect(answers.purposes).toContain("daily");
+	});
+
 	it("assumes someone running a task plugin wants tasks on their board", () => {
 		const answers = defaultAnswers(
 			freshSettings(),

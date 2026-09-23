@@ -342,8 +342,17 @@ function makeFunctions(angleUnit: "deg" | "rad"): Record<string, (args: number[]
 	};
 }
 
+/** The largest n whose factorial a double can hold: 170! ≈ 7.26e306, and
+ * 171! overflows to Infinity. */
+const MAX_FACTORIAL = 170;
+
 function factorial(n: number): number {
 	if (n < 0 || !Number.isInteger(n)) return NaN;
+	// Answered without the loop past the point where every result is Infinity.
+	// The loop used to run to n regardless, and the calculator card evaluates on
+	// every keystroke — so typing `10000000000!` ran ten billion multiplications
+	// on the UI thread and froze Obsidian.
+	if (n > MAX_FACTORIAL) return Infinity;
 	let out = 1;
 	for (let i = 2; i <= n; i++) out *= i;
 	return out;
@@ -549,9 +558,32 @@ class Parser {
 
 // ---- Plain-language preprocessing --------------------------------------
 
+/** Drop thousands separators ("1,000", "1,234,567") so a grouped number — the
+ * card's own output format — can be typed back in. Only commas outside
+ * parentheses are touched: inside them a comma separates function arguments. */
+function stripGroupingCommas(input: string): string {
+	let out = "";
+	let depth = 0;
+	for (let i = 0; i < input.length; i++) {
+		const ch = input[i];
+		if (ch === "(") depth++;
+		else if (ch === ")") depth = Math.max(0, depth - 1);
+		else if (
+			ch === "," &&
+			depth === 0 &&
+			/\d/.test(input[i - 1] ?? "") &&
+			/^\d{3}(?!\d)/.test(input.slice(i + 1))
+		) {
+			continue;
+		}
+		out += ch;
+	}
+	return out;
+}
+
 /** Rewrite spoken-word math into symbols the tokenizer understands. */
 function normalizeExpression(input: string): string {
-	let s = ` ${input.toLowerCase()} `;
+	let s = ` ${stripGroupingCommas(input.toLowerCase())} `;
 	// Word operators (whole words only).
 	s = s.replace(/\bmultiplied by\b/g, " * ");
 	s = s.replace(/\bdivided by\b/g, " / ");

@@ -1,4 +1,4 @@
-import { Keymap, type App, type OpenViewState, type PaneType, type TFile, type UserEvent, type WorkspaceLeaf } from "obsidian";
+import { Keymap, parseLinktext, type App, type OpenViewState, type PaneType, type TFile, type UserEvent, type WorkspaceLeaf } from "obsidian";
 import {
 	OPEN_IN_MODES,
 	type HomeSettings,
@@ -169,6 +169,22 @@ export async function openLink(
 		await h.app.workspace.openLinkText(linktext, sourcePath, target.pane);
 		return;
 	}
-	if (h.leaf) h.app.workspace.setActiveLeaf(h.leaf, { focus: true });
+	if (h.leaf) {
+		// Open a note that exists straight into the Second Brain Dashboard leaf.
+		// `openLinkText(…, false)` goes through `getLeaf(false)`, which skips a
+		// leaf whose view isn't navigable — and the dashboard isn't when outside
+		// opens are set to use a new tab — so it would open a new tab anyway.
+		const { path, subpath } = parseLinktext(linktext);
+		const file = h.app.metadataCache.getFirstLinkpathDest(path, sourcePath);
+		if (file) {
+			await h.leaf.openFile(file, {
+				active: true,
+				...(subpath ? { eState: { subpath } } : {}),
+			});
+			return;
+		}
+		h.app.workspace.setActiveLeaf(h.leaf, { focus: true });
+	}
+	// A missing note is left to `openLinkText`, which creates it.
 	await h.app.workspace.openLinkText(linktext, sourcePath, false);
 }

@@ -13,7 +13,79 @@ History begins at 1.5.0. For releases before 1.5.0, see the
 
 ## [2.1.0]
 
+### Fixed
+
+- **The tasks widget scrolls, and its rows are shorter.** A tasks widget draws
+  up to six tasks at large and ten at extra large — more than either tile holds
+  — and the surplus was simply clipped, with no way to reach it. The Kanban
+  layout has scrolled per column since it was written; the list was the one
+  layout whose overflow had nowhere to go. It scrolls now. Rows also lost some
+  padding and gutter: 66px to 58px each, which is one more task on screen before
+  you have to scroll, and the type is untouched. If rows still feel tall, they
+  are wrapping their chips onto a second line — show fewer fields per task
+  (Settings → Integrations → Fields shown on a task, or the card's own settings)
+  and the row goes back to one line.
+
+- **A short widget can no longer hide its own top rows.** The small and medium
+  tiles centre what they hold, and they also clip — so a widget whose content
+  ran over lost half the overflow off the *top* edge, where no amount of
+  scrolling could reach it. The sync widget at medium was 27px over and dropped
+  its own "Sync to inbox" title off the top while dropping its tray line off the
+  bottom, leaving a tile that named neither itself nor its folder's depth.
+  Centring is now `safe`, so it gives way to top-alignment the moment content
+  overflows and anything cut is at least cut where you can see it. The sync
+  widget also stops drawing its tray line at medium, which is the 27px: a
+  338×158 tile holds its header and its three feeds and nothing more, and the
+  header's chip already names the folder. Large and extra large are unchanged,
+  and the unsorted widget — whose header is one line, not three — keeps its tray
+  line at every size it had it.
+
+- **An update can no longer cost you your dashboard.** Two paths could throw
+  away a board that `data.json` still held. One bad widget — a save interrupted
+  part-way, a beta that wrote a size this build doesn't know, one hand-edited
+  entry — used to empty the *whole* board on load, silently; now only that
+  widget is dropped. And a `data.json` that is on disk but can't be read (its
+  files replaced under a running app, a sync client mid-write, a truncated file
+  from an earlier crash) used to look exactly like a fresh install: Second Brain
+  Dashboard would seed the starter board and the next autosave would put it over
+  the real file. It now tells the two apart by asking the vault whether the file
+  is there, and when it is, refuses every write for the session and says so, so
+  the file survives untouched and a reload picks it back up.
+
 ### Changed
+
+- **The board can fill the window.** Content width stopped at 1600px — which was
+  also its default, so on any wider display everything past 1600px was side
+  margin and no setting could close it: the ceiling *was* the value. The slider
+  now runs to 2600, and its top position drops the cap entirely so the board
+  takes the whole pane, leaving only the small gutter at each edge. The board is
+  a fixed 16-column page, so a wider column is also a larger cell: widgets are
+  drawn bigger to match, and Widget size dials them back without bringing the
+  margins with them. The setting now says which of the two it is doing. Nothing
+  moves on upgrade — 1600 is a mid-range value now rather than the end stop, and
+  still means 1600px.
+
+- **Both menus wear the settings window's own colours.** The settings index and
+  the add-card picker's rail drew flat monochrome glyphs beside Obsidian's own
+  tinted ones, which read as a different app bolted into the window. Every row
+  in both now carries the same tinted rounded-square tile Obsidian gives its own
+  settings list, and the picker's rail is grouped into inset boxes with hairline
+  separators and a "Categories" label to match. The tints are the theme's own
+  `--color-*` hues, so a theme that retunes them retunes these too.
+
+- **Claude's two trays are set up once, in settings, not on every widget.**
+  Where the inbox and unsorted folders are, how far ahead and back the calendar
+  sync reaches, and the button that forgets what has already been written all
+  describe one filing system rather than one widget: every sync widget fills
+  the same inbox and shares one record of what it has written, and whoever
+  drains a tray reads one folder. They now live under Settings → Behaviour →
+  Claude trays, where both folders can also be pointed anywhere in the vault
+  (typed, or picked) instead of being fixed at `Claude/inbox` and
+  `Claude/unsorted`. A board that already carried a per-widget sync window
+  keeps it — the first sync widget's value is lifted into settings on upgrade.
+  What stays in a widget's own settings is what only that widget does: which
+  three calendars a sync widget watches and how often it refreshes, and which
+  note an unsorted widget attaches to.
 
 - **Every widget gets the row rhythm the stylesheet was written for.** A
   widget's body was a block, which quietly disabled two rules aimed at it: the

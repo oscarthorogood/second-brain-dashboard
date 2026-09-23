@@ -67,6 +67,15 @@ interface MomentFn {
 export const moment: MomentFn = createMoment as unknown as MomentFn;
 
 
+/** The "→ folder" chip naming the tray a widget files into (the sync and
+ * unsorted widgets' headers). */
+export function destinationChip(parent: HTMLElement, folder: string): void {
+	const chip = parent.createDiv("sbd-sync-dest");
+	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
+	chip.createSpan({ cls: "sbd-sync-dest-path", text: folder });
+}
+
+
 export function emptyState(body: HTMLElement, icon: string, text: string): void {
 	const empty = body.createDiv("sbd-card-empty");
 	setIcon(empty.createDiv("sbd-card-empty-icon"), icon);
@@ -406,15 +415,25 @@ export function renderLivePreviewEmbed(
 	file: TFile,
 	body: HTMLElement,
 	component: Component,
+	fallback?: () => void,
 ): boolean {
 	// `sbd-leaf-host` carries the transparency rules that let a hosted view
 	// show the card's own translucent surface; `sbd-leaf-hide-header` drops the
 	// breadcrumb/kebab bar, which is pure noise on a single-file card.
 	const host = body.createDiv("sbd-leaf-host sbd-leaf-hide-header sbd-jot-live");
 	body.addClass("sbd-card-body-live");
-	if (mountMarkdownEditor(view.app, file, host, component)) return true;
-	host.remove();
-	body.removeClass("sbd-card-body-live");
+	const giveUp = () => {
+		host.remove();
+		body.removeClass("sbd-card-body-live");
+	};
+	// Hosting can also fail later, once the card is on screen and the editor
+	// is actually built; the plain editor takes over then too.
+	const hosted = mountMarkdownEditor(view.app, file, host, component, () => {
+		giveUp();
+		fallback?.();
+	});
+	if (hosted) return true;
+	giveUp();
 	return false;
 }
 
@@ -969,7 +988,7 @@ function makeTileFreeFormDrag<T extends { id: string; col?: number; row?: number
 		const wasMoved = moved;
 		moved = false;
 		tile.removeClass("is-tile-dragging");
-		tile.setCssStyles({});
+		tile.style.removeProperty("transform");
 		if (ghost) {
 			ghost.remove();
 			ghost = null;
@@ -1123,7 +1142,9 @@ function makeTileAutoFlowDrag<T extends { id: string; col?: number; row?: number
 		const wasMoved = moved;
 		moved = false;
 		tile.removeClass("is-tile-dragging");
-		tile.setCssStyles({});
+		for (const prop of ["position", "width", "height", "left", "top"]) {
+			tile.style.removeProperty(prop);
+		}
 		tile.closest(".sbd-card")?.removeClass("has-tile-gesture");
 		const dropPos = placeholderPos;
 		if (placeholder) {

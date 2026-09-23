@@ -1,6 +1,6 @@
-import { addIcon, apiVersion, debounce, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
+import { addIcon, apiVersion, debounce, normalizePath, Plugin, setIcon, TFolder, WorkspaceLeaf, Notice } from "obsidian";
 import { HomeView, VIEW_TYPE_HOME } from "./view";
-import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings } from "./types";
+import { DEFAULT_SETTINGS, fillMissingDefaults, HomeSettings, lowPowerActive, migrateSettings, type SettingsBackup, settingsAreReadable } from "./types";
 import { HomeSettingTab } from "./settings";
 import {
 	SBD_ICON_ID,
@@ -15,6 +15,7 @@ import { setLanguage, t } from "./i18n";
 import { maybeShowWhatsNew } from "./whatsnew";
 import { maybeRunSetup, openSetupWizard } from "./onboarding";
 import { exportSettings } from "./layout";
+import { isNewer } from "./changelog";
 import { clearContentSearchCache } from "./query";
 
 /** Core "Audio recorder" plugin id, used by the "Record voice" mobile action. */
@@ -26,6 +27,39 @@ export default class SbdPlugin extends Plugin {
 	 * as opposed to an existing vault that simply predates a given setting.
 	 * Used so the "What's new" dialog greets upgraders but not first-timers. */
 	isFirstRun = false;
+	/**
+	 * True when this load could not read an existing `data.json`, so nothing may
+	 * be written back over it.
+	 *
+	 * Starts false: the guard exists to protect a file we know is there and
+	 * couldn't read, and until `loadSettings` has looked there is nothing to
+	 * protect. Never cleared during a session — the in-memory settings are the
+	 * defaults plus a starter board, and they never become the right thing to
+	 * write over the user's real file. A reload is the way out, which is what
+	 * the notice says.
+	 */
+	private settingsUnwritable = false;
+
+	/** Whether this session refuses to write settings (see `settingsUnwritable`).
+	 * Read by the settings pane so an import can say what it is about to do. */
+	get settingsLocked(): boolean {
+		return this.settingsUnwritable;
+	}
+
+	/**
+	 * Lift the write lock, for a deliberate restore only.
+	 *
+	 * The lock exists to stop the *in-memory* state — defaults plus a starter
+	 * board — being autosaved over a file we couldn't read. An explicit import
+	 * is different in kind: the user has picked a file, confirmed that it
+	 * replaces their settings, and the state it leaves in memory is the one they
+	 * chose. That is exactly the recovery the load notice points at, and
+	 * without this the import showed "imported" and then saved nothing, so the
+	 * restore silently vanished on the next reload.
+	 */
+	releaseSettingsLock(): void {
+		this.settingsUnwritable = false;
+	}
 	/** The ribbon crystal, kept so the icon can be swapped when the
 	 * themeColorTarget setting changes. */
 	private ribbonEl?: HTMLElement;
@@ -146,7 +180,14 @@ export default class SbdPlugin extends Plugin {
 			// The setup wizard is the fresh install's counterpart and is offered
 			// after it, so the two can never stack: on a first run the changelog
 			// is silently seeded and only the wizard appears.
-			void maybeShowWhatsNew(this).then(() => maybeRunSetup(this));
+			//
+			// Neither runs while the settings file couldn't be read. Both would read
+			// the empty stand-in as a real state — the changelog as an upgrade from
+			// nothing, the wizard as a fresh install — and whatever either wrote
+			// would be refused by the lock anyway.
+			if (!this.settingsUnwritable) {
+				void maybeShowWhatsNew(this).then(() => maybeRunSetup(this));
+			}
 		});
 	}
 
@@ -254,12 +295,30 @@ export default class SbdPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		const raw = ((await this.loadData()) ?? {}) as Record<string, unknown>;
+		const { raw, readable } = await this.readSettingsFile();
+		// A data.json that is there but unreadable is the one case where carrying
+		// on normally destroys the vault's setup: everything below would treat it
+		// as a fresh install, seed the starter board, and the next autosave — the
+		// calendar sync writes on every refresh — would put that over the real
+		// file. Refuse to write instead, and say so.
+		this.settingsUnwritable = !readable;
+		if (!readable) new Notice(t().notices.settingsUnreadable, 15_000);
 		// No persisted keys at all => a genuinely fresh install. An existing vault
 		// that merely lacks a newly-added field (like lastSeenVersion) still has
 		// its other settings here, so it is correctly treated as an upgrade.
-		this.isFirstRun = Object.keys(raw).length === 0;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, raw);
+		//
+		// An unreadable file also arrives as `{}`, and is emphatically not a fresh
+		// install: treating it as one opened the setup wizard over a vault whose
+		// real settings were only unreadable, and nothing built in it could be
+		// saved.
+		this.isFirstRun = readable && Object.keys(raw).length === 0;
+		// Cloned, not assigned: `Object.assign` is shallow, so every array and
+		// object default the file didn't carry (`favorites`, `cards`, …) was the
+		// *same object* as the one in DEFAULT_SETTINGS. Pinning a favourite then
+		// pushed into the default itself, and anything later reading the defaults
+		// in that session — a reset button, the pre-update snapshot — saw the
+		// user's data as the factory value.
+		this.settings = Object.assign(structuredClone(DEFAULT_SETTINGS), raw);
 		// Backfill nested config defaults too, not just top-level keys, so an
 		// object persisted by an older version isn't missing a nested field.
 		fillMissingDefaults(
@@ -268,13 +327,99 @@ export default class SbdPlugin extends Plugin {
 		);
 		// Snapshot BEFORE the migration below, so the copy is what the previous
 		// version actually left behind rather than what this one made of it.
-		const snapshotted = this.snapshotBeforeUpdate(raw);
+		// Never of an unreadable file: all there is to copy is the stand-in, and
+		// once an import lifts the lock that stand-in would be saved as the
+		// "undo" for this update.
+		const snapshotted = readable && this.snapshotBeforeUpdate(raw);
 		// A one-way migration (e.g. the commandId → target fold) mutates settings
 		// in memory only; without flushing it here the legacy data would survive
 		// in storage and the migration would re-run every start, never actually
 		// retiring the deprecated field. Persist immediately when that happens.
 		const migrated = migrateSettings(this.settings, raw);
+		if (!readable) {
+			// The migration read `{}` as a fresh install and set the bookkeeping to
+			// match: the wizard pending, no version seen. Neither is true of a vault
+			// that had a settings file, and an import that lifts the lock doesn't
+			// carry either field (they are left out of exports on purpose) — so
+			// without this the wizard opened over the restored board on the next
+			// launch and What's New replayed the whole changelog.
+			this.settings.setupStatus = "done";
+			this.settings.lastSeenVersion = this.manifest.version;
+		}
 		if (migrated || snapshotted) await this.saveSettings();
+	}
+
+	/**
+	 * Read `data.json`, telling "this vault has none yet" apart from "this vault
+	 * has one and we could not read it".
+	 *
+	 * `loadData()` answers `null` for both, which is the whole problem: a plugin
+	 * update is exactly when the second case happens — the plugin folder's files
+	 * are replaced under a running app (BRAT does this on every beta), a sync
+	 * client is part-way through writing the file, or a previous crash left it
+	 * truncated. Read as "fresh install", that hands the user a starter board and
+	 * then saves it over the one they actually had.
+	 *
+	 * The vault's own file listing is what tells them apart, so this asks it.
+	 * Anything unusable *with* the file present counts as unreadable; a genuinely
+	 * absent file is a fresh install and still gets its starter board.
+	 */
+	private async readSettingsFile(): Promise<{ raw: Record<string, unknown>; readable: boolean }> {
+		let loaded: unknown = null;
+		let threw = false;
+		try {
+			loaded = await this.loadData();
+		} catch {
+			// A corrupt or truncated file: `loadData` parses JSON, so a half-written
+			// one throws rather than returning null.
+			threw = true;
+		}
+		// The file listing is only consulted when the read produced nothing usable,
+		// which is the only case that needs telling apart — an ordinary load never
+		// pays for it.
+		const usable = !threw && loaded && typeof loaded === "object" && !Array.isArray(loaded);
+		const exists = usable ? false : await this.settingsFileExists();
+		if (!settingsAreReadable(loaded, threw, exists)) return { raw: {}, readable: false };
+		return { raw: (usable ? (loaded as Record<string, unknown>) : {}), readable: true };
+	}
+
+	/** Whether this plugin's `data.json` is on disk right now. Defensive: a
+	 * `manifest.dir` Obsidian didn't set, or an adapter that throws, must not
+	 * take the load down — and "we can't tell" is safest read as "it's there",
+	 * which only ever costs a refused write the user is told about. */
+	private async settingsFileExists(): Promise<boolean> {
+		try {
+			const dir = this.manifest.dir;
+			if (!dir) return true;
+			return await this.app.vault.adapter.exists(normalizePath(`${dir}/data.json`));
+		} catch {
+			return true;
+		}
+	}
+
+	/**
+	 * Every write of this plugin's settings, from anywhere.
+	 *
+	 * Overriding `saveData` rather than guarding `saveSettings` is deliberate:
+	 * some twenty call sites across the card modules persist through
+	 * `plugin.saveData(plugin.settings)` directly — a widget's tab, a pet's
+	 * hunger, the calendar sync's index — and any one of them would be enough to
+	 * write a starter board over a real one. One override covers them all, and
+	 * every future one.
+	 *
+	 * The refusal is loud but not repeated: the load already showed a notice, and
+	 * a second one per keystroke of an autosaving widget would be worse than the
+	 * silence it replaced.
+	 */
+	override async saveData(data: unknown): Promise<void> {
+		if (this.settingsUnwritable) {
+			console.warn(
+				"Second Brain Dashboard: refusing to save — this vault's data.json could not be read on load, " +
+					"so saving now would overwrite it. Reload Obsidian to try again.",
+			);
+			return;
+		}
+		return super.saveData(data);
 	}
 
 	/**
@@ -295,16 +440,27 @@ export default class SbdPlugin extends Plugin {
 	 */
 	private snapshotBeforeUpdate(raw: Record<string, unknown>): boolean {
 		if (this.isFirstRun) return false;
+		const current = this.manifest.version;
 		const previous = typeof raw.lastSeenVersion === "string" ? raw.lastSeenVersion : "";
 		// An empty lastSeenVersion is a vault from before that field existed, so
-		// it IS an upgrade and is worth snapshotting; the same version is not.
-		if (previous === this.manifest.version) return false;
+		// it IS an upgrade and is worth snapshotting. Otherwise only a move to a
+		// NEWER version is: a downgrade has nothing of this version's to undo.
+		if (previous !== "" && !isNewer(current, previous)) return false;
+		// And only once per version. Two devices syncing one data.json on
+		// different builds flip lastSeenVersion back and forth, so "it differs"
+		// alone re-took the snapshot on every alternation — overwriting the copy
+		// from before this version's migration with the already-migrated board
+		// on the very first flip. The snapshot this version took is the one to
+		// keep.
+		const existing = raw.preUpdateBackup as SettingsBackup | undefined;
+		if (existing?.takenBy === current) return false;
 		this.settings.preUpdateBackup = {
 			version: previous,
 			savedAt: new Date().toISOString(),
 			// exportSettings enumerates the settings it carries, so the snapshot
 			// never contains a previous snapshot — this slot cannot compound.
 			data: exportSettings(this.settings),
+			takenBy: current,
 		};
 		return true;
 	}
@@ -335,6 +491,22 @@ export default class SbdPlugin extends Plugin {
 		this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME).forEach((leaf) => {
 			const view = leaf.view;
 			if (view instanceof HomeView) view.render();
+		});
+	}
+
+	/**
+	 * Re-render every open home view except the one that made the change.
+	 *
+	 * For edits made from a board — a drag-reorder, a card's settings — where the
+	 * editing view already shows the result, and redrawing it would interrupt the
+	 * drag or rebuild the board under an open settings modal. Those edits used to
+	 * save without refreshing anything, so a second dashboard tab (a split pane,
+	 * another window) kept showing the old order or config until refocused.
+	 */
+	refreshOtherViews(except: HomeView) {
+		this.app.workspace.getLeavesOfType(VIEW_TYPE_HOME).forEach((leaf) => {
+			const view = leaf.view;
+			if (view instanceof HomeView && view !== except) view.render();
 		});
 	}
 

@@ -18,8 +18,9 @@ import {
 	type CardTemplateDef,
 } from "./cards";
 import { templateDefaultSize, templateSizes } from "./cards/definition";
+import { glyphTile, type TileTint } from "./glyphtile";
 import { sizeSpec, type WidgetSize } from "./widgetsize";
-import { cardRequestGithubUrl, cardRequestMailtoUrl } from "./cardrequest";
+import { CARD_REQUEST_EMAIL, cardRequestGithubUrl, cardRequestMailtoUrl } from "./cardrequest";
 import { t } from "./i18n";
 
 /**
@@ -44,6 +45,9 @@ import { t } from "./i18n";
  * (`CardCategory` values are used verbatim, so the rail is derived from the
  * registry rather than a second hand-kept list.) */
 type PickerScope = "all" | "request" | CardCategory;
+
+/** One rail row, as the group builder takes it. */
+type RailEntry = [PickerScope, string, string, TileTint];
 
 /** localStorage key for the scope the picker reopens on. */
 const SCOPE_KEY = "sbd-card-picker-scope";
@@ -171,7 +175,9 @@ class CardPickerModal extends Modal {
 			if (!this.tiles.length) return;
 			// Enter takes the top match without a detour through the grid — the
 			// point of typing "pet" is to get the pet card.
-			if (evt.key === "Enter") {
+			// Not while an IME is composing: that Enter confirms the conversion,
+			// and taking it here added the top card for a half-typed word.
+			if (evt.key === "Enter" && !evt.isComposing) {
 				evt.preventDefault();
 				// The top match at the size it prefers — the chip a mouse would
 				// most likely have gone for, not whichever chip is leftmost.
@@ -191,20 +197,50 @@ class CardPickerModal extends Modal {
 		rail.empty();
 		const strings = t().cardPicker;
 
-		this.railButton(rail, "all", strings.allCards, "layout-grid");
-		for (const category of CARD_CATEGORIES) {
-			this.railButton(rail, category, strings.categories[category], CATEGORY_ICONS[category]);
-		}
-		rail.createDiv("sbd-picker-rail-sep");
-		this.railButton(rail, "request", strings.request.railLabel, "message-square-plus");
+		// Grouped the way the settings window groups its own list: the catalogue
+		// itself, then the categories under a label, then the one row that isn't
+		// a category at all.
+		this.railGroup(rail, [["all", strings.allCards, "layout-grid", "grey"]]);
+		rail.createDiv({ cls: "sbd-picker-rail-label-group", text: strings.categoriesLabel });
+		this.railGroup(
+			rail,
+			CARD_CATEGORIES.map(
+				(category) =>
+					[
+						category,
+						strings.categories[category],
+						CATEGORY_ICONS[category],
+						CATEGORY_TINTS[category],
+					] as RailEntry,
+			),
+		);
+		this.railGroup(rail, [
+			["request", strings.request.railLabel, "message-square-plus", "grey"],
+		]);
 	}
 
-	private railButton(rail: HTMLElement, scope: PickerScope, label: string, icon: string): void {
-		const btn = rail.createEl("button", { cls: "sbd-picker-rail-btn" });
+	/** One inset box of rail rows — the shape Obsidian's settings list uses, so
+	 * a group's first and last rows round with the box and the rows between are
+	 * separated by hairlines rather than by gaps. */
+	private railGroup(rail: HTMLElement, entries: RailEntry[]): void {
+		const group = rail.createDiv("sbd-picker-rail-group");
+		for (const [scope, label, icon, tint] of entries) {
+			this.railButton(group, scope, label, icon, tint);
+		}
+	}
+
+	private railButton(
+		group: HTMLElement,
+		scope: PickerScope,
+		label: string,
+		icon: string,
+		tint: TileTint,
+	): void {
+		const btn = group.createEl("button", { cls: "sbd-picker-rail-btn" });
 		btn.toggleClass("is-active", this.pickerScope === scope);
 		btn.toggleClass("is-request", scope === "request");
 		btn.setAttribute("aria-pressed", String(this.pickerScope === scope));
-		setIcon(btn.createSpan("sbd-picker-rail-icon"), icon);
+		glyphTile(btn, icon, tint);
 		btn.createSpan({ cls: "sbd-picker-rail-label", text: label });
 		btn.addEventListener("click", () => this.setScope(scope));
 	}
@@ -487,15 +523,18 @@ class CardPickerModal extends Modal {
 			action: strings.githubAction,
 			url: cardRequestGithubUrl(context),
 		});
-		this.requestOption(page, {
-			icon: "mail",
-			title: strings.emailTitle,
-			// The address itself is never printed on screen — it only ever exists
-			// inside the mailto: the button opens.
-			description: strings.emailDesc,
-			action: strings.emailAction,
-			url: cardRequestMailtoUrl(context),
-		});
+		// Only when there is somewhere real to send it (see CARD_REQUEST_EMAIL).
+		if (CARD_REQUEST_EMAIL) {
+			this.requestOption(page, {
+				icon: "mail",
+				title: strings.emailTitle,
+				// The address itself is never printed on screen — it only ever exists
+				// inside the mailto: the button opens.
+				description: strings.emailDesc,
+				action: strings.emailAction,
+				url: cardRequestMailtoUrl(context),
+			});
+		}
 
 		page.createDiv({ cls: "sbd-picker-request-note", text: strings.prefilledNote });
 	}
@@ -529,4 +568,16 @@ const CATEGORY_ICONS: Record<CardCategory, string> = {
 	integrations: "plug",
 	ai: "bot",
 	fun: "sparkles",
+};
+
+/** The hue each category's tile wears, matching the settings pane's rail so the
+ * two menus read as one app. See `glyphtile.ts`. */
+const CATEGORY_TINTS: Record<CardCategory, TileTint> = {
+	notes: "blue",
+	planning: "red",
+	vault: "orange",
+	tools: "green",
+	integrations: "cyan",
+	ai: "purple",
+	fun: "pink",
 };

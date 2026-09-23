@@ -8,7 +8,8 @@ import {
 	watchedCardReactsToKind,
 } from "../src/cardevents";
 import { CARD_DEFINITIONS } from "../src/cards";
-import type { DashboardCard } from "../src/types";
+import { DEFAULT_SETTINGS, type DashboardCard, type HomeSettings } from "../src/types";
+import type { HomeView } from "../src/view";
 
 /**
  * The dashboard's live-refresh wiring, tested without the Obsidian runtime.
@@ -121,11 +122,21 @@ function ev(kind: VaultEventKind, path = "Any.md", oldPath?: string): VaultEvent
 }
 
 /** The dashboard's vault-mode dispatch (see mountCardBody): a vault-live card
- * redraws unless its definition's `shouldRedraw` filter skips the event. */
-function liveCardRedraws(c: DashboardCard, e: VaultEvent): boolean {
+ * redraws unless its definition's `shouldRedraw` filter skips the event.
+ *
+ * The filter takes the view because the two tray cards watch a folder named in
+ * plugin settings rather than on the card, so the stub carries settings. */
+function liveCardRedraws(
+	c: DashboardCard,
+	e: VaultEvent,
+	settings: Partial<HomeSettings> = {},
+): boolean {
 	const live = CARD_DEFINITIONS[c.kind].liveness;
 	if (live.mode !== "vault") throw new Error(`${c.kind} is not a vault-live kind`);
-	return !live.shouldRedraw || live.shouldRedraw(c, e);
+	const view = {
+		plugin: { settings: { ...DEFAULT_SETTINGS, ...settings } },
+	} as unknown as HomeView;
+	return !live.shouldRedraw || live.shouldRedraw(c, e, view);
 }
 
 describe("vault-live redraw decision (registry liveness.shouldRedraw)", () => {

@@ -43,8 +43,15 @@ export interface IcsEvent {
 	allDay: boolean;
 	/** Raw RRULE value (without the "RRULE:" prefix), or null for one-offs. */
 	rrule: string | null;
-	/** Epoch ms of excluded occurrence starts (EXDATE). */
+	/** Epoch ms of excluded occurrence starts (EXDATE, plus every instance a
+	 * RECURRENCE-ID override replaces — see parseIcs). */
 	exdates: number[];
+	/** For an override of one instance of a recurring series: the start of the
+	 * instance it replaces (its RECURRENCE-ID). Absent on ordinary events. */
+	recurrenceId?: number;
+	/** STATUS:CANCELLED — only meaningful on an override, where it removes the
+	 * instance rather than moving it. */
+	cancelled?: boolean;
 	/** Opaque payload for events synthesised by a non-ICS provider (currently
 	 * the TaskNotes source), carried onto every occurrence so the card can
 	 * recognise and style them. Never set by the ICS parser. */
@@ -97,7 +104,20 @@ interface CacheEntry {
 	inflight: Promise<IcsCalendar | null> | null;
 	error: string | null;
 	blocked: boolean;
+	/** When the last fetch was attempted (epoch ms), successful or not. */
+	attempted: number;
 }
+
+/**
+ * How long a feed that failed is left alone before it is tried again, unless
+ * the user asks (a manual refresh passes `force`).
+ *
+ * Freshness used to count only a successful load, so a feed that returned 404
+ * or was offline was never "fresh" and was fetched again on every render — and
+ * the calendar card redraws on any change anywhere in the vault. Capped by the
+ * caller's own TTL, so a feed set to refresh more often than this still does.
+ */
+const FAILURE_BACKOFF_MS = 2 * 60_000;
 
 const cache = new Map<string, CacheEntry>();
 
@@ -134,7 +154,7 @@ export async function loadCalendar(
 ): Promise<IcsCalendar | null> {
 	let entry = cache.get(url);
 	if (!entry) {
-		entry = { cal: null, inflight: null, error: null, blocked: false };
+		entry = { cal: null, inflight: null, error: null, blocked: false, attempted: 0 };
 		cache.set(url, entry);
 	}
 	if (opts.disabled) {
@@ -145,8 +165,11 @@ export async function loadCalendar(
 	const fresh = entry.cal && Date.now() - entry.cal.fetched < opts.ttlMs;
 	if (fresh && !opts.force) return entry.cal;
 	if (entry.inflight) return entry.inflight;
+	const backoff = Math.min(FAILURE_BACKOFF_MS, opts.ttlMs > 0 ? opts.ttlMs : FAILURE_BACKOFF_MS);
+	if (!opts.force && entry.error && Date.now() - entry.attempted < backoff) return entry.cal;
 
 	const current = entry;
+	current.attempted = Date.now();
 	current.inflight = (async () => {
 		try {
 			// webcal:// is just https for subscription URLs; normalise it so
@@ -221,7 +244,38 @@ export function parseIcs(raw: string): IcsCalendar | null {
 		}
 	}
 
-	return { name, events, fetched: Date.now() };
+	return { name, events: applyOverrides(events), fetched: Date.now() };
+}
+
+/**
+ * Fold RECURRENCE-ID overrides into their series.
+ *
+ * When one instance of a recurring event is moved or edited (Google and
+ * iCloud both do this for "just this event"), the feed carries the master
+ * RRULE unchanged plus a second VEVENT with the same UID and a RECURRENCE-ID
+ * naming the instance it replaces. Both used to be expanded as they stood, so
+ * the moved lecture appeared twice — at its old slot from the master and its
+ * new one from the override — and the sync wrote an inbox note for each.
+ *
+ * The replaced instance is excluded from the master, like an EXDATE; the
+ * override stands as the one-off it now is, unless it cancels the instance,
+ * in which case it is dropped too.
+ */
+function applyOverrides(events: IcsEvent[]): IcsEvent[] {
+	const masters = new Map<string, IcsEvent>();
+	for (const ev of events) {
+		if (ev.rrule && ev.recurrenceId === undefined && ev.uid) masters.set(ev.uid, ev);
+	}
+	const out: IcsEvent[] = [];
+	for (const ev of events) {
+		if (ev.recurrenceId !== undefined) {
+			const master = masters.get(ev.uid);
+			if (master && !master.exdates.includes(ev.recurrenceId)) master.exdates.push(ev.recurrenceId);
+			if (ev.cancelled) continue;
+		}
+		out.push(ev);
+	}
+	return out;
 }
 
 /** Unfold RFC 5545 continuation lines: a CRLF followed by a space or tab
@@ -288,7 +342,13 @@ function buildEvent(
 		}
 	}
 
+	const rid = props["RECURRENCE-ID"]?.[0];
+	const recurrenceId = rid ? parseIcsDate(rid.value, rid.params) : null;
+	const cancelled = (props.STATUS?.[0]?.value ?? "").trim().toUpperCase() === "CANCELLED";
+
 	return {
+		...(recurrenceId !== null ? { recurrenceId } : {}),
+		...(cancelled ? { cancelled } : {}),
 		uid: props.UID?.[0]?.value ?? "",
 		summary: unescapeText(props.SUMMARY?.[0]?.value ?? ""),
 		location: unescapeText(props.LOCATION?.[0]?.value ?? ""),
@@ -355,6 +415,10 @@ interface Moment {
 	valueOf(): number;
 	clone(): Moment;
 	add(amount: number, unit: string): Moment;
+	/** Whole `unit`s from `other` to this one, truncated toward zero. */
+	diff(other: Moment, unit: string): number;
+	/** Day of the month, 1–31. */
+	date(): number;
 	isoWeekday(): number;
 	toDate(): Date;
 }
@@ -423,9 +487,8 @@ function expandRecurring(
 	}
 	const until = rule.until ?? Infinity;
 	const hardEnd = Math.min(windowEnd, until === Infinity ? windowEnd : until + duration + 1);
-	let count = 0;
-	let emitted = 0;
-	let cursor = moment(ev.start);
+	const unit = FREQ_UNITS[rule.freq] ?? "days";
+	const interval = FREQ_UNITS[rule.freq] ? rule.interval : 1;
 
 	// Weekly BYDAY (e.g. "MO,WE,FR") — the common multi-day weekly case.
 	const byDays =
@@ -433,9 +496,39 @@ function expandRecurring(
 			? rule.byday.map((d) => ICAL_DAYS[d]).filter((n) => n !== undefined)
 			: null;
 
-	while (count < MAX_OCCURRENCES) {
+	// Every step is computed from DTSTART — step k is DTSTART + k intervals —
+	// rather than by adding to the previous step. Adding a month to a clamped
+	// date drifts for good: the 31st became the 28th in February and stayed
+	// there. And it means the loop can start near the window instead of at
+	// DTSTART, which matters because the cap counts steps: a daily series begun
+	// in 2023 used up all 750 before reaching 2025, so viewing 2026 showed
+	// nothing and a long-running standup silently vanished.
+	//
+	// Not with COUNT, which is counted from the very first instance and so has
+	// to walk them all (and is bounded by its own count).
+	let k = 0;
+	if (!rule.count) {
+		const target = windowStart - duration;
+		if (target > ev.start) {
+			const elapsed = moment(target).diff(moment(ev.start), unit);
+			// One interval short, so an instance overlapping the window's start
+			// is never skipped over.
+			k = Math.max(0, Math.floor(elapsed / interval) - 1);
+		}
+	}
+
+	// A monthly or yearly series keeps its day of month: RFC 5545 treats the
+	// 31st of a 30-day month, or 29 February in a common year, as not an
+	// instance at all (Google and Apple skip them too), rather than moving it.
+	const startDay = moment(ev.start).date();
+	const keepsDay = unit === "months" || unit === "years";
+
+	let emitted = 0;
+	for (let steps = 0; steps < MAX_OCCURRENCES; steps++, k++) {
+		const cursor = moment(ev.start).add(k * interval, unit);
 		const base = cursor.valueOf();
 		if (base > hardEnd) break;
+		if (keepsDay && cursor.date() !== startDay) continue;
 
 		const starts = byDays ? weeklyStarts(cursor, byDays) : [base];
 		for (const start of starts) {
@@ -447,11 +540,17 @@ function expandRecurring(
 			emitted++;
 			if (rule.count && emitted >= rule.count) return;
 		}
-
-		cursor = advance(cursor, rule.freq, rule.interval);
-		count++;
 	}
 }
+
+/** Moment's unit for each RRULE frequency. Anything else — HOURLY, MINUTELY,
+ * a typo — steps a day at a time, so the loop still terminates. */
+const FREQ_UNITS: Record<string, "days" | "weeks" | "months" | "years"> = {
+	DAILY: "days",
+	WEEKLY: "weeks",
+	MONTHLY: "months",
+	YEARLY: "years",
+};
 
 /** The concrete occurrence starts within the week of `cursor` that fall on the
  * requested weekdays, preserving the cursor's time-of-day.
@@ -477,22 +576,6 @@ function weeklyStarts(cursor: Moment, byDays: number[]): number[] {
 		out.push(d.getTime());
 	}
 	return out.sort((a, b) => a - b);
-}
-
-function advance(cursor: Moment, freq: string, interval: number): Moment {
-	switch (freq) {
-		case "DAILY":
-			return cursor.clone().add(interval, "days");
-		case "WEEKLY":
-			return cursor.clone().add(interval, "weeks");
-		case "MONTHLY":
-			return cursor.clone().add(interval, "months");
-		case "YEARLY":
-			return cursor.clone().add(interval, "years");
-		default:
-			// Unknown frequency: step a day so the loop still terminates.
-			return cursor.clone().add(1, "days");
-	}
 }
 
 interface RRule {

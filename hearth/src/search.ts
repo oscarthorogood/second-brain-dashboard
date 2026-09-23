@@ -6,6 +6,7 @@ import {
 	mergeRanked,
 	QueryFilter,
 	QueryHit,
+	queryMode,
 	runQuery,
 	searchFileContents,
 	slotsAboveBody,
@@ -290,6 +291,11 @@ export class SearchSection {
 		if (
 			this.view.plugin.settings.searchEngine === "omnisearch" &&
 			query &&
+			// As the comment above says — and as it wasn't: `#project` and
+			// `status: done` went to Omnisearch's full-text index as literal
+			// strings, so the tag and frontmatter results the search bar
+			// documents never appeared.
+			queryMode(query) === "name" &&
 			filter.includeFiles &&
 			isOmnisearchAvailable(this.view.app)
 		) {
@@ -507,6 +513,14 @@ export class SearchSection {
 			this.inputEl.blur();
 			return;
 		}
+		// Results are rebuilt 140ms after typing pauses, so an Enter pressed right
+		// after the last key saw the previous query's rows and opened its top hit
+		// — "meeting notes" typed fast and Entered opened the best match for
+		// "meet". Bring any pending update forward first, so Enter acts on what is
+		// actually in the field. (Before the empty check: the old rows being empty
+		// says nothing about what the new query finds.)
+		if (e.key === "Enter" && !e.isComposing) this.updateDebounced.run();
+
 		if (this.rows.length === 0) return;
 
 		if (e.key === "ArrowDown") {
@@ -515,7 +529,7 @@ export class SearchSection {
 		} else if (e.key === "ArrowUp") {
 			e.preventDefault();
 			this.move(-1);
-		} else if (e.key === "Enter") {
+		} else if (e.key === "Enter" && !e.isComposing) {
 			e.preventDefault();
 			const target = this.selected >= 0 ? this.selected : 0;
 			this.rows[target]?.open();

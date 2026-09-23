@@ -592,8 +592,14 @@ body.theme-dark {
 }
 
 /* Loading spinners are the one animation worth keeping: frozen mid-spin they
- * read as a broken card rather than a calm one. */
-.sbd-view.sbd-low-power .is-loading {
+ * read as a broken card rather than a calm one.
+ *
+ * Only this plugin's own refresh buttons (RSS, Git, Jira). A bare `.is-loading`
+ * also matched Obsidian's own class of that name inside a hosted leaf or embed,
+ * which this rule then set rotating 360° forever. */
+.sbd-view.sbd-low-power .sbd-rss-refresh.is-loading,
+.sbd-view.sbd-low-power .sbd-git-refresh.is-loading,
+.sbd-view.sbd-low-power .sbd-jira-refresh.is-loading {
 	animation: sbd-rss-spin 0.9s linear infinite !important;
 }
 
@@ -768,42 +774,54 @@ body.theme-dark {
  * The text-shadow reset matters: .sbd-card sets one on every descendant so
  * white type survives whatever shows through the glass. On dark-on-white it
  * only smears the letterforms. */
-.sbd-sheet {
-	background: var(--sbd-sheet-fill);
-	border-radius: var(--sbd-radius-sheet);
-	color: var(--sbd-sheet-ink-body);
-	text-shadow: none;
-	/* Sheets are content panes: they take the height the card has left. */
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow: auto;
-}
-
 /* Obsidian paints rendered markdown, embedded views and plugin panes with
- * its own --text-* variables. Inside a sheet those have to be the sheet's
- * ladder, or a dark-mode vault renders white text on white. Set on the
- * sheet itself so anything it hosts inherits them. */
-.sbd-view .sbd-sheet {
+ * its own --text-* variables, and so does much of this plugin's own markup.
+ * On a sheet those have to be the sheet's ladder, or they stay the board's
+ * white values and draw white on white.
+ *
+ * This used to hang off a `.sbd-sheet` class that nothing in src/ ever adds,
+ * so for most sheet surfaces it never applied: task rows and search results
+ * drew their due dates, tags, descriptions and recurring markers in white at
+ * 46-66% on a 0.9-white row — about 1.2:1, unreadable. It now names the
+ * surfaces that actually paint the sheet fill. (The kanban card keeps its own
+ * equivalent block.)
+ *
+ * The accent is reset too. The board sets --interactive-accent to white, and
+ * Obsidian draws a checked checkbox in the accent with its tick in
+ * --background-primary — which this ladder makes white. So inside an embedded
+ * note or a Dataview task list a checked box was white-on-white, identical to
+ * an unchecked one, and a `.mod-cta` button lost its label. */
+.sbd-view .sbd-list.is-sheet .sbd-list-item,
+/* The search dropdown too: it paints --background-primary, which on the board
+ * is #a2a2a7, under the board's white text — result names at about 2.5:1,
+ * paths at 1.4:1, and a match highlight in the white accent on white names that
+ * showed only as bold. Here it becomes an opaque white sheet with dark ink. */
+.sbd-view .sbd-search-results,
+.sbd-view .sbd-rss-item,
+.sbd-view .sbd-jira-issue,
+.sbd-view .sbd-sync-row.is-sheet,
+.sbd-view .sbd-detail-action.is-sheet,
+.sbd-view .sbd-embed,
+.sbd-view .sbd-jot,
+.sbd-view .sbd-leaf-host,
+.sbd-view .sbd-dataview,
+.sbd-view .sbd-datacore {
 	--text-normal: var(--sbd-sheet-ink);
 	--text-muted: var(--sbd-sheet-ink-muted);
 	--text-faint: var(--sbd-sheet-ink-faint);
 	--text-accent: var(--sbd-sheet-link);
 	--text-on-accent: #ffffff;
+	--interactive-accent: var(--sbd-sheet-link);
+	--interactive-accent-hover: var(--sbd-sheet-link);
+	--checkbox-color: var(--sbd-sheet-link);
+	--checkbox-color-hover: var(--sbd-sheet-link);
+	--checkbox-marker-color: #ffffff;
+	--checkbox-border-color: var(--sbd-sheet-ink-faint);
 	--background-modifier-border: var(--sbd-sheet-rule);
 	--background-modifier-hover: rgba(0, 0, 0, 0.05);
 	--background-primary: #ffffff;
 	--background-secondary: #f4f6f8;
 	--link-color: var(--sbd-sheet-link);
-}
-
-/* A row/card ON a sheet-tier surface — a query result, an RSS item, a task
- * card. Same fill, its own smaller corner, and it does NOT stretch. */
-.sbd-sheet-item {
-	flex: none;
-	background: var(--sbd-sheet-fill);
-	border-radius: var(--sbd-radius-l);
-	color: var(--sbd-sheet-ink-body);
-	text-shadow: none;
 }
 
 /* ---- Sheet-hosted widgets ------------------------------------------- */
@@ -1103,8 +1121,12 @@ body.theme-dark {
 
 /* The reference's table on the sheet: tracked-out grey column heads over a
  * hairline rule, blue file links, and mono for the date column. */
+/* No width here. This rule outranks `.sbd-dataview table` (auto-fit, further
+ * down) and used to force `width: 100%`, so on the board — which is the only
+ * place a Dataview card lives — the auto-fit rule was dead: a two-column table
+ * still stretched to the card and its columns inflated unevenly, the exact
+ * thing auto-fit was added to stop. Width is left to that rule. */
 .sbd-view .sbd-dataview table {
-	width: 100%;
 	border-collapse: collapse;
 }
 
@@ -1145,26 +1167,6 @@ body.theme-dark {
 	color: var(--sbd-sheet-ink-body);
 	text-shadow: none;
 	padding: 14px 16px;
-}
-
-/* Every one of the above hosts foreign markup (rendered markdown, a plugin's
- * own pane, a Dataview table), so the same variable remapping the .sbd-sheet
- * class does has to reach them too. */
-.sbd-view .sbd-embed,
-.sbd-view .sbd-jot,
-.sbd-view .sbd-leaf-host,
-.sbd-view .sbd-dataview,
-.sbd-view .sbd-datacore {
-	--text-normal: var(--sbd-sheet-ink);
-	--text-muted: var(--sbd-sheet-ink-muted);
-	--text-faint: var(--sbd-sheet-ink-faint);
-	--text-accent: var(--sbd-sheet-link);
-	--text-on-accent: #ffffff;
-	--background-modifier-border: var(--sbd-sheet-rule);
-	--background-modifier-hover: rgba(0, 0, 0, 0.05);
-	--background-primary: #ffffff;
-	--background-secondary: #f4f6f8;
-	--link-color: var(--sbd-sheet-link);
 }
 
 /* ---- Search --------------------------------------------------------- */
@@ -2010,10 +2012,21 @@ body.theme-dark {
 /* The two short tiles hold one or two rows in 158px of height, so the
  * reference centres them rather than letting them sit against the top edge
  * with a band of empty glass beneath (`justify-content:center` on both the
- * S and M tile of RECENT, LEAF, BOOKMARKS, FAVORITES, TEXT and the rest). */
+ * S and M tile of RECENT, LEAF, BOOKMARKS, FAVORITES, TEXT and the rest).
+ *
+ * `safe`, because the body also clips (`overflow: hidden`). A plain `center`
+ * splits any overflow between BOTH edges, and the half above the box is
+ * unreachable — there is no scroll position that reveals it. A widget whose
+ * content ran over therefore lost its top rows silently: the sync widget at
+ * this size overflowed by 27px and dropped its own title off the top edge
+ * while also dropping its tray line off the bottom. `safe center` centres
+ * while the content fits and falls back to flex-start the moment it doesn't,
+ * so overflow can only ever run off the bottom, where it is at least visible
+ * as something cut off. It does not make more room — a widget that overflows
+ * still needs to show less (see `bySize`) — it makes the overflow honest. */
 .sbd-card.is-size-small > .sbd-card-body,
 .sbd-card.is-size-medium > .sbd-card-body {
-	justify-content: center;
+	justify-content: safe center;
 }
 
 /* A medium tile drops the eyebrow: at 338×158 the two rows it can show are
@@ -2430,8 +2443,7 @@ body.theme-dark {
 }
 
 /* Empty states */
-.sbd-card-empty,
-.sbd-grid-empty {
+.sbd-card-empty {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -2440,11 +2452,6 @@ body.theme-dark {
 	gap: 8px;
 	color: var(--text-faint);
 	text-align: center;
-}
-
-.sbd-grid-empty {
-	grid-column: 1 / -1;
-	min-height: 160px;
 }
 
 /* A round glass badge behind the placeholder glyph, matching the icon-circle
@@ -2997,13 +3004,6 @@ body.theme-dark {
 	background: var(--sbd-sheet-fill);
 }
 
-.sbd-import-input {
-	width: 100%;
-	font-family: var(--font-monospace);
-	font-size: 0.8rem;
-	resize: vertical;
-}
-
 /* ---- Settings tab: section groups -----------------------------------
    These styles apply in Obsidian's settings UI (not the home view), so they're
    not scoped under .sbd-view. Each section is a .sbd-section: a heading
@@ -3141,22 +3141,71 @@ body.theme-dark {
 	background: var(--background-modifier-hover);
 }
 
-.sbd-settings-index-glyph {
+/* ---- The tinted glyph tile ------------------------------------------
+   Obsidian 1.13 draws every row of its own settings list as a coloured
+   rounded square with a white glyph, and Cupertino leans the whole window on
+   that shape. A plugin's pane renders inside that same window, so a
+   monochrome glyph beside a native tinted one reads as a different app.
+
+   Shared by the settings index and the add-card rail (see glyphtile.ts), so
+   the two menus are the same menu in two places.
+
+   Every fill is one of the eight --color-* hues Obsidian defines and a theme
+   retunes, darkened a touch so a white glyph clears AA on the light ones
+   (--color-yellow and --color-orange are bright enough to fail undarkened).
+   The fallbacks are for a theme that drops a hue entirely. */
+
+.sbd-glyph-tile {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	width: 30px;
-	height: 30px;
-	border-radius: var(--radius-s, 10px);
+	width: 29px;
+	height: 29px;
+	border-radius: 8px;
 	corner-shape: var(--corner-shape, round);
-	background: var(--background-modifier-border);
-	color: var(--text-normal);
+	/* Named --sbd-glyph-fill, not --sbd-tile-fill: the latter is already a
+	   :root token for the picker's translucent catalogue chips, and a custom
+	   property set here would cascade into anything nested inside. */
+	background: var(--sbd-glyph-fill);
+	/* Not --text-on-accent: that follows the accent's own contrast, which has
+	   nothing to do with these eight fills. */
+	color: #fff;
+	/* The top-edge sheen Obsidian's tiles carry. Inset so it never bleeds past
+	   the corner radius. */
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
 }
 
-.sbd-settings-index-glyph .svg-icon {
+.sbd-glyph-tile .svg-icon {
 	width: 16px;
 	height: 16px;
+	color: #fff;
+	stroke-width: 2.1px;
+}
+
+.sbd-glyph-tile.is-grey {
+	--sbd-glyph-fill: color-mix(in srgb, var(--text-muted) 78%, var(--background-secondary));
+}
+.sbd-glyph-tile.is-red {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-red, #e5534b) 90%, #000);
+}
+.sbd-glyph-tile.is-orange {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-orange, #d2812a) 84%, #000);
+}
+.sbd-glyph-tile.is-green {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-green, #3aa657) 84%, #000);
+}
+.sbd-glyph-tile.is-cyan {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-cyan, #27a5b4) 86%, #000);
+}
+.sbd-glyph-tile.is-blue {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-blue, #3a7bd5) 92%, #000);
+}
+.sbd-glyph-tile.is-purple {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-purple, #9065d0) 92%, #000);
+}
+.sbd-glyph-tile.is-pink {
+	--sbd-glyph-fill: color-mix(in srgb, var(--color-pink, #d44c85) 90%, #000);
 }
 
 .sbd-settings-index-rowtext {
@@ -3219,7 +3268,13 @@ body.theme-dark {
 }
 
 .sbd-settings-page-title {
+	display: flex;
+	align-items: center;
+	gap: 11px;
 	padding: 10px 4px 0;
+}
+
+.sbd-settings-page-titletext {
 	font-size: var(--font-ui-larger);
 	font-weight: 600;
 	color: var(--text-normal);
@@ -3648,14 +3703,26 @@ body.theme-dark {
  * measurements: Widget Set → TASKS draws a 10px column of rows inset
  * 12px 16px with a 12px gutter, and titles them at 15px/500 rather than the
  * 14px/600 a search result takes. */
+/* The reference's 10px gutter and 12x16 inset were measured on a row that
+ * fits on one line. These rows routinely do not: in a narrow tile the chip
+ * group wraps below the title (deliberately — see .sbd-task-metas), which makes
+ * a row half again as tall, and at that height a large tile shows barely two of
+ * the six tasks it draws. Tightening both reclaims roughly a row per tile
+ * without touching the type, which is what carries the reference's look. */
 .sbd-list.is-sheet.sbd-tasks {
-	gap: 10px;
+	gap: 6px;
 }
 
 .sbd-list.is-sheet.sbd-tasks > .sbd-list-item {
 	align-items: center;
-	padding: 12px 16px;
-	gap: 12px;
+	padding: 9px 13px;
+	gap: 10px;
+}
+
+/* A wrapped chip group sits tight under the title rather than a full row-gap
+ * below it: the group is the title's own trailing detail, not a second row. */
+.sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-task-metas {
+	row-gap: 4px;
 }
 
 .sbd-list.is-sheet.sbd-tasks > .sbd-list-item > .sbd-list-label,
@@ -4160,15 +4227,33 @@ body.theme-dark {
 }
 
 /* A sheet-tier row (the query, search and Kanban surfaces) flips back to dark
- * ink, so neither override applies there. */
+ * ink, so neither override applies there.
+ *
+ * The Kanban card (0.92 white) and the pill style of priority are listed
+ * explicitly. They were missing, so the two rules above — white text on a
+ * translucent-white chip — applied on a white surface: the status chip and a
+ * pill-style priority on every Kanban card, and a pill priority on list rows,
+ * had labels that could not be seen at all. */
 .sbd-view .sbd-list.is-sheet .sbd-task-priority.is-text,
-.sbd-view .sbd-list.is-sheet .sbd-task-priority.is-colored .sbd-task-priority-label {
+.sbd-view .sbd-list.is-sheet .sbd-task-priority.is-colored .sbd-task-priority-label,
+.sbd-view .sbd-kanban-card .sbd-task-priority.is-text,
+.sbd-view .sbd-kanban-card .sbd-task-priority.is-colored .sbd-task-priority-label {
 	color: color-mix(in srgb, var(--level-color) 70%, var(--sbd-sheet-ink));
 }
 
-.sbd-view .sbd-list.is-sheet .sbd-task-status {
+.sbd-view .sbd-list.is-sheet .sbd-task-status,
+.sbd-view .sbd-kanban-card .sbd-task-status {
 	background: rgba(0, 0, 0, 0.07);
 	color: var(--sbd-sheet-ink-muted);
+}
+
+/* The pill keeps its level tint, drawn as a pale wash of that colour with the
+ * label in a dark shade of it — the same reading as the text style, on a chip. */
+.sbd-view .sbd-list.is-sheet .sbd-task-priority.is-pill,
+.sbd-view .sbd-kanban-card .sbd-task-priority.is-pill {
+	background: color-mix(in srgb, var(--level-color) 16%, #ffffff);
+	color: color-mix(in srgb, var(--level-color) 70%, var(--sbd-sheet-ink));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--level-color) 35%, transparent);
 }
 
 /* Favorites cards */
@@ -4738,12 +4823,6 @@ body.theme-dark {
 	background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 	pointer-events: none;
 	opacity: 0.6;
-}
-
-/* Briefly hide a dragged tile from hit-testing so elementFromPoint() can find
- * the tile underneath it during a reorder. */
-.sbd-link-tile.is-hit-testing {
-	pointer-events: none;
 }
 
 /* In arrange mode, tiles show a grab cursor to signal they're repositionable. */
@@ -8097,12 +8176,6 @@ body.theme-dark {
 	margin-bottom: auto;
 }
 
-/* Don't let the "No cards yet" placeholder stretch and push the search off
- * centre — let it size to its content under the centred search. */
-.sbd-view.sbd-empty-board .sbd-grid-empty {
-	height: auto;
-}
-
 /* ---- Per-card colors ------------------------------------------------ */
 
 /* Edge merging: when two cards touch (gap ≈ 0, e.g. snapped together), the
@@ -8320,6 +8393,26 @@ body.theme-dark {
 .sbd-tasks-wrap > .sbd-kanban {
 	flex: 1;
 	min-height: 0;
+}
+
+/* ...and let the list scroll inside it.
+ *
+ * The card draws up to six tasks at large and ten at extra large, which is
+ * more than either tile's height holds once a row wraps its chips onto a
+ * second line — so the last rows were simply clipped by the body's
+ * `overflow: hidden`, with no way to reach them. The kanban has scrolled per
+ * column since it was written; list mode was the one layout whose overflow had
+ * nowhere to go.
+ *
+ * `auto`, not `scroll`, so a list that fits shows no track at all — and the
+ * scrollbar is left visible rather than hidden (as the RSS tab strip and the
+ * weather hours hide theirs), because here it is the only thing saying there
+ * are more tasks below. The inline-end padding keeps a row's chips from
+ * sitting under it. */
+.sbd-tasks-wrap > .sbd-list {
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-inline-end: 4px;
 }
 
 /* The "new task" button floats over the board's top-right corner so it never
@@ -9516,13 +9609,22 @@ body.sbd-dv-resizing {
  * moving: the sliding and zooming transitions become the crossfade, and the slow
  * zoom is dropped. */
 @media (prefers-reduced-motion: reduce) {
-	.sbd-slideshow > .sbd-slide.is-in-next,
-	.sbd-slideshow > .sbd-slide.is-in-prev {
+	/* Named per transition, at the same specificity as the rules they replace
+	 * and declared after them. A bare `.sbd-slideshow > .sbd-slide.is-in-next`
+	 * is (0,3,0) against their (0,4,0) — and a media query adds none — so it
+	 * never won: a reader who had asked for less motion still got the full
+	 * sideways slide and the zoom on every advance. */
+	.sbd-slideshow.is-trans-slide > .sbd-slide.is-in-next,
+	.sbd-slideshow.is-trans-slide > .sbd-slide.is-in-prev,
+	.sbd-slideshow.is-trans-zoom > .sbd-slide.is-in-next,
+	.sbd-slideshow.is-trans-zoom > .sbd-slide.is-in-prev {
 		animation-name: sbd-slide-fade-in;
 	}
 
-	.sbd-slideshow > .sbd-slide.is-out-next,
-	.sbd-slideshow > .sbd-slide.is-out-prev {
+	.sbd-slideshow.is-trans-slide > .sbd-slide.is-out-next,
+	.sbd-slideshow.is-trans-slide > .sbd-slide.is-out-prev,
+	.sbd-slideshow.is-trans-zoom > .sbd-slide.is-out-next,
+	.sbd-slideshow.is-trans-zoom > .sbd-slide.is-out-prev {
 		animation-name: sbd-slide-fade-out;
 	}
 
@@ -10680,6 +10782,23 @@ body.sbd-dv-resizing {
 .sbd-jira-issue:focus-visible {
 	outline: 2px solid var(--interactive-accent);
 	outline-offset: 2px;
+}
+
+/* The filter menu is absolutely positioned inside the card, and the card and
+ * its body both clip — so on a small or medium card the menu (up to 240px) was
+ * cut off at the card's bottom edge, with its lower options unreachable: the
+ * part scrolled into view inside the menu was still hidden by the card.
+ *
+ * Only while a menu is open does the card stop clipping, and it lifts above its
+ * neighbours so the menu isn't painted under the next widget. The issue list is
+ * its own scroll container (.sbd-jira-issues), so it can't spill meanwhile. */
+.sbd-card.is-jira-card:has(.sbd-jira-filter[open]),
+.sbd-card.is-jira-card:has(.sbd-jira-filter[open]) > .sbd-card-body {
+	overflow: visible;
+}
+
+.sbd-card.is-jira-card:has(.sbd-jira-filter[open]) {
+	z-index: 20;
 }
 
 .sbd-jira-filter-menu {
@@ -11987,6 +12106,11 @@ body.sbd-dv-resizing {
 	--sbd-track-pill-fill: var(--background-primary);
 	--sbd-track-tab-fill-hover: var(--background-modifier-hover);
 	--sbd-track-tab-fill-active: var(--background-modifier-active-hover);
+	/* The active tab's hover fill, retuned with the pill it sits on. Left at the
+	 * board's #ffffff, hovering the selected tab in a dark theme turned its pill
+	 * pure white under the theme's light label — about 1.3:1, so the label
+	 * vanished exactly when the pointer was on it. */
+	--sbd-btn-light-fill-hover: var(--background-primary-alt, var(--background-primary));
 
 	/* The translucent middle tier the board stacks on a card. On a theme
 	 * surface the equivalent is the theme's own overlay pair. */
@@ -12147,9 +12271,11 @@ body.sbd-dv-resizing {
 	justify-content: flex-start;
 	gap: 11px;
 	width: 100%;
-	padding: 10px 12px;
+	padding: 9px 12px;
 	border: none;
-	border-radius: var(--sbd-radius-s);
+	/* Square: the group box owns the radius, so a row's own corners would
+	   round *inside* it and leave four notches down each edge. */
+	border-radius: 0;
 	background: transparent;
 	box-shadow: none;
 	/* Darker than the panel's --text-muted: in the reference an unselected
@@ -12186,26 +12312,50 @@ body.sbd-dv-resizing {
 	background: var(--sbd-rail-fill-active);
 }
 
-.sbd-picker-rail-icon {
-	display: inline-flex;
-	flex: none;
-}
-
-.sbd-picker-rail-icon .svg-icon {
-	width: 16px;
-	height: 16px;
-}
-
 .sbd-picker-rail-label {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.sbd-picker-rail-sep {
-	height: 1px;
-	margin: 10px 10px;
-	background: var(--sbd-panel-divider);
+/* The heading over a group of rail rows — "Categories", the way the settings
+   window labels the groups in its own list. Same treatment as the settings
+   index's group label, so the two menus share a voice. */
+.sbd-picker-rail-label-group {
+	padding: 14px 10px 6px;
+	font-family: var(--sbd-font-mono);
+	font-size: var(--sbd-label-size);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: var(--sbd-label-tracking);
+	color: var(--text-faint);
+}
+
+.sbd-picker-rail-label-group:first-child {
+	padding-top: 0;
+}
+
+/* One inset box of rows. Rows round with the box rather than each carrying
+   its own radius, which is what makes a group read as one list instead of a
+   stack of separate buttons — Obsidian's settings list, and the screenshot's
+   sidebar, both do this. */
+.sbd-picker-rail-group {
+	/* The sheet's own translucent vocabulary, not the settings window's opaque
+	   grouped fill: this box floats on a frosted panel, and an opaque one would
+	   punch a flat rectangle through the blur. */
+	background: var(--sbd-tile-fill);
+	border: 1px solid var(--sbd-tile-border);
+	border-radius: var(--sbd-radius-m);
+	corner-shape: var(--corner-shape, round);
+	overflow: hidden;
+}
+
+.sbd-picker-rail-group + .sbd-picker-rail-group {
+	margin-top: 14px;
+}
+
+.sbd-picker-rail-btn + .sbd-picker-rail-btn {
+	border-top: 1px solid var(--sbd-panel-divider);
 }
 
 .sbd-picker-rail-btn.is-request {
@@ -12583,6 +12733,23 @@ body.sbd-dv-resizing {
 		border-bottom: 1px solid var(--background-modifier-border);
 	}
 
+	/* The rail is a horizontal strip of pills at this width, so each row goes
+	   back to carrying its own border and radius and the group box stands
+	   down to a plain flex run. */
+	.sbd-picker-rail-group {
+		display: flex;
+		gap: 6px;
+		background: none;
+		border: none;
+		border-radius: 0;
+		overflow: visible;
+	}
+
+	.sbd-picker-rail-group + .sbd-picker-rail-group {
+		margin-top: 0;
+		margin-left: 6px;
+	}
+
 	.sbd-picker-rail-btn {
 		width: auto;
 		flex: none;
@@ -12591,8 +12758,33 @@ body.sbd-dv-resizing {
 		white-space: nowrap;
 	}
 
-	.sbd-picker-rail-sep {
+	.sbd-picker-rail-btn + .sbd-picker-rail-btn {
+		border-top: 1px solid var(--background-modifier-border);
+	}
+
+	/* The label would break the strip onto a second line, and the pills name
+	   their own categories anyway. */
+	.sbd-picker-rail-label-group {
 		display: none;
+	}
+
+	/* A 29px tile in a pill makes the strip two rows tall; at this width the
+	   glyph carries the meaning on its own.
+
+	   Scoped to the rail. This sits in the picker's media query, but an
+	   unscoped `.sbd-glyph-tile` here also shrank every tile in the settings
+	   pane on a phone — the category rows and the page-title tile — which have
+	   no pill strip to fit and were meant to stay the full 29px. */
+	.sbd-picker-rail .sbd-glyph-tile {
+		width: 20px;
+		height: 20px;
+		border-radius: 6px;
+		box-shadow: none;
+	}
+
+	.sbd-picker-rail .sbd-glyph-tile .svg-icon {
+		width: 13px;
+		height: 13px;
 	}
 
 	.sbd-picker-grid {
@@ -12761,14 +12953,6 @@ body.sbd-dv-resizing {
 	color: var(--text-muted);
 	font-size: 0.85em;
 	line-height: 1.5;
-}
-
-/* The one note that is a promise rather than an aside — "nothing you have
-   is touched" — so it reads as reassurance, not small print. */
-.sbd-setup-note.is-safe {
-	background: var(--background-modifier-success, var(--background-secondary));
-	border: 1px solid var(--background-modifier-border);
-	color: var(--text-normal);
 }
 
 /* ---- Welcome bullets ---- */
@@ -14125,6 +14309,19 @@ body.sbd-dv-resizing {
 		0 0 0 2px var(--sbd-focus-ring),
 		0 0 0 4px var(--sbd-focus-halo);
 	border-radius: 6px;
+}
+
+/* Low power mode sets `box-shadow: none !important` on every descendant, which
+ * erased the ring above and left keyboard users with no focus indicator at all.
+ * An outline is untouched by that rule and costs nothing to composite, so the
+ * mode draws focus that way: the accent ring, with the dark halo as its offset
+ * gap's backing so a pale accent still reads. */
+.sbd-view.sbd-low-power [role="button"]:focus-visible,
+.sbd-view.sbd-low-power input:focus-visible,
+.sbd-view.sbd-low-power textarea:focus-visible,
+.sbd-view.sbd-low-power button:focus-visible {
+	outline: 2px solid var(--sbd-focus-ring);
+	outline-offset: 2px;
 }
 
 /* The status dot on the small calendar tile.

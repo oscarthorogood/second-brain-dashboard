@@ -230,6 +230,10 @@ function coordinateRows(containerEl: HTMLElement, opts: PlacePickerOptions): voi
 	// follows them as they change; one that was searched for or typed stands.
 	let namedByCoords = !draft?.name.trim() || draft.name === coordName(draft);
 
+	// Which of the place's two coordinates have actually been given. An existing
+	// place has both; a new one has neither until they're typed.
+	const entered = { lat: !!draft, lon: !!draft };
+
 	/** Write one coordinate, creating the place if this is the first one typed. */
 	const setCoord = (which: "lat" | "lon", raw: string): void => {
 		const value = Number(raw.trim());
@@ -238,9 +242,14 @@ function coordinateRows(containerEl: HTMLElement, opts: PlacePickerOptions): voi
 		if (Math.abs(value) > limit) return;
 		const place: WeatherPlace = draft ? { ...draft } : { name: "", lat: 0, lon: 0 };
 		place[which] = value;
+		entered[which] = true;
 		if (namedByCoords) place.name = coordName(place);
 		draft = place;
-		opts.onPick({ ...place });
+		// Committed only once both are real. A new place used to be committed on
+		// its first coordinate, with the other standing in as 0 — so typing a
+		// latitude and pressing Done saved "51.50, 0.00", a genuine-looking place
+		// on the prime meridian, and the forecast was for there.
+		if (entered.lat && entered.lon) opts.onPick({ ...place });
 	};
 
 	// Two inputs plus a label do not fit on one settings row — Obsidian gives

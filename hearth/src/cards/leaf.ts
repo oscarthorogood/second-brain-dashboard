@@ -61,11 +61,14 @@ export function renderLeaf(
 	// Optionally suppress the hosted view's breadcrumbs/nav/kebab header — for a
 	// single-file card that chrome is just noise.
 	if (card.leafView?.hideHeader) host.addClass("sbd-leaf-hide-header");
-	if (!mountLeafView(view.app, type, host, component, card.leafView?.file)) {
+	const giveUp = () => {
 		host.remove();
 		body.removeClass("sbd-card-body-live");
 		emptyState(body, "layout-panel-left", t().cards.empty.leafViewMissing);
-	}
+	};
+	// Building the view is deferred until the card is on screen, so it can
+	// also fail after this returns.
+	if (!mountLeafView(view.app, type, host, component, card.leafView?.file, giveUp)) giveUp();
 }
 
 

@@ -81,7 +81,6 @@ export function renderCalculator(view: HomeView, card: DashboardCard, body: HTML
 	// with no keypad: sixteen keys in 158x158 are under 30px each, which is
 	// below any usable touch target.
 	const keysEl = wrap.createDiv("sbd-calc-keys");
-	if (card.size === "small") keysEl.addClass("is-hidden");
 
 	// Currency conversions need exchange rates. To stay local-first, rates are
 	// only fetched lazily — the first time a query actually needs them (see the
@@ -174,7 +173,11 @@ export function renderCalculator(view: HomeView, card: DashboardCard, body: HTML
 
 	const renderKeys = () => {
 		keysEl.empty();
-		const tier = cfg.keypad ?? "none";
+		// No keypad on a small tile, whatever the card's setting: that rule used
+		// to be applied once above and then undone here, since this set the
+		// hidden class from the tier alone — so a basic or scientific keypad was
+		// drawn into 158x158 anyway, overflowing and clipping the tile.
+		const tier = card.size === "small" ? "none" : (cfg.keypad ?? "none");
 		keysEl.toggleClass("is-hidden", tier === "none");
 		if (tier === "none") return;
 		const keys = tier === "scientific" ? [...CALC_SCI_KEYS, ...CALC_BASIC_KEYS] : CALC_BASIC_KEYS;
@@ -198,7 +201,7 @@ export function renderCalculator(view: HomeView, card: DashboardCard, body: HTML
 
 	input.addEventListener("input", update);
 	input.addEventListener("keydown", (e) => {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.isComposing) {
 			e.preventDefault();
 			commit();
 		}

@@ -109,15 +109,19 @@ export function searchBarEditor(ctx: CardEditorContext, containerEl: HTMLElement
 		.setName(t().editors.searchBar.filters)
 		.setDesc(t().editors.searchBar.filtersDesc)
 		.addToggle((tg) =>
-			tg.setValue(cfg.filters === true).onChange((v) => {
-				cfg.filters = v || undefined;
+			// On unless explicitly off — the same reading the render uses. The
+			// editor used to read unset as off and store off as `undefined`, which
+			// the render reads as ON: the toggle showed off, and turning it off
+			// changed nothing, so the chip row could never be hidden.
+			tg.setValue(cfg.filters !== false).onChange((v) => {
+				cfg.filters = v ? undefined : false;
 				ctx.opts.save();
 				ctx.opts.rerender();
 				// The per-chip toggles below only exist while the row does.
 				ctx.requestRender();
 			}),
 		);
-	if (cfg.filters === true) renderFilterTypes(ctx, containerEl, cfg);
+	if (cfg.filters !== false) renderFilterTypes(ctx, containerEl, cfg);
 	new Setting(containerEl)
 		.setName(t().editors.searchBar.button)
 		.setDesc(t().editors.searchBar.buttonDesc)

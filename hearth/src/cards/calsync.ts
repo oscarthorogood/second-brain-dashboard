@@ -1,13 +1,20 @@
 import { Notice, setIcon, Setting, type Component, type TFile } from "obsidian";
-import { feedHost } from "../cardbodies";
+import { destinationChip, feedHost } from "../cardbodies";
 import { fileForClaude, trayCount, revealTray } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { formatCompactAge, localDayKey } from "../dates";
 import { t } from "../i18n";
 import { calendarStatus, expandEvents, loadCalendar, type IcsOccurrence } from "../ics";
-import { effectiveAutoRefreshMinutes, type CalendarSyncSlotId, type DashboardCard } from "../types";
-import { makeClickable } from "../ui";
-import { findCourseInText, INBOX_FOLDER } from "../vaultfiling";
+import {
+	effectiveAutoRefreshMinutes,
+	effectiveFilingFolders,
+	effectiveFilingWindow,
+	type CalendarSyncSlotId,
+	type DashboardCard,
+	type HomeSettings,
+} from "../types";
+import { commitOnLeave, makeClickable } from "../ui";
+import { destinationFolder, eventTouchesFolder, findCourseInText, type FilingFolders } from "../vaultfiling";
 import { type HomeView } from "../view";
 
 import { type CardDefinition, type CardEditorContext } from "./definition";
@@ -34,23 +41,33 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * size says where events land and how many are still sitting there, because a
  * sync that works and a tray nobody drains look identical from the feed end.
  *
+ * That folder, how far either side of today the sync reaches, and the button
+ * that forgets what has been written are all the inbox's, not this widget's:
+ * two sync cards on a board write into one tray and share one `seen` index, so
+ * a per-widget answer to any of them would split a queue whose whole value is
+ * being one place to look. They live in plugin settings (Behaviour → Claude
+ * trays); what stays here is what only this card does — which three feeds it
+ * watches, and how often its own timer fires.
+ *
  * Reference (Widget Set v2 → SYNC), with the destination added at each size:
  * small is three status dots, a refresh and the inbox's depth as its one
  * figure; medium three tiles under the destination chip; large three sheet
- * rows; extra large three sheet columns carrying the event counts. Every size
- * but small closes with the tray line.
+ * rows; extra large three sheet columns carrying the event counts. Large and
+ * extra large close with the tray line; medium has no room for it and names the
+ * folder in its header chip instead.
  */
 
 /** The three feeds, in the order every size draws them. */
 const SLOTS: readonly CalendarSyncSlotId[] = ["classes", "assignments", "obsidian"];
 
-/** How far either side of today an event has to fall before it is worth a
- * note. A term's timetable is published months ahead; a note per lecture for
- * all of it would bury the queue, so the window walks forward with the user. */
-const DEFAULT_PAST_DAYS = 7;
-const DEFAULT_AHEAD_DAYS = 21;
-
 const DAY_MS = 86_400_000;
+
+/** Where this card's events land, per the vault's filing settings. Resolved
+ * per draw rather than held: the folder is a setting, so a card already on
+ * screen when it changes must name the new tray, not the one it booted with. */
+function inboxFolder(settings: HomeSettings): string {
+	return destinationFolder("inbox", effectiveFilingFolders(settings));
+}
 
 /**
  * Whether a sync is in flight, and which feeds each card has kicked one for.
@@ -170,22 +187,33 @@ function paintCalSync(
 			break;
 	}
 
-	// The tray line is drawn at every size but small, empty or not: this card's
+	// The tray line is drawn at large and extra large, empty or not: this card's
 	// whole job is moving events into one folder, so the folder's name and depth
 	// are the result, not an exception worth surfacing only when it goes wrong.
-	if (card.size !== "small") trayLine(view, body);
+	//
+	// Not at medium, where it does not fit. A 338×158 tile holds this card's
+	// header and its three feed tiles and nothing else — measured, the tray line
+	// ran 27px past the bottom edge — and a clipped status line is worse than an
+	// absent one, because the folder's name is still half-drawn under the rim.
+	// The destination chip in the header names the same folder at that size; what
+	// is lost is the count, which large is one drag away. (The unsorted card's
+	// own tray line does fit at medium, so it keeps it — its header is one line,
+	// not three.)
+	if (card.size === "large" || card.size === "xlarge") trayLine(view, body);
 }
 
 /** Where the events went, and how many are still sitting there. */
 function trayLine(view: HomeView, body: HTMLElement): void {
-	const waiting = trayCount(view.app, "inbox");
+	const folders = effectiveFilingFolders(view.plugin.settings);
+	const waiting = trayCount(view.app, "inbox", folders);
 	const strings = t().cards.calsync;
-	const label = waiting > 0 ? strings.waiting(waiting, INBOX_FOLDER) : strings.trayEmpty(INBOX_FOLDER);
+	const label =
+		waiting > 0 ? strings.waiting(waiting, folders.inbox) : strings.trayEmpty(folders.inbox);
 	const line = body.createDiv("sbd-tray-line");
 	line.toggleClass("is-empty", waiting === 0);
 	setIcon(line.createDiv("sbd-tray-icon"), "inbox");
 	line.createDiv({ cls: "sbd-tray-text", text: label });
-	const open = () => void revealTray(view.app, "inbox");
+	const open = () => void revealTray(view.app, "inbox", folders);
 	line.addEventListener("click", (e) => {
 		e.stopPropagation();
 		open();
@@ -220,7 +248,10 @@ function renderSmall(
 	// how much is still waiting in the inbox, not how much the feeds hold.
 	const foot = body.createDiv("sbd-sync-foot");
 	foot.createDiv({ cls: "sbd-sync-when", text: lastSyncedLabel(view, syncing) });
-	foot.createDiv({ cls: "sbd-sync-total", text: strings.inInbox(trayCount(view.app, "inbox")) });
+	foot.createDiv({
+		cls: "sbd-sync-total",
+		text: strings.inInbox(trayCount(view.app, "inbox", effectiveFilingFolders(view.plugin.settings))),
+	});
 }
 
 function renderMedium(
@@ -234,7 +265,7 @@ function renderMedium(
 	const head = body.createDiv("sbd-sync-head");
 	const text = head.createDiv("sbd-sync-headtext");
 	text.createDiv({ cls: "sbd-sync-title is-large", text: t().cards.calsync.syncToInbox });
-	destinationChip(text);
+	destinationChip(text, inboxFolder(view.plugin.settings));
 	text.createDiv({ cls: "sbd-sync-when", text: lastSyncedLabel(view, syncing) });
 	refreshButton(view, card, head, syncing, redraw, "pill");
 
@@ -303,7 +334,7 @@ function syncHeader(
 	const text = head.createDiv("sbd-sync-headtext");
 	text.createDiv({ cls: "sbd-card-eyebrow", text: t().cards.calsync.eyebrow });
 	text.createDiv({ cls: "sbd-sync-title is-large", text: t().cards.calsync.syncToInbox });
-	destinationChip(text);
+	destinationChip(text, inboxFolder(view.plugin.settings));
 	text.createDiv({ cls: "sbd-sync-when", text: lastSyncedLabel(view, syncing) });
 	refreshButton(view, card, head, syncing, redraw, "pill", label);
 }
@@ -311,12 +342,6 @@ function syncHeader(
 /** The folder every event lands in, named on the card rather than only in the
  * settings: a card called "sync" that writes notes somewhere is worth being
  * explicit about where. */
-function destinationChip(parent: HTMLElement): void {
-	const chip = parent.createDiv("sbd-sync-dest");
-	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
-	chip.createSpan({ cls: "sbd-sync-dest-path", text: INBOX_FOLDER });
-}
-
 function statusDot(parent: HTMLElement, slot: SlotState): void {
 	const dot = parent.createDiv("sbd-sync-dot");
 	dot.addClass(`is-${slot.state}`);
@@ -434,9 +459,16 @@ export async function syncNow(
 		);
 
 		const now = Date.now();
-		const from = now - (cfg.pastDays ?? DEFAULT_PAST_DAYS) * DAY_MS;
-		const to = now + (cfg.aheadDays ?? DEFAULT_AHEAD_DAYS) * DAY_MS;
+		// The window is the inbox's, not this card's: two sync cards feeding one
+		// tray must agree on how much calendar is worth a note, or the queue's
+		// depth depends on which widget happened to refresh last.
+		// Not named `window`: that shadows the global this file calls
+		// `setInterval` on, and a later edit reaching for it here would get days.
+		const range = effectiveFilingWindow(plugin.settings);
+		const from = now - range.pastDays * DAY_MS;
+		const to = now + range.aheadDays * DAY_MS;
 		const seen = (plugin.settings.calendarSyncSeen ??= {});
+		const folders = effectiveFilingFolders(plugin.settings);
 		const courses = courseNames(view.app);
 		let queued = 0;
 		let failed = 0;
@@ -461,7 +493,7 @@ export async function syncNow(
 				// ponytail: retries every refresh with no backoff — a permanently
 				// failing event re-attempts forever. Add a per-key attempt count
 				// to `seen` if a broken vault path starts hammering the inbox.
-				const note = await fileEvent(view, label, occurrence, courses);
+				const note = await fileEvent(view, label, occurrence, courses, folders);
 				if (!note) {
 					delete seen[key];
 					failed++;
@@ -475,9 +507,9 @@ export async function syncNow(
 		// every write failed and rolled back has synced nothing, and stamping it
 		// would tell the user the vault is current when it is not.
 		if (queued > 0 || failed === 0) plugin.settings.calendarSyncLast = Date.now();
-		if (queued > 0) new Notice(t().notices.calsyncQueued(queued));
+		if (queued > 0) new Notice(t().notices.calsyncQueued(queued, folders.inbox));
 		// A rollback used to be entirely silent: no note, no notice, no clue.
-		if (failed > 0) new Notice(t().notices.calsyncFailed(failed));
+		if (failed > 0) new Notice(t().notices.calsyncFailed(failed, folders.inbox));
 	} finally {
 		// Cleared first, before anything that can throw: a `syncing` left true
 		// refuses every later refresh for the rest of the session.
@@ -522,6 +554,7 @@ async function fileEvent(
 	calendar: string,
 	occurrence: IcsOccurrence,
 	courses: readonly string[],
+	folders: FilingFolders,
 ): Promise<TFile | null> {
 	const strings = t().cards.calsync;
 	const whenLabel = eventWhenLabel(occurrence);
@@ -531,6 +564,8 @@ async function fileEvent(
 		{
 			kind: "calendar-event",
 			destination: "inbox",
+			// Anyone who can put an event on the calendar writes this text.
+			untrusted: true,
 			source: strings.sourceLabel(calendar),
 			summary: occurrence.summary || strings.untitledEvent,
 			uid: occurrence.uid,
@@ -544,6 +579,7 @@ async function fileEvent(
 			},
 		},
 		{ "sbd-event-start": whenLabel, "sbd-calendar": calendar },
+		folders,
 	);
 }
 
@@ -566,8 +602,9 @@ export function calSyncEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 				.onChange((v) => {
 					slot.url = v.trim() || undefined;
 					ctx.opts.save();
-					ctx.opts.rerender();
 				});
+			// Redraw (and so sync) once the URL is finished, not per keystroke.
+			commitOnLeave(txt.inputEl, () => ctx.opts.rerender());
 			txt.inputEl.addClass("sbd-rss-url");
 		});
 		row.addExtraButton((b) =>
@@ -598,32 +635,13 @@ export function calSyncEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 				}),
 		);
 
+	// Where the events land, how wide a window they come from and how to re-sync
+	// them are all properties of the inbox itself, shared by every sync widget on
+	// every board — so they live in the plugin's settings, and this editor says
+	// so rather than offering a second, per-widget answer.
 	new Setting(containerEl)
-		.setName(strings.window)
-		.setDesc(strings.windowDesc)
-		.addText((txt) => {
-			txt.setValue(String(cfg.aheadDays ?? DEFAULT_AHEAD_DAYS)).onChange((v) => {
-				const n = parseInt(v, 10);
-				cfg.aheadDays = Number.isFinite(n) && n > 0 ? n : undefined;
-				ctx.opts.save();
-			});
-			txt.inputEl.type = "number";
-			txt.inputEl.addClass("sbd-count-input");
-		});
-
-	// A full re-sync is the way out of "I deleted the note and want it back":
-	// the index is what suppresses a second copy, so clearing it is the only
-	// thing that can bring one.
-	new Setting(containerEl)
-		.setName(strings.forget)
-		.setDesc(strings.forgetDesc)
-		.addButton((b) =>
-			b.setButtonText(strings.forgetButton).onClick(() => {
-				ctx.opts.settings.calendarSyncSeen = {};
-				ctx.opts.save();
-				new Notice(t().notices.calsyncForgotten);
-			}),
-		);
+		.setName(strings.systemSettings)
+		.setDesc(strings.systemSettingsDesc(inboxFolder(ctx.opts.settings)));
 }
 
 /** Three iCal feeds, emptied into `Claude/inbox`. */
@@ -653,5 +671,8 @@ export const calSyncCard: CardDefinition<"calsync"> = {
 	// The only vault state this card draws is the inbox tray's depth, so a
 	// rebuild on every note edit bought nothing — and each rebuild restarted the
 	// auto-refresh clock, which meant a board in use auto-synced roughly never.
-	liveness: { mode: "vault", shouldRedraw: (_card, ev) => ev.file.path.startsWith(INBOX_FOLDER) },
+	liveness: {
+		mode: "vault",
+		shouldRedraw: (_card, ev, view) => eventTouchesFolder(ev, inboxFolder(view.plugin.settings)),
+	},
 };

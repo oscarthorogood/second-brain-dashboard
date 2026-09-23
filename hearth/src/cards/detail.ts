@@ -1,12 +1,13 @@
-import { Modal, Notice, setIcon, Setting, TFile, type App } from "obsidian";
+import { Modal, Notice, setIcon, Setting, TFile, type App, type Component } from "obsidian";
+import { destinationChip } from "../cardbodies";
 import { fileForClaude, revealTray, trayCount, writeAttachment, writeNote } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { t } from "../i18n";
 import { openFile } from "../opener";
 import { FilePickerModal } from "../pickers";
-import { type DashboardCard } from "../types";
+import { effectiveFilingFolders, type DashboardCard, type HomeSettings } from "../types";
 import { makeClickable } from "../ui";
-import { findCourseInText, UNSORTED_FOLDER } from "../vaultfiling";
+import { attachmentsFolder, destinationFolder, eventTouchesFolder, findCourseInText } from "../vaultfiling";
 import { type HomeView } from "../view";
 import { type CardDefinition, type CardEditorContext } from "./definition";
 
@@ -36,16 +37,34 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
  * tray it fills, the way the sync card is named for its inbox, and the two
  * read as a pair on a board that carries both.
  *
+ * Which folder that is, though, is not this widget's to decide. Every unsorted
+ * widget fills the same tray and whoever drains it reads one folder, so the
+ * path is a vault-wide setting (Behaviour → Claude trays) and this card reads
+ * it per draw. What stays in the card's own settings is the only thing that is
+ * genuinely per-widget: which note it attaches to.
+ *
  * Reference (Widget Set v2 → DETAIL): small is a single add button, medium
  * gains the page field and two chips, large stacks the actions as rows, extra
  * large runs them as columns.
  */
 
-/** Where dropped files wait. A subfolder of the tray so an attachment never
- * sits loose beside the notes that describe it. */
-const UNSORTED_ATTACHMENTS = `${UNSORTED_FOLDER}/attachments`;
+/** Where this card files things, per the vault's filing settings: the tray
+ * itself, and the `attachments/` subfolder inside it so a dropped file never
+ * sits loose beside the notes that describe it.
+ *
+ * Resolved per use rather than held in a constant — the tray is a setting now,
+ * and a card drawn before it changed must not keep writing to the old folder. */
+function trayOf(settings: HomeSettings): { folder: string; attachments: string } {
+	const folders = effectiveFilingFolders(settings);
+	return { folder: destinationFolder("unsorted", folders), attachments: attachmentsFolder(folders) };
+}
 
-export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElement): void {
+export function renderDetail(
+	view: HomeView,
+	card: DashboardCard,
+	body: HTMLElement,
+	component: Component,
+): void {
 	const strings = t().cards.detail;
 	const open = () => openDetailModal(view, targetOf(view.app, card));
 
@@ -56,7 +75,7 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 			tile.createDiv({ cls: "sbd-detail-title", text: strings.toUnsorted });
 			// At 158px the subtitle is the only room to say where things go, and
 			// "page · files · notes" is already said by the icon and the dialog.
-			tile.createDiv({ cls: "sbd-detail-sub", text: UNSORTED_FOLDER });
+			tile.createDiv({ cls: "sbd-detail-sub", text: trayOf(view.plugin.settings).folder });
 			clickable(tile, open, strings.addDetail);
 			break;
 		}
@@ -64,7 +83,7 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 			const head = body.createDiv("sbd-card-headline");
 			setIcon(head.createDiv("sbd-card-headline-icon"), "folder-input");
 			head.createDiv({ cls: "sbd-card-headline-text", text: strings.title });
-			destinationChip(head);
+			destinationChip(head, trayOf(view.plugin.settings).folder);
 			const row = body.createDiv("sbd-detail-row");
 			searchField(row, open);
 			chip(row, strings.dropFiles, open);
@@ -77,7 +96,7 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 			const text = head.createDiv("sbd-course-headtext");
 			text.createDiv({ cls: "sbd-card-eyebrow", text: strings.eyebrow });
 			text.createDiv({ cls: "sbd-course-name is-large", text: strings.title });
-			destinationChip(text);
+			destinationChip(text, trayOf(view.plugin.settings).folder);
 			const wrap = body.createDiv(card.size === "xlarge" ? "sbd-detail-cols" : "sbd-detail-stack");
 			// Two actions, not three. "Link a page" and "Write notes" were two
 			// doors onto the same dialog, which the drop action already opens —
@@ -99,13 +118,27 @@ export function renderDetail(view: HomeView, card: DashboardCard, body: HTMLElem
 
 	// "Drag and drop" that only opens a dialog with a drop zone in it is a
 	// dialog, not a drop. The card itself takes the files.
-	acceptDrops(view, card, body);
+	acceptDrops(view, card, body, component);
 }
 
-/** Make the card a drop target: files dropped anywhere on it are filed into
- * `Claude/unsorted` exactly as the dialog files them, without opening it. */
-function acceptDrops(view: HomeView, card: DashboardCard, body: HTMLElement): void {
-	body.addEventListener("dragover", (evt: DragEvent) => {
+/**
+ * Make the card a drop target: files dropped anywhere on it are filed into the
+ * unsorted tray exactly as the dialog files them, without opening it.
+ *
+ * Registered through the render's component, not `addEventListener`. A redraw
+ * reuses this same `body` — it empties the children, not the listeners on the
+ * element itself — and this card redraws whenever its tray changes, which a
+ * drop always does. So every drop used to add another set of listeners, and
+ * the next drop filed each file once per set: two copies, then three. The
+ * component is unloaded on each redraw, which takes these with it.
+ */
+function acceptDrops(
+	view: HomeView,
+	card: DashboardCard,
+	body: HTMLElement,
+	component: Component,
+): void {
+	component.registerDomEvent(body, "dragover", (evt: DragEvent) => {
 		// Only claim the drop when the drag actually carries files: a widget
 		// being dragged across the board in arrange mode must not land here.
 		if (!evt.dataTransfer?.types.includes("Files")) return;
@@ -113,13 +146,13 @@ function acceptDrops(view: HomeView, card: DashboardCard, body: HTMLElement): vo
 		evt.dataTransfer.dropEffect = "copy";
 		body.addClass("is-drop-over");
 	});
-	body.addEventListener("dragleave", (evt: DragEvent) => {
+	component.registerDomEvent(body, "dragleave", (evt: DragEvent) => {
 		// `dragleave` fires for every child the pointer crosses, so ignore the
 		// ones that are still inside the card.
 		if (evt.relatedTarget instanceof Node && body.contains(evt.relatedTarget)) return;
 		body.removeClass("is-drop-over");
 	});
-	body.addEventListener("drop", (evt: DragEvent) => {
+	component.registerDomEvent(body, "drop", (evt: DragEvent) => {
 		const files = Array.from(evt.dataTransfer?.files ?? []);
 		if (!files.length) return;
 		evt.preventDefault();
@@ -136,21 +169,23 @@ async function fileDroppedAttachments(
 	files: File[],
 ): Promise<void> {
 	const app = view.app;
+	const folders = effectiveFilingFolders(view.plugin.settings);
+	const tray = trayOf(view.plugin.settings);
 	const target = targetOf(app, card);
 	const targetPath = target?.path ?? "";
 	const courseHint = findCourseInText(targetPath, courseNames(app));
-	const source = targetPath || UNSORTED_FOLDER;
+	const source = targetPath || tray.folder;
 	let queued = 0;
 
 	for (const file of files) {
 		let written: TFile | null = null;
 		try {
-			written = await writeAttachment(app, UNSORTED_ATTACHMENTS, file.name, await file.arrayBuffer());
+			written = await writeAttachment(app, tray.attachments, file.name, await file.arrayBuffer());
 		} catch {
 			written = null;
 		}
 		if (!written) {
-			new Notice(t().notices.detailAttachmentFailed(file.name));
+			new Notice(t().notices.detailAttachmentFailed(file.name, tray.attachments));
 			continue;
 		}
 		await fileForClaude(
@@ -169,11 +204,14 @@ async function fileDroppedAttachments(
 				},
 			},
 			targetPath ? { "sbd-target": targetPath } : {},
+			folders,
 		);
 		queued++;
 	}
 
-	new Notice(queued ? t().notices.detailQueued(queued) : t().notices.detailNothingToSave);
+	new Notice(
+		queued ? t().notices.detailQueued(queued, tray.folder) : t().notices.detailNothingToSave,
+	);
 	view.render();
 }
 
@@ -181,9 +219,10 @@ async function fileDroppedAttachments(
  * The note is written where everything else this card collects goes, so it
  * is picked up by the same reader rather than becoming a loose file. */
 async function createUnsortedNote(view: HomeView): Promise<void> {
-	const file = await writeNote(view.app, UNSORTED_FOLDER, t().cards.detail.newNoteName, {}, "");
+	const tray = trayOf(view.plugin.settings);
+	const file = await writeNote(view.app, tray.folder, t().cards.detail.newNoteName, {}, "");
 	if (!file) {
-		new Notice(t().notices.detailNoteFailed);
+		new Notice(t().notices.detailNoteFailed(tray.folder));
 		return;
 	}
 	await openFile(view, file, "card");
@@ -193,22 +232,18 @@ async function createUnsortedNote(view: HomeView): Promise<void> {
 }
 
 /** The folder everything this card collects lands in. */
-function destinationChip(parent: HTMLElement): void {
-	const chip = parent.createDiv("sbd-sync-dest");
-	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
-	chip.createSpan({ cls: "sbd-sync-dest-path", text: UNSORTED_FOLDER });
-}
-
-/** How much is still sitting in `Claude/unsorted`, and a way into it. */
+/** How much is still sitting in the unsorted tray, and a way into it. */
 function trayLine(view: HomeView, body: HTMLElement): void {
-	const waiting = trayCount(view.app, "unsorted");
+	const folders = effectiveFilingFolders(view.plugin.settings);
+	const waiting = trayCount(view.app, "unsorted", folders);
 	const strings = t().cards.detail;
-	const label = waiting > 0 ? strings.waiting(waiting, UNSORTED_FOLDER) : strings.trayEmpty(UNSORTED_FOLDER);
+	const label =
+		waiting > 0 ? strings.waiting(waiting, folders.unsorted) : strings.trayEmpty(folders.unsorted);
 	const line = body.createDiv("sbd-tray-line");
 	line.toggleClass("is-empty", waiting === 0);
 	setIcon(line.createDiv("sbd-tray-icon"), "folder-open");
 	line.createDiv({ cls: "sbd-tray-text", text: label });
-	const open = () => void revealTray(view.app, "unsorted");
+	const open = () => void revealTray(view.app, "unsorted", folders);
 	// Opening the folder is not "add something to it", so the click stops here
 	// rather than also reaching whatever the card surface does with one.
 	line.addEventListener("click", (e) => {
@@ -412,6 +447,8 @@ class DetailModal extends Modal {
 		}
 
 		const app = this.app;
+		const folders = effectiveFilingFolders(this.view.plugin.settings);
+		const attachments = attachmentsFolder(folders);
 		const courses = courseNames(app);
 		const targetPath = this.target?.path ?? "";
 		// A hint only: an exact registry lookup on the target's own title, never
@@ -423,12 +460,12 @@ class DetailModal extends Modal {
 		for (const file of this.files) {
 			let written: TFile | null = null;
 			try {
-				written = await writeAttachment(app, UNSORTED_ATTACHMENTS, file.name, await file.arrayBuffer());
+				written = await writeAttachment(app, attachments, file.name, await file.arrayBuffer());
 			} catch {
 				written = null;
 			}
 			if (!written) {
-				new Notice(t().notices.detailAttachmentFailed(file.name));
+				new Notice(t().notices.detailAttachmentFailed(file.name, attachments));
 				continue;
 			}
 			await fileForClaude(
@@ -447,6 +484,7 @@ class DetailModal extends Modal {
 					},
 				},
 				targetPath ? { "sbd-target": targetPath } : {},
+				folders,
 			);
 			queued++;
 		}
@@ -464,12 +502,15 @@ class DetailModal extends Modal {
 					details: { [t().cards.detail.detailTargetNote]: targetPath },
 				},
 				targetPath ? { "sbd-target": targetPath } : {},
+				folders,
 			);
 			queued++;
 		}
 
 		this.close();
-		new Notice(queued ? t().notices.detailQueued(queued) : t().notices.detailNothingToSave);
+		new Notice(
+			queued ? t().notices.detailQueued(queued, folders.unsorted) : t().notices.detailNothingToSave,
+		);
 		this.view.render();
 	}
 }
@@ -512,6 +553,13 @@ export function detailEditor(ctx: CardEditorContext, containerEl: HTMLElement): 
 				ctx.requestRender();
 			}),
 	);
+
+	// The tray itself is the filing system's, not this widget's: every unsorted
+	// widget fills the same folder, and whoever drains it reads one place. So it
+	// is set once in the plugin's settings, and this editor says where.
+	new Setting(containerEl)
+		.setName(strings.systemSettings)
+		.setDesc(strings.systemSettingsDesc(trayOf(ctx.opts.settings).folder));
 }
 
 /** Drop a page, files or notes into `Claude/unsorted` for Claude to file. */
@@ -526,7 +574,7 @@ export const detailCard: CardDefinition<"detail"> = {
 			build: () => ({ kind: "detail", title: "Add detail to unsorted", detail: {} }),
 		},
 	],
-	render: (view, card, body) => renderDetail(view, card, body),
+	render: (view, card, body, component) => renderDetail(view, card, body, component),
 	renderEditor: (container, ctx) => detailEditor(ctx, container),
 	cloneConfig: (source, copy) => {
 		if (source.detail) copy.detail = { ...source.detail };
@@ -534,5 +582,8 @@ export const detailCard: CardDefinition<"detail"> = {
 	cardClass: "is-detail-card",
 	// The tray line is read from the vault, so the card follows it — but only
 	// for its own folder, rather than rebuilding on every note in the vault.
-	liveness: { mode: "vault", shouldRedraw: (_card, ev) => ev.file.path.startsWith(UNSORTED_FOLDER) },
+	liveness: {
+		mode: "vault",
+		shouldRedraw: (_card, ev, view) => eventTouchesFolder(ev, trayOf(view.plugin.settings).folder),
+	},
 };

@@ -215,9 +215,14 @@ export function mountLeafView(
 	container: HTMLElement,
 	component: Component,
 	file?: string,
+	onFail?: () => void,
 ): boolean {
-	return hostLeafIn(app, container, component, () =>
-		createHostedLeaf(app, viewType, container, file),
+	return hostLeafIn(
+		app,
+		container,
+		component,
+		() => createHostedLeaf(app, viewType, container, file),
+		onFail,
 	);
 }
 
@@ -241,24 +246,37 @@ export function mountMarkdownEditor(
 	file: TFile,
 	container: HTMLElement,
 	component: Component,
+	onFail?: () => void,
 ): boolean {
-	return hostLeafIn(app, container, component, () => createEditorLeaf(app, file, container));
+	return hostLeafIn(
+		app,
+		container,
+		component,
+		() => createEditorLeaf(app, file, container),
+		onFail,
+	);
 }
 
 
 /** The shared hosting lifecycle behind `mountLeafView` and
  * `mountMarkdownEditor`: build the leaf lazily when the card is on screen, tear
  * it down when it leaves, and release everything with `component`. `create`
- * supplies the leaf and is only ever called once per mount. */
+ * supplies the leaf and is only ever called once per mount.
+ *
+ * The leaf is built lazily, so the `true` this returns only means hosting was
+ * set up. When `create` later fails, hosting stops for good and `onFail` runs
+ * so the caller can still show its fallback. */
 function hostLeafIn(
 	app: App,
 	container: HTMLElement,
 	component: Component,
 	create: () => WorkspaceLeaf | null,
+	onFail?: () => void,
 ): boolean {
 	try {
 		let leaf: WorkspaceLeaf | null = null;
 		let destroyed = false;
+		let io: IntersectionObserver | null = null;
 
 		const mount = () => {
 			if (leaf || destroyed) return;
@@ -270,6 +288,10 @@ function hostLeafIn(
 			app.workspace.onLayoutReady(() => {
 				if (leaf || destroyed) return;
 				leaf = create();
+				if (leaf) return;
+				destroyed = true;
+				io?.disconnect();
+				onFail?.();
 			});
 		};
 		const unmount = () => {
@@ -284,7 +306,7 @@ function hostLeafIn(
 		// "changes couldn't be saved" recovery path.
 		const unmountSoon = debounce(unmount, 1500, true);
 
-		const io = new IntersectionObserver((entries) => {
+		io = new IntersectionObserver((entries) => {
 			const visible = entries.some((e) => e.isIntersecting);
 			if (visible) {
 				unmountSoon.cancel();
@@ -297,7 +319,7 @@ function hostLeafIn(
 
 		component.register(() => {
 			destroyed = true;
-			io.disconnect();
+			io?.disconnect();
 			unmountSoon.cancel();
 			unmount();
 		});

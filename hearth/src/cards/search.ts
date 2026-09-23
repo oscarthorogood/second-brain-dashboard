@@ -22,7 +22,20 @@ import { type CardDefinition, type CardEditorContext } from "./definition";
 
 /** A card that runs a saved query (same syntax as the top search bar) and lists
  * the matching files, refreshed on every render. */
+/**
+ * Which render of a card body is the current one.
+ *
+ * The full-text half of a search resolves later, and a redraw reuses the same
+ * `body`. While a note is being typed in, modify events redraw this card every
+ * 400ms, each starting its own body search — and whichever finished last
+ * painted, so an older, slower search could land after a newer redraw and put
+ * stale matches back over the fresh ones. Only the latest render may paint.
+ */
+const renderGeneration = new WeakMap<HTMLElement, number>();
+
 export function renderSavedSearch(view: HomeView, card: DashboardCard, body: HTMLElement): void {
+	const generation = (renderGeneration.get(body) ?? 0) + 1;
+	renderGeneration.set(body, generation);
 	const cfg = card.savedSearch ?? {};
 	const query = (cfg.query ?? "").trim();
 	if (!query) {
@@ -75,6 +88,7 @@ export function renderSavedSearch(view: HomeView, card: DashboardCard, body: HTM
 			exclude,
 			limit: Math.max(0, limit - slotsAboveBody(hits)),
 		}).then((extra) => {
+			if (renderGeneration.get(body) !== generation) return;
 			if (extra.length) render(mergeRanked(hits, extra, limit));
 		});
 	}

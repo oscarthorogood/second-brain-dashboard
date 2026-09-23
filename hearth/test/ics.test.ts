@@ -330,3 +330,102 @@ describe("eventsByDay", () => {
 		expect(map.get("2026-07-20")!.map((o) => o.summary)).toEqual(["allday", "timed"]);
 	});
 });
+
+describe("expandEvents — long-running and monthly series", () => {
+	const day = 86400_000;
+
+	it("still reaches the window for a series that began years earlier", () => {
+		// A daily standup begun in January 2023 used up all 750 steps before
+		// 2025 and showed nothing in 2026.
+		const start = Date.UTC(2023, 0, 1, 9);
+		const windowStart = Date.UTC(2026, 8, 1);
+		const occ = expandEvents(
+			[ev({ start, rrule: "FREQ=DAILY" })],
+			windowStart,
+			windowStart + 7 * day,
+		);
+		expect(occ).toHaveLength(7);
+		expect(occ[0].start).toBe(Date.UTC(2026, 8, 1, 9));
+	});
+
+	it("keeps an INTERVAL's phase when it skips ahead", () => {
+		// Every third day from 1 Jan 2023: the fast-forward must land on the
+		// series' own days, not on whatever day the window starts.
+		const start = Date.UTC(2023, 0, 1, 9);
+		const windowStart = Date.UTC(2026, 8, 1);
+		const occ = expandEvents(
+			[ev({ start, rrule: "FREQ=DAILY;INTERVAL=3" })],
+			windowStart,
+			windowStart + 9 * day,
+		);
+		for (const o of occ) expect(Math.round((o.start - start) / day) % 3).toBe(0);
+		expect(occ).toHaveLength(3);
+	});
+
+	it("keeps the day of month instead of drifting after a short month", () => {
+		// 31 Jan monthly used to give 31 Jan, 28 Feb, 28 Mar, 28 Apr… for good.
+		const start = Date.UTC(2026, 0, 31, 9);
+		const occ = expandEvents(
+			[ev({ start, rrule: "FREQ=MONTHLY" })],
+			start,
+			Date.UTC(2026, 7, 1),
+		);
+		const days = occ.map((o) => new Date(o.start).getUTCDate());
+		// Months without a 31st are not instances (RFC 5545; Google and Apple
+		// agree), and the ones with one land on it.
+		expect(new Set(days)).toEqual(new Set([31]));
+		expect(occ.map((o) => new Date(o.start).getUTCMonth())).toEqual([0, 2, 4, 6]);
+	});
+
+	it("puts a 29 February yearly event on leap years only", () => {
+		const start = Date.UTC(2024, 1, 29, 9);
+		const occ = expandEvents(
+			[ev({ start, rrule: "FREQ=YEARLY" })],
+			start,
+			Date.UTC(2033, 0, 1),
+		);
+		expect(occ.map((o) => new Date(o.start).getUTCFullYear())).toEqual([2024, 2028, 2032]);
+	});
+});
+
+describe("parseIcs — RECURRENCE-ID overrides", () => {
+	const feed = (override: string) =>
+		[
+			"BEGIN:VCALENDAR",
+			"BEGIN:VEVENT",
+			"UID:standup",
+			"SUMMARY:Standup",
+			"DTSTART:20260901T090000Z",
+			"DTEND:20260901T093000Z",
+			"RRULE:FREQ=DAILY;COUNT=3",
+			"END:VEVENT",
+			"BEGIN:VEVENT",
+			"UID:standup",
+			"SUMMARY:Standup (moved)",
+			"RECURRENCE-ID:20260902T090000Z",
+			"DTSTART:20260902T150000Z",
+			"DTEND:20260902T153000Z",
+			override,
+			"END:VEVENT",
+			"END:VCALENDAR",
+		].join("\r\n");
+
+	it("shows a moved instance once, at its new time", () => {
+		// It used to appear twice: at 09:00 from the master and 15:00 from the
+		// override — and the sync wrote an inbox note for each.
+		const cal = parseIcs(feed(""))!;
+		const occ = expandEvents(cal.events, Date.UTC(2026, 8, 1), Date.UTC(2026, 8, 5));
+		const sept2 = occ.filter((o) => new Date(o.start).getUTCDate() === 2);
+		expect(sept2).toHaveLength(1);
+		expect(new Date(sept2[0].start).getUTCHours()).toBe(15);
+		expect(sept2[0].summary).toBe("Standup (moved)");
+		expect(occ).toHaveLength(3);
+	});
+
+	it("drops a cancelled instance entirely", () => {
+		const cal = parseIcs(feed("STATUS:CANCELLED"))!;
+		const occ = expandEvents(cal.events, Date.UTC(2026, 8, 1), Date.UTC(2026, 8, 5));
+		expect(occ.filter((o) => new Date(o.start).getUTCDate() === 2)).toHaveLength(0);
+		expect(occ).toHaveLength(2);
+	});
+});

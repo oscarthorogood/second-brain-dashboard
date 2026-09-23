@@ -114,7 +114,13 @@ export function renderEmbed(
 	// either in Obsidian's own Live Preview editor, or in Second Brain Dashboard's plain
 	// raw-Markdown box (the fallback when hosting the real editor isn't possible).
 	if (active.editable && isMarkdown && !excalidraw) {
-		if (active.livePreview && renderLivePreviewEmbed(view, file, body, component)) return;
+		if (
+			active.livePreview &&
+			renderLivePreviewEmbed(view, file, body, component, () =>
+				renderEditableEmbed(view, file, body, component),
+			)
+		)
+			return;
 		renderEditableEmbed(view, file, body, component);
 		return;
 	}
@@ -624,14 +630,20 @@ export function setSecondViewTarget(ctx: CardEditorContext, value: string, reren
 	if (!target) {
 		ctx.card.secondView = undefined;
 	} else {
-		const next: EmbedView = { ...(ctx.card.secondView ?? {}) };
-		next.target = target;
-		if (!isBase || targetChanged) next.baseView = undefined;
-		ctx.card.secondView = next;
+		// Mutated in place, not replaced. The settings below the target field hold
+		// a reference to this object, and an ordinary note-to-note change doesn't
+		// redraw the editor — so replacing it left zoom, image fit and "editable"
+		// writing into the detached old object, and the change was silently lost
+		// on save.
+		const view: EmbedView = (ctx.card.secondView ??= {});
+		view.target = target;
+		if (!isBase || targetChanged) view.baseView = undefined;
 	}
 	ctx.opts.save();
 	const imageChanged = isImagePath(previousTarget) !== isImagePath(target);
-	if (rerender || wasBase !== isBase || imageChanged || (isBase && targetChanged))
+	// Clearing the target removes the second view entirely, so the settings that
+	// were bound to it have to go as well.
+	if (rerender || !target || wasBase !== isBase || imageChanged || (isBase && targetChanged))
 		ctx.requestRender();
 }
 

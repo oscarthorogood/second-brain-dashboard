@@ -9,7 +9,7 @@ import {
 	type RssLayout,
 	type RssSource,
 } from "../types";
-import { makeClickable } from "../ui";
+import { commitOnLeave, makeClickable } from "../ui";
 import { type HomeView } from "../view";
 import { bySize } from "../widgetsize";
 import { type CardDefinition, type CardEditorContext } from "./definition";
@@ -323,8 +323,9 @@ export function rssEditor(ctx: CardEditorContext, containerEl: HTMLElement): voi
 				.onChange((v) => {
 					source.url = v.trim();
 					ctx.opts.save();
-					ctx.opts.rerender();
 				});
+			// Redraw (and so fetch) once the URL is finished, not per keystroke.
+			commitOnLeave(txt.inputEl, () => ctx.opts.rerender());
 			txt.inputEl.addClass("sbd-rss-url");
 		});
 		row.addExtraButton((b) =>
