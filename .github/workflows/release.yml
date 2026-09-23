@@ -189,7 +189,19 @@ jobs:
             # Re-run: refresh assets and re-assert the prerelease/latest state so
             # a manually-touched release can't linger in the wrong flavour.
             gh release edit "$tag" --title "$title" $flags
-            gh release upload "$tag" main.js manifest.json styles.css --clobber
+            # Replace the three assets by id rather than with --clobber:
+            # --clobber decides what to replace from the release's asset
+            # list, and GitHub has served releases whose list came back
+            # empty while the assets existed (2.1.0-beta.27/28), so the
+            # upload then failed with "ReleaseAsset.name already exists".
+            # The per-release assets endpoint is the authoritative view.
+            id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq .id)"
+            gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --paginate \
+              --jq '.[] | select(.name == "main.js" or .name == "manifest.json" or .name == "styles.css") | .id' |
+              while read -r asset; do
+                gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset"
+              done
+            gh release upload "$tag" main.js manifest.json styles.css
           else
             gh release create "$tag" \
               --target "$GITHUB_SHA" \
