@@ -2814,6 +2814,9 @@ export const en = {
 			doneDate: "Done date",
 			recurrenceLabel: "Repeat",
 			recurrenceNever: "Never",
+			/** A repeat rule the picker can't build ("every weekday", "every
+			 * Monday"), offered so a Save leaves it exactly as written. */
+			recurrenceKeep: (rule: string) => `${rule} (as written)`,
 			recurrenceEvery: "every",
 			recurrenceInterval: "Repeat interval",
 			recurrenceUnits: {
