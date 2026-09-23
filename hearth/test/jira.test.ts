@@ -266,6 +266,34 @@ describe("Jira load coordinator", () => {
 		expect(calls).toEqual(["full"]);
 	});
 
+	it("merges queued requests so a forced refresh is not overwritten", async () => {
+		type Req = { force: boolean; refinedOnly: boolean };
+		const calls: Req[] = [];
+		let release: (() => void) | undefined;
+		const first = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const coordinator = createJiraLoadCoordinator(
+			async (req: Req) => {
+				calls.push(req);
+				if (calls.length === 1) await first;
+			},
+			(queued, next) => ({
+				force: queued.force || next.force,
+				refinedOnly: queued.refinedOnly && next.refinedOnly,
+			}),
+		);
+		coordinator.request({ force: false, refinedOnly: true });
+		coordinator.request({ force: true, refinedOnly: false });
+		coordinator.request({ force: false, refinedOnly: true });
+		release?.();
+		await coordinator.idle();
+		expect(calls).toEqual([
+			{ force: false, refinedOnly: true },
+			{ force: true, refinedOnly: false },
+		]);
+	});
+
 	it("accepts a later request after a failed load", async () => {
 		const calls: string[] = [];
 		const coordinator = createJiraLoadCoordinator(async (kind: string) => {

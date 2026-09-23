@@ -25,6 +25,13 @@ describe("evaluate — arithmetic", () => {
 		expect(ok("50%").value).toBe(0.5);
 	});
 
+	it("accepts thousands separators outside function calls", () => {
+		expect(ok("1,000 + 5").value).toBe(1005);
+		expect(ok("1,234,567 * 2").value).toBe(2469134);
+		expect(ok("max(3, 7, 5)").value).toBe(7);
+		expect(ok("max(1,234)").value).toBe(234);
+	});
+
 	it("powers via ^ and **", () => {
 		expect(ok("2^10").value).toBe(1024);
 		expect(ok("2**10").value).toBe(1024);
@@ -122,6 +129,11 @@ describe("evaluate — currency (rates supplied by caller)", () => {
 	it("understands currency symbols", () => {
 		const r = ok("10 € to USD", { rates });
 		expect(r.value).toBeCloseTo(11, 10);
+	});
+
+	it("understands grouped amounts", () => {
+		const r = ok("$1,100 to eur", { rates });
+		expect(r.value).toBeCloseTo(1000, 10);
 	});
 
 	it("reports when rates are unavailable", () => {

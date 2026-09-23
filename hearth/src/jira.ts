@@ -95,6 +95,9 @@ export interface JiraLoadCoordinator<T> {
 /** Serialize loads while retaining the latest request that arrives in flight. */
 export function createJiraLoadCoordinator<T>(
 	execute: (value: T) => Promise<void>,
+	// Folds a new request into one already queued, so a queued forced refresh
+	// is not lost to a lighter request that arrives after it.
+	merge?: (queued: T, next: T) => T,
 ): JiraLoadCoordinator<T> {
 	let active = false;
 	let destroyed = false;
@@ -119,7 +122,8 @@ export function createJiraLoadCoordinator<T>(
 		request(value: T): void {
 			if (destroyed) return;
 			if (active) {
-				pending = value;
+				pending =
+					pending !== undefined && merge ? merge(pending, value) : value;
 				return;
 			}
 			pending = undefined;
@@ -729,6 +733,10 @@ export function renderJiraCard(
 				}
 			}
 		},
+		(queued, next) => ({
+			force: queued.force || next.force,
+			refinedOnly: queued.refinedOnly && next.refinedOnly,
+		}),
 	);
 
 	component.register(() => {

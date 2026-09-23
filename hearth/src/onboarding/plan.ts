@@ -164,7 +164,10 @@ export function defaultAnswers(
 	const has = (id: SetupIntegrationId): boolean =>
 		detection.integrations.some((i) => i.id === id);
 
-	const purposes: SetupPurpose[] = ["daily", "browsing"];
+	const purposes: SetupPurpose[] = ["browsing"];
+	// A daily-note board only works with the core Daily notes plugin on;
+	// without it the daily card is just a prompt to go and enable it.
+	if (has("dailyNotes")) purposes.unshift("daily");
 	// Someone who already runs a task plugin is telling us what they use their
 	// vault for more clearly than any question could.
 	if (has("tasknotes") || has("kanban")) purposes.push("tasks");

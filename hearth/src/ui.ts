@@ -82,6 +82,24 @@ export class ConfirmModal extends Modal {
 	}
 }
 
+/**
+ * Run `commit` when a text field is left (blur) or on Enter — for fields whose
+ * effect is expensive, where the value should be saved as typed but not *acted
+ * on* per keystroke.
+ *
+ * A feed URL is the case: saving it is cheap, but redrawing the board on each
+ * keystroke mounted the card and fetched the half-typed address — "h", "ht",
+ * "htt", "https://calendar.goo" — a request and a permanent cache entry apiece.
+ */
+export function commitOnLeave(input: HTMLInputElement, commit: () => void): void {
+	input.addEventListener("blur", commit);
+	input.addEventListener("keydown", (evt: KeyboardEvent) => {
+		if (evt.key !== "Enter" || evt.isComposing) return;
+		evt.preventDefault();
+		commit();
+	});
+}
+
 /** Convenience: open a confirm dialog. */
 export function confirmAction(
 	app: App,

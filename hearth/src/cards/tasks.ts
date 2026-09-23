@@ -73,7 +73,13 @@ import {
 	type TaskSortField,
 	type TaskSortRule,
 } from "../types";
-import { openInTaskNotes, TASKNOTES_PLUGIN_ID } from "../tasknotes";
+import {
+	DEFAULT_TASKNOTES_FIELDS,
+	openInTaskNotes,
+	readTaskNotesSetup,
+	TASKNOTES_PLUGIN_ID,
+	type TaskNotesFieldMapping,
+} from "../tasknotes";
 import { confirmAction, makeClickable } from "../ui";
 import { type HomeView } from "../view";
 import { bySize, type WidgetSize } from "../widgetsize";
@@ -3107,8 +3113,23 @@ function scalarField(v: unknown): string | undefined {
 }
 
 
+/** The frontmatter keys of a recurring task's `scheduled`, `recurrence` and
+ * `complete_instances`, and of a task's title. A TaskNotes task follows
+ * TaskNotes' own field mapping; a note made by "Convert to note" (any hit
+ * with a line, or a linked `targetFile`) always uses the default keys, since
+ * those are the keys it was written with. */
+function recurringTaskKeys(
+	view: HomeView,
+	hit?: TaskHit,
+	targetFile?: TFile,
+): TaskNotesFieldMapping {
+	const fromTaskNotes = !hit || (hit.line === -1 && !targetFile);
+	return fromTaskNotes ? readTaskNotesSetup(view.app).fields : DEFAULT_TASKNOTES_FIELDS;
+}
+
 function collectTaskNotesTasks(view: HomeView, cfg: TasksConfig): TaskHit[] {
 	const s = view.plugin.settings;
+	const keys = recurringTaskKeys(view);
 	const statusField = s.taskNotesStatusField.trim() || "status";
 	const dueField = s.taskNotesDueField.trim() || "due";
 	const priorityField = s.taskNotesPriorityField.trim() || "priority";
@@ -3135,25 +3156,25 @@ function collectTaskNotesTasks(view: HomeView, cfg: TasksConfig): TaskHit[] {
 			dueRaw = expr;
 			due = resolveDate(expr);
 		}
-		// TaskNotes' scheduled field is conventionally "scheduled"; read it as
-		// a fallback sort key when no due date is set.
-		const scheduledRaw: unknown = fm["scheduled"];
+		// TaskNotes' scheduled field (conventionally "scheduled"); read it as a
+		// fallback sort key when no due date is set.
+		const scheduledRaw: unknown = fm[keys.scheduled];
 		const scheduled: string | null = typeof scheduledRaw === "string" ? scheduledRaw : null;
 		const priority = scalarField(fm[priorityField]);
-		// TaskNotes stores the recurrence rule in a "recurrence" frontmatter
-		// field (an RRULE like "FREQ=WEEKLY;INTERVAL=1" or "RRULE:FREQ=DAILY").
-		const recurrence = scalarField(fm["recurrence"]);
+		// TaskNotes stores the recurrence rule in its recurrence field
+		// (an RRULE like "FREQ=WEEKLY;INTERVAL=1" or "RRULE:FREQ=DAILY").
+		const recurrence = scalarField(fm[keys.recurrence]);
 		// TaskNotes records each completed occurrence of a recurring task as a
-		// YYYY-MM-DD entry in "complete_instances". Read it so the completion
-		// checkbox can reflect today's state and avoid double-completing.
-		const ciRaw: unknown = fm["complete_instances"];
+		// YYYY-MM-DD entry in its complete-instances field. Read it so the
+		// completion checkbox can reflect today's state and avoid double-completing.
+		const ciRaw: unknown = fm[keys.completeInstances];
 		const completeInstances: string[] = Array.isArray(ciRaw)
 			? ciRaw.map((v) => String(v)).filter(Boolean)
 			: [];
 		hits.push({
 			file,
 			line: -1,
-			text: String(fm.title ?? file.basename),
+			text: String(scalarField(fm[keys.title]) ?? file.basename),
 			done: isDone(status),
 			due,
 			dueRaw,
@@ -4426,24 +4447,28 @@ function nextOccurrence(rule: string, fromDate: string): string | null {
 	if (!freq) return null;
 	const interval = Math.max(1, parseInt(/INTERVAL=(\d+)/i.exec(r)?.[1] ?? "1", 10) || 1);
 	const bydayRaw = /BYDAY=([A-Z,]+)/i.exec(r)?.[1];
+	const from = moment(fromDate);
+	// The series' anchor: its DTSTART, or — when the rule carries none, which is
+	// what TaskNotes writes for "weekly" and friends — the occurrence being
+	// stepped from. Without an anchor every "days since" below was 0: DAILY
+	// ignored INTERVAL and WEEKLY landed on tomorrow, so ticking a weekly task
+	// moved it one day; MONTHLY and YEARLY needed one to match against and
+	// returned null, so the task never moved at all.
 	const dtstart = dtRaw
 		? moment(`${dtRaw.slice(0, 4)}-${dtRaw.slice(4, 6)}-${dtRaw.slice(6, 8)}`)
-		: null;
-	const from = moment(fromDate);
+		: from.clone();
 	const wdMap: Record<string, number> = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 };
 	const weekdays = bydayRaw
 		? bydayRaw
 				.split(",")
 				.map((d) => wdMap[d.trim().toUpperCase()] ?? -1)
 				.filter((w) => w >= 0)
-		: dtstart
-			? [dtstart.day()]
-			: [];
+		: [dtstart.day()];
 
 	const cursor = from.clone().add(1, "day");
 	const limit = 730;
 	for (let i = 0; i < limit; i++) {
-		const daysSince = dtstart ? cursor.diff(dtstart, "days") : 0;
+		const daysSince = cursor.diff(dtstart, "days");
 		if (daysSince < 0) {
 			cursor.add(1, "day");
 			continue;
@@ -4493,29 +4518,43 @@ function nextRecurrenceDate(rule: string, fromDate: string): string | null {
 }
 
 
-/** Mark today's occurrence of a recurring TaskNotes task complete the way
- * TaskNotes does: append today's YYYY-MM-DD to `complete_instances` (deduped,
+/** The YYYY-MM-DD day of a TaskNotes `scheduled` value (which may carry a
+ * time), or null when there isn't one. */
+function scheduledDay(value: string | null): string | null {
+	const m = value ? /^(\d{4}-\d{2}-\d{2})/.exec(value.trim()) : null;
+	return m ? m[1] : null;
+}
+
+/** Mark the scheduled occurrence of a recurring TaskNotes task complete the
+ * way TaskNotes does: append its YYYY-MM-DD to `complete_instances` (deduped,
  * kept sorted) and advance `scheduled` to the next occurrence derived from the
  * recurrence rule. The task's `status` is left untouched — a recurring task
  * stays open and just rolls forward to its next due date. */
 async function completeRecurringInstance(view: HomeView, hit: TaskHit, targetFile?: TFile): Promise<void> {
 	if (!hit.recurrence) return;
+	const rule = hit.recurrence;
 	const today: string = moment().format("YYYY-MM-DD");
-	const next = nextRecurrenceDate(hit.recurrence, today);
+	const keys = recurringTaskKeys(view, hit, targetFile);
 	try {
 		await view.app.fileManager.processFrontMatter(targetFile ?? hit.file, (fm) => {
-			const cur = typeof fm["scheduled"] === "string" ? String(fm["scheduled"]) : null;
+			const cur = typeof fm[keys.scheduled] === "string" ? String(fm[keys.scheduled]) : null;
 			const timeMatch = cur ? /T(\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)\s*$/.exec(cur) : null;
-			const instances = Array.isArray(fm["complete_instances"])
-				? fm["complete_instances"].map((v: unknown) => String(v))
-				: [];
-			if (!instances.includes(today)) {
-				instances.push(today);
+			// The occurrence being completed is the one the task is scheduled for,
+			// not today. Using today broke finishing early: Friday's occurrence
+			// ticked off on Wednesday was recorded as Wednesday, and the next date
+			// after Wednesday is that same Friday — so `scheduled` didn't move and
+			// the task came back open on Friday, already done.
+			const occurrence = scheduledDay(cur) ?? today;
+			const next = nextRecurrenceDate(rule, occurrence);
+			const ciRaw: unknown = fm[keys.completeInstances];
+			const instances = Array.isArray(ciRaw) ? ciRaw.map((v: unknown) => String(v)) : [];
+			if (!instances.includes(occurrence)) {
+				instances.push(occurrence);
 				instances.sort();
-				fm["complete_instances"] = instances;
+				fm[keys.completeInstances] = instances;
 			}
 			if (next) {
-				fm["scheduled"] = timeMatch ? `${next}T${timeMatch[1]}` : next;
+				fm[keys.scheduled] = timeMatch ? `${next}T${timeMatch[1]}` : next;
 			}
 		});
 	} catch {
@@ -4524,24 +4563,31 @@ async function completeRecurringInstance(view: HomeView, hit: TaskHit, targetFil
 }
 
 
-/** Undo today's completion of a recurring TaskNotes task: remove today from
- * `complete_instances` and roll `scheduled` back to today (the occurrence we
- * just un-completed). Used when the user unchecks the box to cancel a
- * mistaken completion. */
+/** Undo the latest completion of a recurring TaskNotes task: remove that
+ * occurrence from `complete_instances` and roll `scheduled` back to it. Used
+ * when the user unchecks the box to cancel a mistaken completion. */
 async function uncompleteRecurringInstance(view: HomeView, hit: TaskHit, targetFile?: TFile): Promise<void> {
 	if (!hit.recurrence) return;
 	const today: string = moment().format("YYYY-MM-DD");
+	const keys = recurringTaskKeys(view, hit, targetFile);
 	try {
 		await view.app.fileManager.processFrontMatter(targetFile ?? hit.file, (fm) => {
-			const cur = typeof fm["scheduled"] === "string" ? String(fm["scheduled"]) : null;
+			const cur = typeof fm[keys.scheduled] === "string" ? String(fm[keys.scheduled]) : null;
 			const timeMatch = cur ? /T(\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)\s*$/.exec(cur) : null;
-			const instances = Array.isArray(fm["complete_instances"])
-				? fm["complete_instances"].map((v: unknown) => String(v)).filter((d) => d !== today)
-				: [];
-			fm["complete_instances"] = instances;
-			// Restore the occurrence date the checkbox represents (today),
-			// keeping any time component the task already had.
-			fm["scheduled"] = timeMatch ? `${today}T${timeMatch[1]}` : today;
+			const ciRaw: unknown = fm[keys.completeInstances];
+			const all = Array.isArray(ciRaw) ? ciRaw.map((v: unknown) => String(v)) : [];
+			// The completion being undone is the latest one before the date the
+			// task has since moved on to — the mirror of completing, which records
+			// the scheduled occurrence rather than today. Falls back to today for
+			// a record written before that, when completions were stamped today.
+			const upcoming = scheduledDay(cur);
+			const undone =
+				[...all].sort().reverse().find((d) => !upcoming || d < upcoming) ?? today;
+			const instances = all.filter((d) => d !== undone);
+			fm[keys.completeInstances] = instances;
+			// Restore the undone occurrence's date, keeping any time component
+			// the task already had.
+			fm[keys.scheduled] = timeMatch ? `${undone}T${timeMatch[1]}` : undone;
 		});
 	} catch {
 		new Notice(t().notices.couldNotUndoRecurring);

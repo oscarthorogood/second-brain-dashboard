@@ -13,7 +13,7 @@ import {
 	type DashboardCard,
 	type HomeSettings,
 } from "../types";
-import { makeClickable } from "../ui";
+import { commitOnLeave, makeClickable } from "../ui";
 import { destinationFolder, eventTouchesFolder, findCourseInText, type FilingFolders } from "../vaultfiling";
 import { type HomeView } from "../view";
 
@@ -608,8 +608,9 @@ export function calSyncEditor(ctx: CardEditorContext, containerEl: HTMLElement):
 				.onChange((v) => {
 					slot.url = v.trim() || undefined;
 					ctx.opts.save();
-					ctx.opts.rerender();
 				});
+			// Redraw (and so sync) once the URL is finished, not per keystroke.
+			commitOnLeave(txt.inputEl, () => ctx.opts.rerender());
 			txt.inputEl.addClass("sbd-rss-url");
 		});
 		row.addExtraButton((b) =>

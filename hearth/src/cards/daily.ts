@@ -72,7 +72,13 @@ export function renderDaily(
 	renderDailyDate(body);
 
 	if (card.editable) {
-		if (card.livePreview && renderLivePreviewEmbed(view, file, body, component)) return;
+		if (
+			card.livePreview &&
+			renderLivePreviewEmbed(view, file, body, component, () =>
+				renderEditableEmbed(view, file, body, component),
+			)
+		)
+			return;
 		renderEditableEmbed(view, file, body, component);
 		return;
 	}

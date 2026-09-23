@@ -79,6 +79,12 @@ export function addIcon(): void {}
 export function getIconIds(): string[] {
 	throw new Error("getIconIds is not implemented in tests (Obsidian API)");
 }
+export function parseLinktext(linktext: string): { path: string; subpath: string } {
+	const i = linktext.indexOf("#");
+	return i < 0
+		? { path: linktext, subpath: "" }
+		: { path: linktext.slice(0, i), subpath: linktext.slice(i) };
+}
 export function parseYaml(): unknown {
 	throw new Error("parseYaml is not implemented in tests (Obsidian API)");
 }

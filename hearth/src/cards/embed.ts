@@ -114,7 +114,13 @@ export function renderEmbed(
 	// either in Obsidian's own Live Preview editor, or in Second Brain Dashboard's plain
 	// raw-Markdown box (the fallback when hosting the real editor isn't possible).
 	if (active.editable && isMarkdown && !excalidraw) {
-		if (active.livePreview && renderLivePreviewEmbed(view, file, body, component)) return;
+		if (
+			active.livePreview &&
+			renderLivePreviewEmbed(view, file, body, component, () =>
+				renderEditableEmbed(view, file, body, component),
+			)
+		)
+			return;
 		renderEditableEmbed(view, file, body, component);
 		return;
 	}
