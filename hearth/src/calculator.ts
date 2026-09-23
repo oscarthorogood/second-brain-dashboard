@@ -342,8 +342,17 @@ function makeFunctions(angleUnit: "deg" | "rad"): Record<string, (args: number[]
 	};
 }
 
+/** The largest n whose factorial a double can hold: 170! ≈ 7.26e306, and
+ * 171! overflows to Infinity. */
+const MAX_FACTORIAL = 170;
+
 function factorial(n: number): number {
 	if (n < 0 || !Number.isInteger(n)) return NaN;
+	// Answered without the loop past the point where every result is Infinity.
+	// The loop used to run to n regardless, and the calculator card evaluates on
+	// every keystroke — so typing `10000000000!` ran ten billion multiplications
+	// on the UI thread and froze Obsidian.
+	if (n > MAX_FACTORIAL) return Infinity;
 	let out = 1;
 	for (let i = 2; i <= n; i++) out *= i;
 	return out;

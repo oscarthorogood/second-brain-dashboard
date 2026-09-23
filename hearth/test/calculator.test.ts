@@ -254,3 +254,21 @@ describe("formatNumber", () => {
 		expect(formatNumber(1e-9)).toContain("e");
 	});
 });
+
+describe("factorial stays bounded", () => {
+	it("answers a huge factorial instantly instead of looping to it", () => {
+		// The calculator evaluates on every keystroke; this used to run ten
+		// billion multiplications on the UI thread and freeze Obsidian.
+		const started = performance.now();
+		const result = evaluate("10000000000!");
+		expect(performance.now() - started).toBeLessThan(50);
+		expect(result.ok ? result.value : NaN).toBe(Infinity);
+	});
+
+	it("still computes the largest representable factorial exactly as before", () => {
+		const r = evaluate("170!");
+		expect(r.ok && Number.isFinite(r.value)).toBe(true);
+		const over = evaluate("171!");
+		expect(over.ok ? over.value : NaN).toBe(Infinity);
+	});
+});

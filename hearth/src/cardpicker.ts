@@ -20,7 +20,7 @@ import {
 import { templateDefaultSize, templateSizes } from "./cards/definition";
 import { glyphTile, type TileTint } from "./glyphtile";
 import { sizeSpec, type WidgetSize } from "./widgetsize";
-import { cardRequestGithubUrl, cardRequestMailtoUrl } from "./cardrequest";
+import { CARD_REQUEST_EMAIL, cardRequestGithubUrl, cardRequestMailtoUrl } from "./cardrequest";
 import { t } from "./i18n";
 
 /**
@@ -521,15 +521,18 @@ class CardPickerModal extends Modal {
 			action: strings.githubAction,
 			url: cardRequestGithubUrl(context),
 		});
-		this.requestOption(page, {
-			icon: "mail",
-			title: strings.emailTitle,
-			// The address itself is never printed on screen — it only ever exists
-			// inside the mailto: the button opens.
-			description: strings.emailDesc,
-			action: strings.emailAction,
-			url: cardRequestMailtoUrl(context),
-		});
+		// Only when there is somewhere real to send it (see CARD_REQUEST_EMAIL).
+		if (CARD_REQUEST_EMAIL) {
+			this.requestOption(page, {
+				icon: "mail",
+				title: strings.emailTitle,
+				// The address itself is never printed on screen — it only ever exists
+				// inside the mailto: the button opens.
+				description: strings.emailDesc,
+				action: strings.emailAction,
+				url: cardRequestMailtoUrl(context),
+			});
+		}
 
 		page.createDiv({ cls: "sbd-picker-request-note", text: strings.prefilledNote });
 	}

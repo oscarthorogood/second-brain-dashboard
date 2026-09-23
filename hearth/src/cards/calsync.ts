@@ -570,6 +570,8 @@ async function fileEvent(
 		{
 			kind: "calendar-event",
 			destination: "inbox",
+			// Anyone who can put an event on the calendar writes this text.
+			untrusted: true,
 			source: strings.sourceLabel(calendar),
 			summary: occurrence.summary || strings.untitledEvent,
 			uid: occurrence.uid,

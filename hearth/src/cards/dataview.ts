@@ -1,6 +1,6 @@
 import { Component, Setting } from "obsidian";
 import { emptyState, summaryTile, wireMarkdownLinks } from "../cardbodies";
-import { DATAVIEW_PLUGIN_ID, getDataviewApi, isDataviewAvailable } from "../dataview";
+import { DATAVIEW_PLUGIN_ID, dataviewJsEnabled, getDataviewApi, isDataviewAvailable } from "../dataview";
 import { t } from "../i18n";
 import { type DashboardCard } from "../types";
 import { type HomeView } from "../view";
@@ -49,6 +49,13 @@ export function renderDataview(
 	// in a translucent mono panel. A table of rows with the query hidden in
 	// settings gives no way to tell what you are looking at from the board.
 	body.createDiv({ cls: "sbd-query-source", text: query });
+
+	// JavaScript queries only where Dataview itself allows them (see
+	// `dataviewJsEnabled` for why the API can't be trusted to check).
+	if (cfg.language === "js" && !dataviewJsEnabled(view.app)) {
+		emptyState(body, "shield-alert", t().cards.empty.dataviewJsDisabled);
+		return;
+	}
 
 	const host = body.createDiv("sbd-dataview");
 	// The dashboard has no "current note", so queries run with an empty origin

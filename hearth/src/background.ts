@@ -7,16 +7,34 @@ import {
 	skyGroupCode,
 } from "./sky";
 import type { HomeView } from "./view";
-import { type BackgroundConfig, contentWidthIsFull, effectiveBackground, effectiveMaxWidth } from "./types";
+import { type BackgroundConfig, contentWidthIsFull, effectiveBackground, effectiveMaxWidth, LOW_POWER_BACKGROUND } from "./types";
 import { cachedWeather, loadWeather, type WeatherRequest } from "./weather";
 
 /**
- * URL of the bundled default background. Served straight from the main branch
- * on GitHub so it works without depending on a specific release asset being
- * attached. Update the file at assets/default-bg.gif to ship a new image.
+ * URL of the bundled default background. Served straight from the default
+ * branch on GitHub so it works without depending on a specific release asset
+ * being attached. Update the file at hearth/assets/default-bg.gif to ship a new
+ * image.
+ *
+ * This repository's copy, not upstream Hearth's. It used to point at
+ * ondreu/Hearth, so every default board fetched its wallpaper from a repository
+ * this project doesn't control: if that file moved or went, every default board
+ * lost its background, and each render told a third party the user's IP. The
+ * image is byte-identical (1,491,693 bytes) in this repo.
  */
 const DEFAULT_BG_URL =
-	"https://raw.githubusercontent.com/ondreu/Hearth/refs/heads/main/assets/default-bg.gif";
+	"https://raw.githubusercontent.com/oscarthorogood/second-brain-dashboard/refs/heads/master/hearth/assets/default-bg.gif";
+
+/**
+ * Whether painting this background would fetch from the network.
+ *
+ * The default and URL kinds load a remote image. Obsidian's resource paths for
+ * a vault image (`app://…`) are local, and a colour or the sky's cached
+ * forecast needs nothing — the sky already honours the setting itself.
+ */
+function fetchesRemote(kind: BackgroundConfig["kind"], url: string): boolean {
+	return (kind === "default" || kind === "url") && /^(https?:)?\/\//i.test(url);
+}
 
 /**
  * Apply the optional, customizable background as a separate layer behind the
@@ -125,6 +143,16 @@ function paintBackground(
 	} else if (bg.kind === "image") {
 		const file = view.app.vault.getAbstractFileByPath(bg.value);
 		if (file instanceof TFile) url = view.app.vault.getResourcePath(file);
+	}
+
+	// "Block all outbound network requests" means all of them. The wallpaper was
+	// fetched on every render regardless — including the default one, which is
+	// what a fresh install shows and what the setup wizard picks. With calls
+	// off, a remote image is replaced by the flat backdrop low power mode uses,
+	// so the board still has a surface rather than going transparent.
+	if (url && fetchesRemote(bg.kind, url) && view.plugin.settings.disableExternalCalls) {
+		layer.style.background = LOW_POWER_BACKGROUND;
+		return;
 	}
 
 	if (url) {

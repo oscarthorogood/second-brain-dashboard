@@ -2493,6 +2493,9 @@ export const en = {
 				"No Kanban board found — pick a board note in card settings, or create one with the Kanban plugin",
 			dataviewEnable: "Enable the Dataview plugin to run queries",
 			dataviewNoQuery: "Set a Dataview query in card settings",
+			dataviewJsDisabled:
+				"This is a DataviewJS query, and JavaScript queries are off in Dataview's settings. " +
+				"Turn on \"Enable JavaScript queries\" there to run it.",
 			datacoreEnable: "Enable the Datacore plugin to run queries",
 			datacoreNoQuery: "Set a Datacore query in card settings",
 			datacoreBadQuery: "Datacore couldn't read this query",

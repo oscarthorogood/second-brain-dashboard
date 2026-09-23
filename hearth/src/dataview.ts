@@ -36,6 +36,31 @@ export function getDataviewApi(app: App): DataviewApi | null {
 }
 
 /** Whether Dataview is enabled and its render API is reachable right now. */
+/**
+ * Whether Dataview itself allows JavaScript queries (its "Enable JavaScript
+ * queries" setting).
+ *
+ * The API's `executeJs` does not check this — Dataview enforces it in its own
+ * `dataviewjs` code-block processor, which a card calling the API bypasses. So
+ * a DataviewJS card ran JavaScript for a user who had switched JS off, and —
+ * because card config travels with a settings or layout import — a board file
+ * someone else shared could carry a JS query that ran, with full Node access on
+ * desktop, the moment the board drew. The card now asks here first.
+ *
+ * Read defensively: `settings` is Dataview's internal shape, and "can't tell"
+ * is answered as off, which only ever costs a query that doesn't run.
+ */
+export function dataviewJsEnabled(app: App): boolean {
+	try {
+		const plugin = app.plugins.plugins[DATAVIEW_PLUGIN_ID] as
+			| { settings?: { enableDataviewJs?: unknown } }
+			| undefined;
+		return plugin?.settings?.enableDataviewJs === true;
+	} catch {
+		return false;
+	}
+}
+
 export function isDataviewAvailable(app: App): boolean {
 	return getDataviewApi(app) !== null;
 }
