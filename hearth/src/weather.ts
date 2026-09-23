@@ -529,9 +529,16 @@ export function forecastUrl(req: WeatherRequest): string {
 interface CacheEntry {
 	snapshot: WeatherSnapshot | null;
 	inflight: Promise<WeatherSnapshot | null> | null;
+	/** When the last fetch failed (epoch ms), or 0 after a success. */
+	failedAt: number;
 }
 
 const cache = new Map<string, CacheEntry>();
+
+/** How long a failed fetch holds off the next unforced attempt. Without it a
+ * dead or offline source was requested again on every board redraw, since a
+ * failure leaves nothing fresh in the cache to stop it. */
+const FAILURE_BACKOFF_MS = 2 * 60_000;
 
 /** The last-fetched snapshot for a request (possibly stale), or null if none
  * was ever loaded. */
@@ -555,13 +562,15 @@ export async function loadWeather(
 	const key = weatherKey(req);
 	let entry = cache.get(key);
 	if (!entry) {
-		entry = { snapshot: null, inflight: null };
+		entry = { snapshot: null, inflight: null, failedAt: 0 };
 		cache.set(key, entry);
 	}
 	if (opts.disabled) return entry.snapshot;
 	const fresh = entry.snapshot && Date.now() - entry.snapshot.fetched < opts.ttlMs;
 	if (fresh && !opts.force) return entry.snapshot;
 	if (entry.inflight) return entry.inflight;
+	const backoff = Math.min(FAILURE_BACKOFF_MS, opts.ttlMs > 0 ? opts.ttlMs : FAILURE_BACKOFF_MS);
+	if (!opts.force && entry.failedAt && Date.now() - entry.failedAt < backoff) return entry.snapshot;
 
 	const current = entry;
 	current.inflight = (async () => {
@@ -570,8 +579,10 @@ export async function loadWeather(
 			const parsed = parseForecast(res.json, Date.now());
 			// Keep the prior snapshot when a response is unparseable.
 			if (parsed) current.snapshot = parsed;
+			current.failedAt = parsed ? 0 : Date.now();
 			return current.snapshot;
 		} catch {
+			current.failedAt = Date.now();
 			// Offline or blocked — keep whatever we had.
 			return current.snapshot;
 		} finally {

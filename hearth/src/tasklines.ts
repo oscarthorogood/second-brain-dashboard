@@ -81,3 +81,17 @@ export function withEmojiDate(text: string, emoji: string, date: string | null):
 	const base = body.replace(re, "").replace(/\s+/g, " ").trim();
 	return withBlockId(date ? `${base} ${emoji} ${date}`.trim() : base, blockId);
 }
+
+
+/** Split a note into lines without their line endings, and report which ending
+ * the note uses so an edit can write it back the same way.
+ *
+ * Splitting on "\n" alone left a "\r" on every line of a note saved with
+ * Windows line endings, and `.` never matches "\r" — so no task pattern ending
+ * in `(.*)$` matched, and those tasks could be neither shown nor edited. */
+export function splitLines(content: string): { lines: string[]; eol: "\n" | "\r\n" } {
+	return {
+		lines: content.split(/\r?\n/),
+		eol: content.includes("\r\n") ? "\r\n" : "\n",
+	};
+}

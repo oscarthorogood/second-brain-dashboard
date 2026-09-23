@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitBlockId, withDoneDate, withEmojiDate } from "../src/tasklines";
+import { splitBlockId, splitLines, withDoneDate, withEmojiDate } from "../src/tasklines";
 
 /**
  * The metadata write paths edit a user's markdown in place, so what they must
@@ -58,5 +58,21 @@ describe("withEmojiDate", () => {
 	it("removes a date without taking the block id", () => {
 		const out = withEmojiDate("Standup 📅 2024-06-03 ^standup", "📅", null);
 		expect(out).toBe("Standup ^standup");
+	});
+});
+
+describe("splitLines", () => {
+	it("strips CRLF endings so task patterns match, and reports them", () => {
+		const { lines, eol } = splitLines("- [ ] one\r\n- [x] two 📅 2026-01-02\r\n");
+		expect(lines).toEqual(["- [ ] one", "- [x] two 📅 2026-01-02", ""]);
+		expect(eol).toBe("\r\n");
+		expect(/^- \[ \] (.*)$/.exec(lines[0])?.[1]).toBe("one");
+	});
+
+	it("round-trips a note with its own line endings", () => {
+		for (const text of ["a\nb\n", "a\r\nb\r\n", "a"]) {
+			const { lines, eol } = splitLines(text);
+			expect(lines.join(eol)).toBe(text);
+		}
 	});
 });

@@ -67,6 +67,15 @@ interface MomentFn {
 export const moment: MomentFn = createMoment as unknown as MomentFn;
 
 
+/** The "→ folder" chip naming the tray a widget files into (the sync and
+ * unsorted widgets' headers). */
+export function destinationChip(parent: HTMLElement, folder: string): void {
+	const chip = parent.createDiv("sbd-sync-dest");
+	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
+	chip.createSpan({ cls: "sbd-sync-dest-path", text: folder });
+}
+
+
 export function emptyState(body: HTMLElement, icon: string, text: string): void {
 	const empty = body.createDiv("sbd-card-empty");
 	setIcon(empty.createDiv("sbd-card-empty-icon"), icon);

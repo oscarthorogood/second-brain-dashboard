@@ -87,6 +87,7 @@ import {
 	FIELD_VALUE,
 	MANAGED_EMOJI_CLASS,
 	splitBlockId,
+	splitLines,
 	stripTaskMetadata,
 	TASK_EMOJI_CLASS,
 	withBlockId,
@@ -2208,7 +2209,8 @@ function renderTaskKanban(
 				return;
 			}
 			const value = col.label === t().cards.tasks.noStatus ? "" : col.label;
-			void setTaskNotesStatus(view, hit, value).then(refresh);
+			const done = doneStatusMatcher(cfg, view.plugin.settings.taskNotesDoneValue)(value);
+			void setTaskNotesStatus(view, hit, value, done).then(refresh);
 		}
 	};
 
@@ -3022,7 +3024,7 @@ async function collectCheckboxTasks(view: HomeView, cfg: TasksConfig): Promise<T
 		const cache = view.app.metadataCache.getFileCache(file);
 		if (cache && !cache.listItems?.some((li) => li.task !== undefined)) continue;
 		const content = await view.app.vault.cachedRead(file);
-		const lines = content.split("\n");
+		const { lines } = splitLines(content);
 		// Only lines that are real checkboxes: not inside a fenced code block, not
 		// in the frontmatter. A `- [ ] example` in a ```md sample used to be listed
 		// as a task — and ticking it rewrote the code block.
@@ -3398,7 +3400,7 @@ async function collectKanbanTasks(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return { hits: [], columns: [], file: null };
 	const content = await view.app.vault.cachedRead(file);
-	const lines = content.split("\n");
+	const { lines } = splitLines(content);
 	const { columns } = parseKanbanColumns(lines);
 	const extended = cfg.kanbanExtended ?? false;
 	const hits: TaskHit[] = [];
@@ -3530,7 +3532,7 @@ async function setLineRecurringInstanceDone(
 	done: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3566,7 +3568,7 @@ async function setLineRecurringInstanceDone(
 		.slice(0, cur.length - m[2].length)
 		.replace(CHECKBOX_MARKER, (_x, pre: string, _s: string, post: string) => `${pre} ${post}`);
 	lines[hit.line] = `${prefix}${body}`.trimEnd();
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3581,7 +3583,7 @@ async function setKanbanCardDone(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3590,7 +3592,7 @@ async function setKanbanCardDone(
 		.replace(CHECKBOX_MARKER, (_x, pre: string, _s: string, post: string) => `${pre}${done ? "x" : " "}${post}`);
 	const body = extended ? withDoneDate(m[2], done, moment().format("YYYY-MM-DD")) : m[2];
 	lines[hit.line] = `${marker}${body}`;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3608,7 +3610,7 @@ async function moveKanbanCard(
 	doneDate?: string,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m) return false; // line changed under us
@@ -3639,7 +3641,7 @@ async function moveKanbanCard(
 	lines.splice(hit.line, removeEnd - hit.line);
 
 	if (!insertCardBlock(lines, targetHeading, block)) return false;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3659,12 +3661,12 @@ async function addKanbanCard(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return false;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	let body = text.replace(/\r?\n/g, " ").trim();
 	if (markDone && doneDate) body = withDoneDate(body, true, doneDate);
 	const block = [`- [${markDone ? "x" : " "}] ${body}`, ...descriptionBullets(description ?? "", "")];
 	if (!insertCardBlock(lines, heading, block)) return false;
-	await view.app.vault.modify(file, lines.join("\n"));
+	await view.app.vault.modify(file, lines.join(eol));
 	return true;
 }
 
@@ -3718,7 +3720,7 @@ async function addKanbanCardAsNote(
 	}
 
 	const content = await view.app.vault.read(board);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const link = view.app.fileManager.generateMarkdownLink(note, board.path);
 	let cardBody = link;
 	if (!scrape) {
@@ -3727,7 +3729,7 @@ async function addKanbanCardAsNote(
 	}
 	const block = [`- [${markDone ? "x" : " "}] ${cardBody}`.trimEnd()];
 	if (!insertCardBlock(lines, heading, block)) return false;
-	await view.app.vault.modify(board, lines.join("\n"));
+	await view.app.vault.modify(board, lines.join(eol));
 	return true;
 }
 
@@ -3740,7 +3742,7 @@ async function markCardsDone(view: HomeView, hits: TaskHit[], doneDate?: string)
 	if (!hits.length) return;
 	const file = hits[0].file;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	let changed = false;
 	for (const hit of hits) {
 		const line = lines[hit.line];
@@ -3754,7 +3756,7 @@ async function markCardsDone(view: HomeView, hits: TaskHit[], doneDate?: string)
 		lines[hit.line] = `${marker}${body}`;
 		changed = true;
 	}
-	if (changed) await view.app.vault.modify(file, lines.join("\n"));
+	if (changed) await view.app.vault.modify(file, lines.join(eol));
 }
 
 
@@ -3880,7 +3882,7 @@ async function setKanbanCardMetadata(
 	// edits are written there, not onto the board link.
 	if (hit.linkedFile) return writeMetadataFrontmatter(view, hit.linkedFile, meta);
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3903,7 +3905,7 @@ async function setKanbanCardMetadata(
 		// (which may be sub-tasks, not a description) untouched.
 		lines[hit.line] = newItem;
 	}
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3922,7 +3924,7 @@ async function setKanbanCardText(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3944,7 +3946,7 @@ async function setKanbanCardText(
 	const newItem = `${prefix}${rest}`.trimEnd();
 	if (newItem === cur) return true; // no-op edit
 	lines[hit.line] = newItem;
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3965,7 +3967,7 @@ async function setKanbanCardDescription(
 		return true;
 	}
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3974,7 +3976,7 @@ async function setKanbanCardDescription(
 	// Swap just the description sub-bullets (item line + 1 … block end) for the
 	// freshly-built ones, keeping the card's title/metadata line as-is.
 	lines.splice(hit.line + 1, end - (hit.line + 1), ...descriptionBullets(description, itemIndent));
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -3984,7 +3986,7 @@ async function setKanbanCardDescription(
  * longer matches the card. */
 async function deleteKanbanCard(view: HomeView, hit: TaskHit): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) return false;
@@ -3999,7 +4001,7 @@ async function deleteKanbanCard(view: HomeView, hit: TaskHit): Promise<boolean> 
 	let removeEnd = end;
 	if (lines[removeEnd]?.trim() === "") removeEnd++;
 	lines.splice(hit.line, removeEnd - hit.line);
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
@@ -4137,12 +4139,12 @@ async function renameKanbanColumn(
 	const file = resolveKanbanFile(view.app, cfg);
 	if (!file) return;
 	const content = await view.app.vault.read(file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const { columns } = parseKanbanColumns(lines);
 	const col = columns.find((c) => c.heading === oldHeading);
 	if (!col) return;
 	lines[col.headingLine] = `## ${newHeading}`;
-	await view.app.vault.modify(file, lines.join("\n"));
+	await view.app.vault.modify(file, lines.join(eol));
 	// Remap the lowercased column keys the config stores.
 	const oldKey = oldHeading.toLowerCase();
 	const newKey = newHeading.toLowerCase();
@@ -4161,7 +4163,7 @@ async function renameKanbanColumn(
 async function convertKanbanCardToNote(view: HomeView, cfg: TasksConfig, hit: TaskHit): Promise<void> {
 	const board = hit.file;
 	const content = await view.app.vault.read(board);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const cur = lines[hit.line];
 	const m = cur != null ? KANBAN_CARD_RE.exec(cur) : null;
 	if (!m || stripTaskMetadata(m[2]) !== stripTaskMetadata(hit.text)) {
@@ -4217,7 +4219,7 @@ async function convertKanbanCardToNote(view: HomeView, cfg: TasksConfig, hit: Ta
 	// note), leaving just the link line.
 	const prefix = cur.slice(0, cur.length - m[2].length);
 	lines.splice(hit.line, end - hit.line, `${prefix}${link}${meta ? ` ${meta}` : ""}`);
-	await view.app.vault.modify(board, lines.join("\n"));
+	await view.app.vault.modify(board, lines.join(eol));
 }
 
 
@@ -4366,7 +4368,7 @@ async function setCheckboxSymbol(
 	extended: boolean,
 ): Promise<boolean> {
 	const content = await view.app.vault.read(hit.file);
-	const lines = content.split("\n");
+	const { lines, eol } = splitLines(content);
 	const line = lines[hit.line];
 	const match = line != null ? CHECKBOX_MARKER.exec(line) : null;
 	if (!match) return false;
@@ -4377,13 +4379,11 @@ async function setCheckboxSymbol(
 		.replace(CHECKBOX_MARKER, (_m, pre: string, _state: string, post: string) => `${pre}${symbol}${post}`);
 	const body = extended ? withDoneDate(rest, done, moment().format("YYYY-MM-DD")) : rest;
 	lines[hit.line] = `${marker}${body}`.trimEnd();
-	await view.app.vault.modify(hit.file, lines.join("\n"));
+	await view.app.vault.modify(hit.file, lines.join(eol));
 	return true;
 }
 
 
-/** Write a TaskNotes task's status frontmatter field (used by the Kanban board
- * when a card is dragged to another status column). */
 /** The status value written when a TaskNotes task is marked done: the card's
  * first configured "done" status when set (so a card treating both "done" and
  * "canceled" as complete writes "done"), otherwise the global done value. */
@@ -4417,15 +4417,29 @@ function renderTaskNotesCheckbox(
 	check.addEventListener("pointerdown", stop);
 	check.addEventListener("change", () => {
 		const value = check.checked ? doneWriteValue(view, cfg) : openStatus;
-		void setTaskNotesStatus(view, hit, value).then(refresh);
+		void setTaskNotesStatus(view, hit, value, check.checked).then(refresh);
 	});
 }
 
-async function setTaskNotesStatus(view: HomeView, hit: TaskHit, value: string): Promise<void> {
+/** Write a TaskNotes task's status frontmatter field (the list checkbox, and
+ * the Kanban board when a card is dragged to another status column).
+ *
+ * TaskNotes stamps the completion date alongside a completed status, and its
+ * own views sort and filter on it, so do the same: set it when the task moves
+ * into a done status, and clear it when the task is reopened. */
+async function setTaskNotesStatus(
+	view: HomeView,
+	hit: TaskHit,
+	value: string,
+	done: boolean,
+): Promise<void> {
 	const field = view.plugin.settings.taskNotesStatusField.trim() || "status";
+	const completedField = readTaskNotesSetup(view.app).fields.completedDate;
 	try {
 		await view.app.fileManager.processFrontMatter(hit.file, (fm) => {
 			fm[field] = value;
+			if (done && !hit.done) fm[completedField] = moment().format("YYYY-MM-DD");
+			else if (!done && completedField in fm) delete fm[completedField];
 		});
 	} catch {
 		new Notice(t().notices.couldNotUpdateTaskStatus);
@@ -4791,7 +4805,7 @@ async function discoverTaskFields(
 	if (source === "kanban" && cfg) {
 		const board = resolveKanbanFile(app, cfg);
 		if (board) {
-			const lines = (await app.vault.cachedRead(board)).split("\n");
+			const { lines } = splitLines(await app.vault.cachedRead(board));
 			record(builtinSource("column"), parseKanbanColumns(lines).columns.map((c) => c.heading));
 		}
 	}

@@ -1,5 +1,5 @@
 import { Notice, setIcon, Setting, type Component, type TFile } from "obsidian";
-import { feedHost } from "../cardbodies";
+import { destinationChip, feedHost } from "../cardbodies";
 import { fileForClaude, trayCount, revealTray } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { formatCompactAge, localDayKey } from "../dates";
@@ -342,12 +342,6 @@ function syncHeader(
 /** The folder every event lands in, named on the card rather than only in the
  * settings: a card called "sync" that writes notes somewhere is worth being
  * explicit about where. */
-function destinationChip(parent: HTMLElement, folder: string): void {
-	const chip = parent.createDiv("sbd-sync-dest");
-	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
-	chip.createSpan({ cls: "sbd-sync-dest-path", text: folder });
-}
-
 function statusDot(parent: HTMLElement, slot: SlotState): void {
 	const dot = parent.createDiv("sbd-sync-dot");
 	dot.addClass(`is-${slot.state}`);

@@ -1,4 +1,5 @@
 import { Modal, Notice, setIcon, Setting, TFile, type App, type Component } from "obsidian";
+import { destinationChip } from "../cardbodies";
 import { fileForClaude, revealTray, trayCount, writeAttachment, writeNote } from "../claudebridge";
 import { courseNames } from "../coursework";
 import { t } from "../i18n";
@@ -231,13 +232,7 @@ async function createUnsortedNote(view: HomeView): Promise<void> {
 }
 
 /** The folder everything this card collects lands in. */
-function destinationChip(parent: HTMLElement, folder: string): void {
-	const chip = parent.createDiv("sbd-sync-dest");
-	setIcon(chip.createDiv("sbd-sync-dest-icon"), "corner-down-right");
-	chip.createSpan({ cls: "sbd-sync-dest-path", text: folder });
-}
-
-/** How much is still sitting in `Claude/unsorted`, and a way into it. */
+/** How much is still sitting in the unsorted tray, and a way into it. */
 function trayLine(view: HomeView, body: HTMLElement): void {
 	const folders = effectiveFilingFolders(view.plugin.settings);
 	const waiting = trayCount(view.app, "unsorted", folders);
